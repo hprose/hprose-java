@@ -1,6 +1,20 @@
 *.class
 
 # Package Files #
-*.jar
 *.war
 *.ear
+/java5/build/
+/java5/nbproject/private/
+/java5/example/java/HelloClient/nbproject/private/
+/java5/example/java/HelloServer/nbproject/private/
+/java5/example/java/HproseExamClient/nbproject/private/
+/java5/example/java/HproseExamServer/nbproject/private/
+/java5/example/HelloServer/nbproject/private/
+/java5/example/HelloClient/nbproject/private/
+/java5/example/HelloServer/build/
+/java5/example/HelloClient/build/
+/java5/example/HelloClient/dist/
+/java5/example/HproseExamClient/dist/
+/java5/example/HproseExamClient/build/
+/java5/example/HproseExamServer/dist/
+/java5/example/HproseExamServer/build/

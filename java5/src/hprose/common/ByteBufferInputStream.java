@@ -1,0 +1,71 @@
+/**********************************************************\
+|                                                          |
+|                          hprose                          |
+|                                                          |
+| Official WebSite: http://www.hprose.com/                 |
+|                   http://www.hprose.net/                 |
+|                   http://www.hprose.org/                 |
+|                                                          |
+\**********************************************************/
+/**********************************************************\
+ *                                                        *
+ * ByteBufferInputStream.java                             *
+ *                                                        *
+ * ByteBuffer InputStream for Java.                       *
+ *                                                        *
+ * LastModified: Feb 28, 2014                             *
+ * Author: Ma Bingyao <andot@hprose.com>                  *
+ *                                                        *
+\**********************************************************/
+
+package hprose.common;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+class ByteBufferInputStream extends InputStream {
+    ByteBufferStream stream;
+    ByteBufferInputStream(ByteBufferStream stream) {
+        this.stream = stream;
+    }
+
+    @Override
+    public int read() throws IOException {
+        return stream.read();
+    }
+
+    @Override
+    public int read(byte b[]) throws IOException {
+        return stream.read(b);
+    }
+
+    @Override
+    public int read(byte b[], int off, int len) throws IOException {
+        return stream.read(b, off, len);
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        return stream.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+	return stream.available();
+    }
+
+    @Override
+    public boolean markSupported() {
+	return stream.markSupported();
+    }
+
+    @Override
+    public void mark(int readlimit) {
+	stream.mark(readlimit);
+    }
+
+    @Override
+    public void reset() {
+        stream.reset();
+    }
+}

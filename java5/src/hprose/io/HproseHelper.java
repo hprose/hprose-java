@@ -13,7 +13,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Jan 4, 2013                              *
+ * LastModified: Mar 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,7 @@ package hprose.io;
 
 import hprose.common.ByteBufferStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
@@ -34,6 +35,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -591,5 +593,35 @@ public final class HproseHelper {
         catch (Exception e) {
             return new String(bytes);
         }
+    }
+
+    public static void sendDataOverTcp(SocketChannel channel, ByteBufferStream stream) throws IOException {
+        int n = stream.available();
+        int len = n > 1020 ? 2048 : n > 508 ? 1024 : 512;
+        byte[] buf = new byte[len];
+        buf[0] = (byte)((n >> 24) & 0xff);
+        buf[1] = (byte)((n >> 16) & 0xff);
+        buf[2] = (byte)((n >> 8) & 0xff);
+        buf[3] = (byte)(n & 0xff);
+        int p = len - 4;
+        if (n <= p) {
+            stream.read(buf, 4, n);
+            ByteBufferStream.wrap(buf, 0, n + 4).writeTo(channel);
+        }
+        else {
+            stream.read(buf, 4, p);
+            ByteBufferStream.wrap(buf, 0, len).writeTo(channel);
+            stream.writeTo(channel);
+        }
+    }
+
+    public static ByteBufferStream receiveDataOverTcp(SocketChannel channel) throws IOException {
+        ByteBufferStream buf = new ByteBufferStream(4);
+        buf.readFrom(channel, 4);
+        buf.rewind();
+        int len = (buf.read() << 24) | (buf.read() << 16) | (buf.read() << 8) | buf.read();
+        ByteBufferStream data = new ByteBufferStream(len);
+        data.readFrom(channel, len);
+        return data;
     }
 }

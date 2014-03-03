@@ -13,7 +13,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Mar 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -36,8 +36,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 
 public abstract class HproseClient implements HproseInvoker {
 
@@ -65,6 +68,43 @@ public abstract class HproseClient implements HproseInvoker {
         this.uri = uri;
     }
 
+    private static final HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
+
+    public static void registerClientFactory(String scheme, Class<? extends HproseClient> clientClass) {
+        synchronized (clientFactories) {
+            clientFactories.put(scheme, clientClass);
+        }
+    }
+
+    static {
+        registerClientFactory("tcp", HproseTcpClient.class);
+        registerClientFactory("tcp4", HproseTcpClient.class);
+        registerClientFactory("tcp6", HproseTcpClient.class);
+        registerClientFactory("http", HproseHttpClient.class);
+        registerClientFactory("https", HproseHttpClient.class);
+    }
+
+    public static HproseClient create(String uri) throws IOException, URISyntaxException {
+        return create(uri, HproseMode.MemberMode);
+    }
+
+    public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
+        String scheme = (new URI(uri)).getScheme().toLowerCase();
+        Class<? extends HproseClient> clientClass = clientFactories.get(scheme);
+        if (clientClass != null) {
+            try {
+                HproseClient client = clientClass.newInstance();
+                client.mode = mode;
+                client.uri = uri;
+                return client;
+            }
+            catch (Exception ex) {
+                throw new HproseException("This client desn't support " + scheme + " scheme.");
+            }
+        }
+        throw new HproseException("This client desn't support " + scheme + " scheme.");
+    }
+
     public HproseFilter getFilter() {
         return filter;
     }
@@ -77,45 +117,28 @@ public abstract class HproseClient implements HproseInvoker {
         this.uri = uri;
     }
 
-    public final Object useService(Class<?> type) {
+    public final <T> T useService(Class<T> type) {
         return useService(type, null);
     }
 
-    public final Object useService(String uri, Class<?> type) {
+    public final <T> T useService(String uri, Class<T> type) {
         return useService(uri, type, null);
     }
 
-    public final Object useService(Class<?>[] types) {
-        return useService(types, null);
-    }
-
-    public final Object useService(String uri, Class<?>[] types) {
-        return useService(uri, types, null);
-    }
-
-    public final Object useService(Class<?> type, String ns) {
+    @SuppressWarnings("unchecked")
+    public final <T> T useService(Class<T> type, String ns) {
         HproseInvocationHandler handler = new HproseInvocationHandler(this, ns);
         if (type.isInterface()) {
-            return Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+            return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
         }
         else {
-            return Proxy.newProxyInstance(type.getClassLoader(), type.getInterfaces(), handler);
+            return (T) Proxy.newProxyInstance(type.getClassLoader(), type.getInterfaces(), handler);
         }
     }
 
-    public final Object useService(String uri, Class<?> type, String ns) {
+    public final <T> T useService(String uri, Class<T> type, String ns) {
         useService(uri);
         return useService(type, ns);
-    }
-
-    public final Object useService(Class<?>[] types, String ns) {
-        HproseInvocationHandler handler = new HproseInvocationHandler(this, ns);
-        return Proxy.newProxyInstance(types[0].getClassLoader(), types, handler);
-    }
-
-    public final Object useService(String uri, Class<?>[] types, String ns) {
-        useService(uri);
-        return useService(types, ns);
     }
 
     public final void invoke(String functionName, HproseCallback1<?> callback) {
@@ -460,7 +483,7 @@ public abstract class HproseClient implements HproseInvoker {
         return result;
     }
 
-    private ByteBuffer doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple) throws IOException {
+    private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple) throws IOException {
         ByteBufferStream stream = new ByteBufferStream();
         HproseWriter hproseWriter = new HproseWriter(stream.getOutputStream(), mode, simple);
         stream.write(HproseTags.TagCall);
@@ -478,7 +501,7 @@ public abstract class HproseClient implements HproseInvoker {
             stream.buffer = filter.outputFilter(stream.buffer);
             stream.flip();
         }
-        return stream.buffer;
+        return stream;
     }
 
     private Object ByteBufferStreamToType(ByteBufferStream stream, Type returnType) throws HproseException {
@@ -498,8 +521,7 @@ public abstract class HproseClient implements HproseInvoker {
         throw new HproseException("Can't Convert ByteBuffer to Type: " + returnType.toString());
     }
 
-    private Object doInput(ByteBuffer buffer, Object[] arguments, Type returnType, HproseResultMode resultMode) throws IOException {
-        ByteBufferStream stream = new ByteBufferStream(buffer);
+    private Object doInput(ByteBufferStream stream, Object[] arguments, Type returnType, HproseResultMode resultMode) throws IOException {
         stream.flip();
         if (filter != null) {
             stream.buffer = filter.inputFilter(stream.buffer);
@@ -550,5 +572,5 @@ public abstract class HproseClient implements HproseInvoker {
         return result;
     }
 
-    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer) throws IOException;
+    protected abstract ByteBufferStream sendAndReceive(ByteBufferStream buffer) throws IOException;
 }

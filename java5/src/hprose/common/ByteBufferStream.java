@@ -13,7 +13,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Feb 28, 2014                             *
+ * LastModified: Mar 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 
 public class ByteBufferStream {
     public ByteBuffer buffer;
@@ -40,6 +41,14 @@ public class ByteBufferStream {
 
     public ByteBufferStream(ByteBuffer buffer) {
         this.buffer = buffer;
+    }
+
+    public static ByteBufferStream wrap(byte[] array, int offset, int length) {
+        return new ByteBufferStream(ByteBuffer.wrap(array, offset, length));
+    }
+
+    public static ByteBufferStream wrap(byte[] array) {
+        return new ByteBufferStream(ByteBuffer.wrap(array));
     }
 
     public InputStream getInputStream() {
@@ -170,7 +179,6 @@ public class ByteBufferStream {
     }
 
     public void readFrom(InputStream istream) throws IOException {
-        buffer.clear();
         byte[] b = new byte[8192];
         for (;;) {
             int n = istream.read(b);
@@ -194,6 +202,28 @@ public class ByteBufferStream {
                 }
                 ostream.write(b, 0, n);
             }
+        }
+    }
+
+    public void readFrom(ByteChannel channel, int length) throws IOException {
+        int n = 0;
+        grow(length);
+        buffer.limit(buffer.position() + length);
+        while (n < length) {
+            int nn = channel.read(buffer);
+            if (nn == -1) {
+                break;
+            }
+            n += nn;
+        }
+        if (n < length) {
+            throw new HproseException("Unexpected EOF");
+        }
+    }
+
+    public void writeTo(ByteChannel channel) throws IOException {
+        while (buffer.hasRemaining()) {
+            channel.write(buffer);
         }
     }
 }

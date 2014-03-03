@@ -13,21 +13,23 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Mar 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
 import hprose.common.ByteBufferStream;
+import hprose.common.HproseException;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -59,6 +61,14 @@ public class HproseHttpClient extends HproseClient {
 
     public HproseHttpClient(String uri, HproseMode mode) {
         super(uri, mode);
+    }
+
+    public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
+        String scheme = (new URI(uri)).getScheme().toLowerCase();
+        if (!scheme.equals("http") && !scheme.equals("https")) {
+            throw new HproseException("This client desn't support " + scheme + " scheme.");
+        }
+        return new HproseTcpClient(uri, mode);
     }
 
     public void setHeader(String name, String value) {
@@ -140,8 +150,7 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected ByteBuffer sendAndReceive(ByteBuffer buffer) throws IOException {
-        ByteBufferStream stream = new ByteBufferStream(buffer);
+    protected ByteBufferStream sendAndReceive(ByteBufferStream stream) throws IOException {
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -187,8 +196,9 @@ public class HproseHttpClient extends HproseClient {
         }
         cookieManager.setCookie(cookieList, url.getHost());
         InputStream istream = conn.getInputStream();
+        stream.buffer.clear();
         stream.readFrom(istream);
         istream.close();
-        return stream.buffer;
+        return stream;
     }
 }

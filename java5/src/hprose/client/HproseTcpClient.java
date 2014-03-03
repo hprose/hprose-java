@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -83,7 +84,20 @@ public class HproseTcpClient extends HproseClient {
             }
         }
 
-        private void freeChannels(final LinkedList<SocketChannel> channels) {
+        private void closeChannel(final SocketChannel channel) {
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        channel.close();
+                    }
+                    catch (IOException ex) {
+                    }
+                }
+            }.start();
+        }
+
+        private void freeChannels(final List<SocketChannel> channels) {
             new Thread() {
                 @Override
                 public void run() {
@@ -103,8 +117,9 @@ public class HproseTcpClient extends HproseClient {
             synchronized (pool) {
                 for (TcpConnEntry entry : pool) {
                     if (entry.uri != null) {
-                        if (entry.status == TcpConnStatus.Free &&
-                            (System.currentTimeMillis() - entry.lastUsedTime) > timeout) {
+                        if ((entry.channel != null && !entry.channel.isOpen()) ||
+                            (entry.status == TcpConnStatus.Free &&
+                            (System.currentTimeMillis() - entry.lastUsedTime) > timeout)) {
                             channels.add(entry.channel);
                             entry.channel = null;
                             entry.uri = null;
@@ -120,8 +135,16 @@ public class HproseTcpClient extends HproseClient {
                 for (TcpConnEntry entry : pool) {
                     if (entry.status == TcpConnStatus.Free) {
                         if (entry.uri.equals(uri)) {
-                            entry.status = TcpConnStatus.Using;
-                            return entry;
+                            if (entry.channel.isOpen()) {
+                                entry.status = TcpConnStatus.Using;
+                                return entry;
+                            }
+                            else {
+                                closeChannel(entry.channel);
+                                entry.channel = null;
+                                entry.status = TcpConnStatus.Using;
+                                return entry;
+                            }
                         }
                         else if (entry.uri == null) {
                             entry.status = TcpConnStatus.Using;
@@ -135,6 +158,7 @@ public class HproseTcpClient extends HproseClient {
                 return newEntry;
             }
         }
+
         public void close(String uri) {
             LinkedList<SocketChannel> channels = new LinkedList<SocketChannel>();
             synchronized (pool) {
@@ -156,11 +180,8 @@ public class HproseTcpClient extends HproseClient {
         public void free(TcpConnEntry entry) {
             if (entry.status == TcpConnStatus.Closing) {
                 if (entry.channel != null) {
-                    try {
-                        entry.channel.close();
-                    }
-                    catch (IOException ex) {
-                    }
+                    closeChannel(entry.channel);
+                    entry.channel = null;
                 }
                 entry.uri = null;
             }
@@ -242,10 +263,11 @@ public class HproseTcpClient extends HproseClient {
         }
         catch (IOException e) {
             entry.close();
-            pool.free(entry);
             throw e;
         }
-        pool.free(entry);
+        finally {
+            pool.free(entry);
+        }
         return stream;
     }
 

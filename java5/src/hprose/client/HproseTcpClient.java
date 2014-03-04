@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 3, 2014                              *
+ * LastModified: Mar 4, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -116,10 +116,9 @@ public class HproseTcpClient extends HproseClient {
             LinkedList<SocketChannel> channels = new LinkedList<SocketChannel>();
             synchronized (pool) {
                 for (TcpConnEntry entry : pool) {
-                    if (entry.uri != null) {
+                    if (entry.status == TcpConnStatus.Free && entry.uri != null) {
                         if ((entry.channel != null && !entry.channel.isOpen()) ||
-                            (entry.status == TcpConnStatus.Free &&
-                            (System.currentTimeMillis() - entry.lastUsedTime) > timeout)) {
+                            ((System.currentTimeMillis() - entry.lastUsedTime) > timeout)) {
                             channels.add(entry.channel);
                             entry.channel = null;
                             entry.uri = null;
@@ -135,16 +134,12 @@ public class HproseTcpClient extends HproseClient {
                 for (TcpConnEntry entry : pool) {
                     if (entry.status == TcpConnStatus.Free) {
                         if (entry.uri.equals(uri)) {
-                            if (entry.channel.isOpen()) {
-                                entry.status = TcpConnStatus.Using;
-                                return entry;
-                            }
-                            else {
+                            if (!entry.channel.isOpen()) {
                                 closeChannel(entry.channel);
                                 entry.channel = null;
-                                entry.status = TcpConnStatus.Using;
-                                return entry;
                             }
+                            entry.status = TcpConnStatus.Using;
+                            return entry;
                         }
                         else if (entry.uri == null) {
                             entry.status = TcpConnStatus.Using;

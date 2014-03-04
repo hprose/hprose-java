@@ -24,7 +24,7 @@ public class ClientExam10 {
     public static void main(String[] args) throws IOException {
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8080/HproseExamServer/Methods");
-        final ITest test = (ITest) client.useService(ITest.class, "ex2");
+        final ITest test = client.useService(ITest.class, "ex2");
         Map<String, String> map = new HashMap<String, String>();
         map.put("January", "Jan");
         map.put("February", "Feb");

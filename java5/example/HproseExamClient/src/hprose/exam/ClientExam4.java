@@ -8,7 +8,7 @@ public class ClientExam4 {
     public static void main(String[] args) throws IOException {
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8080/HproseExamServer/Methods");
-        List<User> userList = (List<User>)client.invoke("ex2_getUserList");
+        List<User> userList = client.invoke("ex2_getUserList", List.class);
         for (User user : userList) {
             System.out.printf("name: %s, ", user.getName());
             System.out.printf("age: %d, ", user.getAge());
@@ -18,7 +18,7 @@ public class ClientExam4 {
             System.out.println();
         }
         System.out.println();
-        User[] users = (User[])client.invoke("ex2_getUserList", User[].class);
+        User[] users = client.invoke("ex2_getUserList", User[].class);
         for (User user : users) {
             System.out.printf("name: %s, ", user.getName());
             System.out.printf("age: %d, ", user.getAge());

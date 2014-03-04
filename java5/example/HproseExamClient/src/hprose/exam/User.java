@@ -2,7 +2,7 @@ package hprose.exam;
 
 import java.sql.Date;
 
-public class User implements java.io.Serializable {
+public class User {
     private String name;
     private Sex sex;
     private Date birthday;

@@ -7,7 +7,7 @@ public class ClientExam8 {
     public static void main(String[] args) throws IOException {
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8080/HproseExamServer/Methods");
-        IExam2 exam2 = (IExam2) client.useService(IExam2.class, "ex2");
+        IExam2 exam2 = client.useService(IExam2.class, "ex2");
         User[] users = exam2.getUserList();
         for (User user : users) {
             System.out.printf("name: %s, ", user.getName());

@@ -2,12 +2,15 @@ package hprose.exam;
 
 import hprose.client.HproseClient;
 import hprose.common.HproseCallback1;
+import hprose.common.SimpleMode;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class TcpClientExam {
     public interface IStub {
+        @SimpleMode(true)
         String Hello(String name);
+        @SimpleMode(true)
         void Hello(String name, HproseCallback1<String> callback);
     }
     public static void main(String[] args) throws IOException, URISyntaxException {

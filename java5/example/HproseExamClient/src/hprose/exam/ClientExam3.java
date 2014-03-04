@@ -22,11 +22,11 @@ public class ClientExam3 {
         map.put("November", "Nov");
         map.put("December", "Dec");
         Object[] arguments = new Object[] { map };
-        HashMap map2 = (HashMap)client.invoke("ex1_swapKeyAndValue", arguments);
+        HashMap map2 = client.invoke("ex1_swapKeyAndValue", arguments, HashMap.class);
         System.out.println(map);
         System.out.println(map2);
         System.out.println(arguments[0]);
-        map2 = (HashMap)client.invoke("ex2_swapKeyAndValue", arguments, true);
+        map2 = client.invoke("ex2_swapKeyAndValue", arguments, HashMap.class, true);
         System.out.println(map);
         System.out.println(map2);
         System.out.println(arguments[0]);

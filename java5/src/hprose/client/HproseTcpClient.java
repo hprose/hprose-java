@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 4, 2014                              *
+ * LastModified: Mar 5, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -133,7 +133,7 @@ public class HproseTcpClient extends HproseClient {
             synchronized (pool) {
                 for (TcpConnEntry entry : pool) {
                     if (entry.status == TcpConnStatus.Free) {
-                        if (entry.uri.equals(uri)) {
+                        if (entry.uri != null && entry.uri.equals(uri)) {
                             if (!entry.channel.isOpen()) {
                                 closeChannel(entry.channel);
                                 entry.channel = null;
@@ -158,7 +158,7 @@ public class HproseTcpClient extends HproseClient {
             LinkedList<SocketChannel> channels = new LinkedList<SocketChannel>();
             synchronized (pool) {
                 for (TcpConnEntry entry : pool) {
-                    if (entry.uri.equals(uri)) {
+                    if (entry.uri != null && entry.uri.equals(uri)) {
                         if (entry.status == TcpConnStatus.Free) {
                             channels.add(entry.channel);
                             entry.channel = null;

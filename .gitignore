@@ -18,3 +18,8 @@
 /java5/example/HproseExamClient/build/
 /java5/example/HproseExamServer/dist/
 /java5/example/HproseExamServer/build/
+/java5/example/TcpHelloServer/nbproject/private/
+/java5/example/TcpHelloServer/build/
+/java5/example/TcpHelloServer/dist/
+/java5/example/TcpHelloExam/nbproject/private/
+/java5/example/TcpHelloExam/build/

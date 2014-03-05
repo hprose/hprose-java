@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Mar 5, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -634,6 +634,10 @@ public abstract class HproseService {
         if (event != null) {
             event.onSendError(e);
         }
+    }
+
+    protected ByteBufferStream handle(ByteBufferStream stream) throws IOException {
+        return handle(stream, null, null);
     }
 
     protected ByteBufferStream handle(ByteBufferStream stream, HproseMethods methods, Object context) throws IOException {

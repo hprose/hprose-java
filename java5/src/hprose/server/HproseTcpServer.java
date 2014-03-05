@@ -67,7 +67,6 @@ public class HproseTcpServer extends HproseService {
                         }
                     }
                 }
-                selector.close();
             }
             catch (Throwable ex) {
                 server.fireErrorEvent(ex);
@@ -116,6 +115,7 @@ public class HproseTcpServer extends HproseService {
         if (isStarted()) {
             handlerThread.interrupt();
             try {
+                selector.close();
                 serverChannel.close();
             }
             catch (IOException ex) {

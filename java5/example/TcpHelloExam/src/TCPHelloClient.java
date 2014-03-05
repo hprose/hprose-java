@@ -13,6 +13,9 @@ public class TCPHelloClient {
         for (int i = 0; i < 10000; i++) {
             client.invoke("hello", new Object[] {"World"});
         }
+        long end = System.currentTimeMillis();
+        System.out.println(end - start);
+        start = System.currentTimeMillis();
         for (int i = 0; i < 10000; i++) {
             client.invoke("hello", new Object[] {"World"}, new HproseCallback1() {
                 @Override
@@ -20,7 +23,7 @@ public class TCPHelloClient {
                 }
             });
         }
-        long end = System.currentTimeMillis();
+        end = System.currentTimeMillis();
         System.out.println(end - start);
         System.out.println("END");
     }

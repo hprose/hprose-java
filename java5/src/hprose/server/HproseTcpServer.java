@@ -61,9 +61,15 @@ public class HproseTcpServer extends HproseService {
                         }
                         else if (key.isReadable()) {
                             SocketChannel socketChannel = (SocketChannel) key.channel();
-                            HproseHelper.sendDataOverTcp(socketChannel,
+                            try {
+                                HproseHelper.sendDataOverTcp(socketChannel,
                                     server.handle(HproseHelper.receiveDataOverTcp(socketChannel)));
-                            socketChannel.register(selector, SelectionKey.OP_READ);
+                                socketChannel.register(selector, SelectionKey.OP_READ);
+                            }
+                            catch (IOException e) {
+                                socketChannel.close();
+                                server.fireErrorEvent(e);
+                            }
                         }
                     }
                 }

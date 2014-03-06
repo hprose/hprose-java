@@ -13,7 +13,7 @@
  *                                                        *
  * hprose server class for Java.                          *
  *                                                        *
- * LastModified: Mar 5, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -82,33 +82,48 @@ public class HproseTcpServer extends HproseService {
     private Selector selector = null;
     private ServerSocketChannel serverChannel = null;
     private HandlerThread handlerThread = null;
-    private String uri = null;
+    private String host = null;
+    private int port = 0;
 
-    public HproseTcpServer(String uri) {
-        this.uri = uri;
+    public HproseTcpServer(String uri) throws URISyntaxException {
+        URI u = new URI(uri);
+        host = u.getHost();
+        port = u.getPort();
     }
 
-    public String getUri() {
-        return uri;
+    public HproseTcpServer(String host, int port) {
+        this.host = host;
+        this.port = port;
     }
 
-    public void setUri(String value) {
-        uri = value;
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String value) {
+        host = value;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int value) {
+        port = value;
     }
 
     public boolean isStarted() {
         return handlerThread != null && handlerThread.isAlive();
     }
 
-    public void start() throws URISyntaxException, IOException {
+    public void start() throws IOException {
         if (!isStarted()) {
-            URI u = new URI(uri);
             serverChannel = ServerSocketChannel.open();
             ServerSocket serverSocket = serverChannel.socket();
             selector = Selector.open();
-            InetSocketAddress address = (u.getHost() == null) ?
-                    new InetSocketAddress(u.getPort()) :
-                    new InetSocketAddress(u.getHost(), u.getPort());
+            InetSocketAddress address = (host == null) ?
+                    new InetSocketAddress(port) :
+                    new InetSocketAddress(host, port);
             serverSocket.bind(address);
             serverChannel.configureBlocking(false);
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);

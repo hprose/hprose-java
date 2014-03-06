@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HproseHttpClient extends HproseClient {
     private ConcurrentHashMap<String, String> headers = new ConcurrentHashMap<String, String>();
     private static CookieManager cookieManager = new CookieManager();
-    private boolean keepAlive = false;
+    private boolean keepAlive = true;
     private int keepAliveTimeout = 300;
     private String proxyHost = null;
     private int proxyPort = 80;

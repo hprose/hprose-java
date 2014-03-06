@@ -13,13 +13,12 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Mar 1, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
-import hprose.common.ByteBufferStream;
 import hprose.common.HproseException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -2241,10 +2239,11 @@ public final class HproseReader {
         throw new HproseException("Can not unserialize this type: " + type.toString());
     }
 
-    public ByteBuffer readRaw() throws IOException {
+    public ByteBufferStream readRaw() throws IOException {
     	ByteBufferStream rawstream = new ByteBufferStream();
     	readRaw(rawstream.getOutputStream());
-    	return rawstream.buffer;
+        rawstream.flip();
+    	return rawstream;
     }
 
     public void readRaw(OutputStream ostream) throws IOException {

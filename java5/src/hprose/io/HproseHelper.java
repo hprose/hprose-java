@@ -13,13 +13,12 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Mar 3, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
-import hprose.common.ByteBufferStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamClass;

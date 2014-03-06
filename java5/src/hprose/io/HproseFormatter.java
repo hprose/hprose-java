@@ -13,13 +13,12 @@
  *                                                        *
  * hprose formatter class for Java.                       *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
-import hprose.common.ByteBufferStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;

@@ -13,18 +13,18 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 5, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
-import hprose.common.ByteBufferStream;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
 import hprose.common.HproseMethod;
 import hprose.common.HproseMethods;
 import hprose.common.HproseResultMode;
+import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseReader;

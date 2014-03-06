@@ -13,13 +13,12 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Mar 3, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
-import hprose.common.ByteBufferStream;
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseErrorEvent;
@@ -28,6 +27,7 @@ import hprose.common.HproseFilter;
 import hprose.common.HproseInvocationHandler;
 import hprose.common.HproseInvoker;
 import hprose.common.HproseResultMode;
+import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseReader;
@@ -548,7 +548,7 @@ public abstract class HproseClient implements HproseInvoker {
                         result = hproseReader.unserialize(returnType);
                     }
                     else if (resultMode == HproseResultMode.Serialized) {
-                        result = ByteBufferStreamToType(new ByteBufferStream(hproseReader.readRaw()), returnType);
+                        result = ByteBufferStreamToType(hproseReader.readRaw(), returnType);
                     }
                     break;
                 case HproseTags.TagArgument:

@@ -13,12 +13,12 @@
  *                                                        *
  * ByteBuffer OutputStream for Java.                      *
  *                                                        *
- * LastModified: Feb 28, 2014                             *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
-package hprose.common;
+package hprose.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -13,14 +13,14 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 5, 2014                              *
+ * LastModified: Mar 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
-import hprose.common.ByteBufferStream;
 import hprose.common.HproseException;
+import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import java.io.IOException;

@@ -13,14 +13,14 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Mar 7, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
 import hprose.common.HproseMethods;
-import hprose.io.ClassManager;
+import hprose.io.HproseClassManager;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import java.io.IOException;
@@ -154,7 +154,7 @@ public class HproseServlet extends HttpServlet {
                 String[] classNames = HproseHelper.split(param, ',', 0);
                 for (int i = 0, n = classNames.length; i < n; i++) {
                     String[] name = HproseHelper.split(classNames[i], '|', 2);
-                    ClassManager.register(Class.forName(name[0]), name[1]);
+                    HproseClassManager.register(Class.forName(name[0]), name[1]);
                 }
             }
             catch (Exception ex) {

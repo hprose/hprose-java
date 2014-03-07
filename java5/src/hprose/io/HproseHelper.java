@@ -13,7 +13,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 7, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -303,10 +303,10 @@ public final class HproseHelper {
     }
 
     public static String getClassName(Class<?> type) {
-        String className = ClassManager.getClassAlias(type);
+        String className = HproseClassManager.getClassAlias(type);
         if (className == null) {
             className = type.getName().replace('.', '_').replace('$', '_');
-            ClassManager.register(type, className);
+            HproseClassManager.register(type, className);
         }
         return className;
     }
@@ -357,8 +357,8 @@ public final class HproseHelper {
     }
 
     public static Class<?> getClass(String className) {
-        if (ClassManager.containsClass(className)) {
-            return ClassManager.getClass(className);
+        if (HproseClassManager.containsClass(className)) {
+            return HproseClassManager.getClass(className);
         }
         StringBuilder cn = new StringBuilder(className);
         ArrayList<Integer> al = new ArrayList<Integer>();
@@ -397,7 +397,7 @@ public final class HproseHelper {
         if (type == null) {
             type = void.class;
         }
-        ClassManager.register(type, className);
+        HproseClassManager.register(type, className);
         return type;
     }
 

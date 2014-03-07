@@ -13,7 +13,7 @@
  *                                                        *
  * ClassManager for Java.                                 *
  *                                                        *
- * LastModified: May 6, 2011                              *
+ * LastModified: Mar 7, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,11 +21,11 @@ package hprose.io;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class ClassManager {
+public final class HproseClassManager {
     private static final ConcurrentHashMap<Class<?>, String> classCache1 = new ConcurrentHashMap<Class<?>, String>();
     private static final ConcurrentHashMap<String, Class<?>> classCache2 = new ConcurrentHashMap<String, Class<?>>();
 
-    private ClassManager() {
+    private HproseClassManager() {
     }
 
     public static void register(Class<?> type, String alias) {

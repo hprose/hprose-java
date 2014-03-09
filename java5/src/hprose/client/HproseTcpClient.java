@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 9, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -208,7 +208,7 @@ public class HproseTcpClient extends HproseClient {
         if (!scheme.equals("tcp") &&
             !scheme.equals("tcp4") &&
             !scheme.equals("tcp6")) {
-            throw new HproseException("This client desn't support " + scheme + " scheme.");
+            throw new HproseException("This client doesn't support " + scheme + " scheme.");
         }
         return new HproseTcpClient(uri, mode);
     }

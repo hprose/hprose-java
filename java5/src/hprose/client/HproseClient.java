@@ -13,7 +13,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 9, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -99,10 +99,10 @@ public abstract class HproseClient implements HproseInvoker {
                 return client;
             }
             catch (Exception ex) {
-                throw new HproseException("This client desn't support " + scheme + " scheme.");
+                throw new HproseException("This client doesn't support " + scheme + " scheme.");
             }
         }
-        throw new HproseException("This client desn't support " + scheme + " scheme.");
+        throw new HproseException("This client doesn't support " + scheme + " scheme.");
     }
 
     public HproseFilter getFilter() {
@@ -566,7 +566,7 @@ public abstract class HproseClient implements HproseInvoker {
                     break;
                 default:
                     stream.rewind();
-                    throw new HproseException("Wrong Resoponse: \r\n" + HproseHelper.readWrongInfo(stream));
+                    throw new HproseException("Wrong Response: \r\n" + HproseHelper.readWrongInfo(stream));
             }
         }
         return result;

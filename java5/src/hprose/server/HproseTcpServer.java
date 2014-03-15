@@ -11,9 +11,9 @@
  *                                                        *
  * HproseTcpServer.java                                   *
  *                                                        *
- * hprose server class for Java.                          *
+ * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,8 +41,8 @@ public class HproseTcpServer extends HproseService {
         }
         @Override
         public void run() {
-            try {
-                while (!interrupted()) {
+            while (!interrupted()) {
+                try {
                     int n = selector.select();
                     if (n == 0) {
                         continue;
@@ -73,9 +73,9 @@ public class HproseTcpServer extends HproseService {
                         }
                     }
                 }
-            }
-            catch (Throwable ex) {
-                server.fireErrorEvent(ex);
+                catch (Throwable ex) {
+                    server.fireErrorEvent(ex);
+                }
             }
         }
     }

@@ -13,7 +13,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Mar 15, 2014                             *
+ * LastModified: Mar 17, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -63,18 +63,18 @@ public class HproseTcpServer extends HproseService {
                             SocketChannel socketChannel = (SocketChannel) key.channel();
                             try {
                                 HproseHelper.sendDataOverTcp(socketChannel,
-                                    server.handle(HproseHelper.receiveDataOverTcp(socketChannel)));
+                                    server.handle(HproseHelper.receiveDataOverTcp(socketChannel), socketChannel));
                                 socketChannel.register(selector, SelectionKey.OP_READ);
                             }
                             catch (IOException e) {
+                                server.fireErrorEvent(e, socketChannel);
                                 socketChannel.close();
-                                server.fireErrorEvent(e);
                             }
                         }
                     }
                 }
                 catch (Throwable ex) {
-                    server.fireErrorEvent(ex);
+                    server.fireErrorEvent(ex, null);
                 }
             }
         }
@@ -140,7 +140,7 @@ public class HproseTcpServer extends HproseService {
                 serverChannel.close();
             }
             catch (IOException ex) {
-                fireErrorEvent(ex);
+                fireErrorEvent(ex, null);
             }
             selector = null;
         }

@@ -13,7 +13,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Mar 9, 2014                              *
+ * LastModified: Mar 17, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -498,7 +498,7 @@ public abstract class HproseClient implements HproseInvoker {
         stream.write(HproseTags.TagEnd);
         stream.flip();
         if (filter != null) {
-            stream.buffer = filter.outputFilter(stream.buffer);
+            stream.buffer = filter.outputFilter(stream.buffer, this);
             stream.flip();
         }
         return stream;
@@ -524,7 +524,7 @@ public abstract class HproseClient implements HproseInvoker {
     private Object doInput(ByteBufferStream stream, Object[] arguments, Type returnType, HproseResultMode resultMode) throws IOException {
         stream.flip();
         if (filter != null) {
-            stream.buffer = filter.inputFilter(stream.buffer);
+            stream.buffer = filter.inputFilter(stream.buffer, this);
             stream.flip();
         }
         int tag = stream.buffer.get(stream.buffer.limit() - 1);

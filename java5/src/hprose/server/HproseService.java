@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 17, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -455,10 +455,10 @@ public abstract class HproseService {
         getGlobalMethods().addMissingMethod(methodName, type, mode, simple);
     }
 
-    private ByteBufferStream responseEnd(ByteBufferStream data) throws IOException {
+    private ByteBufferStream responseEnd(ByteBufferStream data, Object context) throws IOException {
         data.flip();
         if (filter != null) {
-            data.buffer = filter.outputFilter(data.buffer);
+            data.buffer = filter.outputFilter(data.buffer, context);
             data.flip();
         }
         return data;
@@ -480,16 +480,16 @@ public abstract class HproseService {
         return e.toString();
     }
 
-    protected ByteBufferStream sendError(Throwable e) throws IOException {
+    protected ByteBufferStream sendError(Throwable e, Object context) throws IOException {
         if (event != null) {
-            event.onSendError(e);
+            event.onSendError(e, context);
         }
         ByteBufferStream data = new ByteBufferStream();
         HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, true);
         data.write(HproseTags.TagError);
         writer.writeString(getErrorMessage(e));
         data.write(HproseTags.TagEnd);
-        return responseEnd(data);
+        return responseEnd(data, context);
     }
 
     protected ByteBufferStream doInvoke(ByteBufferStream stream, HproseMethods methods, Object context) throws Throwable {
@@ -542,7 +542,7 @@ public abstract class HproseService {
                 arguments = new Object[0];
             }
             if (event != null) {
-                event.onBeforeInvoke(name, arguments, byRef);
+                event.onBeforeInvoke(name, arguments, byRef, context);
             }
             if (remoteMethod == null) {
                 args = arguments;
@@ -586,11 +586,11 @@ public abstract class HproseService {
                 System.arraycopy(args, 0, arguments, 0, count);
             }
             if (event != null) {
-                event.onAfterInvoke(name, arguments, byRef, result);
+                event.onAfterInvoke(name, arguments, byRef, result, context);
             }
             if (remoteMethod.mode == HproseResultMode.RawWithEndTag) {
                 data.write((byte[])result);
-                return responseEnd(data);
+                return responseEnd(data, context);
             }
             else if (remoteMethod.mode == HproseResultMode.Raw) {
                 data.write((byte[])result);
@@ -613,10 +613,10 @@ public abstract class HproseService {
             }
         } while (tag == HproseTags.TagCall);
         data.write(HproseTags.TagEnd);
-        return responseEnd(data);
+        return responseEnd(data, context);
     }
 
-    protected ByteBufferStream doFunctionList(HproseMethods methods) throws IOException {
+    protected ByteBufferStream doFunctionList(HproseMethods methods, Object context) throws IOException {
         ArrayList<String> names = new ArrayList<String>();
         names.addAll(getGlobalMethods().getAllNames());
         if (methods != null) {
@@ -627,24 +627,24 @@ public abstract class HproseService {
         data.write(HproseTags.TagFunctions);
         writer.writeList(names);
         data.write(HproseTags.TagEnd);
-        return responseEnd(data);
+        return responseEnd(data, context);
     }
 
-    protected void fireErrorEvent(Throwable e) {
+    protected void fireErrorEvent(Throwable e, Object context) {
         if (event != null) {
-            event.onSendError(e);
+            event.onSendError(e, context);
         }
     }
 
-    protected ByteBufferStream handle(ByteBufferStream stream) throws IOException {
-        return handle(stream, null, null);
+    protected ByteBufferStream handle(ByteBufferStream stream, Object context) throws IOException {
+        return handle(stream, null, context);
     }
 
     protected ByteBufferStream handle(ByteBufferStream stream, HproseMethods methods, Object context) throws IOException {
         try {
             stream.flip();
             if (filter != null) {
-                stream.buffer = filter.inputFilter(stream.buffer);
+                stream.buffer = filter.inputFilter(stream.buffer, context);
                 stream.flip();
             }
             int tag = stream.read();
@@ -652,13 +652,13 @@ public abstract class HproseService {
                 case HproseTags.TagCall:
                     return doInvoke(stream, methods, context);
                 case HproseTags.TagEnd:
-                    return doFunctionList(methods);
+                    return doFunctionList(methods, context);
                 default:
-                    return sendError(new HproseException("Wrong Request: \r\n" + HproseHelper.readWrongInfo(stream)));
+                    return sendError(new HproseException("Wrong Request: \r\n" + HproseHelper.readWrongInfo(stream)), context);
             }
         }
         catch (Throwable e) {
-            return sendError(e);
+            return sendError(e, context);
         }
     }
 }

@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 17, 2014                             *
+ * LastModified: Mar 18, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -43,6 +43,11 @@ public abstract class HproseService {
     protected HproseServiceEvent event = null;
     protected HproseMethods globalMethods = null;
     private HproseFilter filter = null;
+    private static ThreadLocal<Object> currentContext = new ThreadLocal<Object>();
+
+    public static Object getCurrentContext() {
+        return currentContext.get();
+    }
 
     public HproseMethods getGlobalMethods() {
         if (globalMethods == null) {
@@ -642,6 +647,7 @@ public abstract class HproseService {
 
     protected ByteBufferStream handle(ByteBufferStream stream, HproseMethods methods, Object context) throws IOException {
         try {
+            currentContext.set(context);
             stream.flip();
             if (filter != null) {
                 stream.buffer = filter.inputFilter(stream.buffer, context);
@@ -659,6 +665,9 @@ public abstract class HproseService {
         }
         catch (Throwable e) {
             return sendError(e, context);
+        }
+        finally {
+            currentContext.remove();
         }
     }
 }

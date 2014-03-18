@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Mar 17, 2014                             *
+ * LastModified: Mar 18, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,10 +33,10 @@ public class HproseHttpService extends HproseService {
     private boolean crossDomainEnabled = false;
     private boolean p3pEnabled = false;
     private boolean getEnabled = true;
-    private static ThreadLocal<HttpContext> context = new ThreadLocal<HttpContext>();
+    private static ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
 
     public static HttpContext getCurrentContext() {
-        return context.get();
+        return currentContext.get();
     }
 
     @Override
@@ -142,7 +142,7 @@ public class HproseHttpService extends HproseService {
 
     public void handle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
         try {
-            context.set(httpContext);
+            currentContext.set(httpContext);
             sendHeader(httpContext);
             String method = httpContext.getRequest().getMethod();
             if (method.equals("GET") && getEnabled) {
@@ -158,7 +158,7 @@ public class HproseHttpService extends HproseService {
             }
         }
         finally {
-            context.remove();
+            currentContext.remove();
         }
     }
 }

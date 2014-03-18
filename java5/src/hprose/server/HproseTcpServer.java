@@ -13,14 +13,16 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Mar 17, 2014                             *
+ * LastModified: Mar 18, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseMethods;
 import hprose.io.HproseHelper;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URI;
@@ -96,6 +98,24 @@ public class HproseTcpServer extends HproseService {
         this.port = port;
     }
 
+    @Override
+    public HproseMethods getGlobalMethods() {
+        if (globalMethods == null) {
+            globalMethods = new HproseTcpMethods();
+        }
+        return globalMethods;
+    }
+
+    @Override
+    public void setGlobalMethods(HproseMethods methods) {
+        if (methods instanceof HproseTcpMethods) {
+            this.globalMethods = methods;
+        }
+        else {
+            throw new ClassCastException("methods must be a HproseTcpMethods instance");
+        }
+    }
+
     public String getHost() {
         return host;
     }
@@ -110,6 +130,21 @@ public class HproseTcpServer extends HproseService {
 
     public void setPort(int value) {
         port = value;
+    }
+
+    @Override
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, int count, Object context) {
+        SocketChannel channel = (SocketChannel)context;
+        if (argumentTypes.length != count) {
+            Object[] args = new Object[argumentTypes.length];
+            System.arraycopy(arguments, 0, args, 0, count);
+            Class<?> argType = (Class<?>) argumentTypes[count];
+            if (argType.equals(SocketChannel.class)) {
+                args[count] = channel;
+            }
+            return args;
+        }
+        return arguments;
     }
 
     public boolean isStarted() {

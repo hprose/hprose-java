@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 18, 2014                             *
+ * LastModified: Mar 20, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,11 +38,11 @@ import java.util.ArrayList;
 
 public abstract class HproseService {
 
+    private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode = HproseMode.MemberMode;
     private boolean debugEnabled = false;
     protected HproseServiceEvent event = null;
     protected HproseMethods globalMethods = null;
-    private HproseFilter filter = null;
     private static ThreadLocal<Object> currentContext = new ThreadLocal<Object>();
 
     public static Object getCurrentContext() {
@@ -85,11 +85,27 @@ public abstract class HproseService {
     }
 
     public HproseFilter getFilter() {
-        return filter;
+        if (filters.isEmpty()) {
+            return null;
+        }
+        return filters.get(0);
     }
 
     public void setFilter(HproseFilter filter) {
-        this.filter = filter;
+        if (!filters.isEmpty()) {
+            filters.clear();
+        }
+        if (filter != null) {
+            filters.add(filter);
+        }
+    }
+
+    public void addFilter(HproseFilter filter) {
+        filters.add(filter);
+    }
+
+    public boolean removeFilter(HproseFilter filter) {
+        return filters.remove(filter);
     }
 
     public void add(Method method, Object obj, String aliasName) {
@@ -462,8 +478,8 @@ public abstract class HproseService {
 
     private ByteBufferStream responseEnd(ByteBufferStream data, Object context) throws IOException {
         data.flip();
-        if (filter != null) {
-            data.buffer = filter.outputFilter(data.buffer, context);
+        for (int i = filters.size() - 1; i >= 0; i--) {
+            data.buffer = filters.get(i).outputFilter(data.buffer, context);
             data.flip();
         }
         return data;
@@ -649,8 +665,8 @@ public abstract class HproseService {
         try {
             currentContext.set(context);
             stream.flip();
-            if (filter != null) {
-                stream.buffer = filter.inputFilter(stream.buffer, context);
+            for (int i = 0, n = filters.size(); i < n; i++) {
+                stream.buffer = filters.get(i).inputFilter(stream.buffer, context);
                 stream.flip();
             }
             int tag = stream.read();

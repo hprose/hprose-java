@@ -13,12 +13,13 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Mar 7, 2014                              *
+ * LastModified: Mar 20, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseFilter;
 import hprose.common.HproseMethods;
 import hprose.io.HproseClassManager;
 import hprose.io.HproseHelper;
@@ -85,6 +86,18 @@ public class HproseServlet extends HttpServlet {
                 Class<?> type = Class.forName(param);
                 if (HproseServiceEvent.class.isAssignableFrom(type)) {
                     service.setEvent((HproseServiceEvent) type.newInstance());
+                }
+            }
+            catch (Exception ex) {
+                throw new ServletException(ex);
+            }
+        }
+        param = config.getInitParameter("filter");
+        if (param != null) {
+            try {
+                Class<?> type = Class.forName(param);
+                if (HproseFilter.class.isAssignableFrom(type)) {
+                    service.setFilter((HproseFilter) type.newInstance());
                 }
             }
             catch (Exception ex) {

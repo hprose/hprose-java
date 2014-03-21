@@ -34,11 +34,9 @@ public class TCPSessionServer {
                 Session.sidMap.put(context, sid);
                 return istream.slice();
             }
-            else {
-                int sid = Session.sessions.size();
-                Session.sidMap.put(context, sid);
-                Session.sessions.add(new HashMap<String, Object>());
-            }
+            int sid = Session.sessions.size();
+            Session.sidMap.put(context, sid);
+            Session.sessions.add(new HashMap<String, Object>());
             istream.rewind();
             return istream;
         }

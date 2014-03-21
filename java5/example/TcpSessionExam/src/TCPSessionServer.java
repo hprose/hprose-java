@@ -32,7 +32,6 @@ public class TCPSessionServer {
                           ((int)istream.get()) << 8  |
                            (int)istream.get();
                 Session.sidMap.put(context, sid);
-                ByteBuffer buf = ByteBuffer.allocateDirect(len);
                 return istream.slice();
             }
             else {

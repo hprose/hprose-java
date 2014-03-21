@@ -21,7 +21,6 @@ public class TCPSessionClient {
                           ((int)istream.get()) << 8  |
                            (int)istream.get();
                 sidMap.put(context, sid);
-                ByteBuffer buf = ByteBuffer.allocateDirect(len);
                 return istream.slice();
             }
             istream.rewind();

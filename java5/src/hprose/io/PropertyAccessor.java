@@ -13,7 +13,7 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Dec 26, 2012                             *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,8 +23,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 final class PropertyAccessor extends MemberAccessor {
-    private Method getter;
-    private Method setter;
+    private final Method getter;
+    private final Method setter;
     private static final Object[] nullArgs = new Object[0];
 
     public PropertyAccessor(Method getter, Method setter) {

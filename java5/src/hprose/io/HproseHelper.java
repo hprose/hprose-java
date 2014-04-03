@@ -13,7 +13,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Mar 7, 2014                              *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -49,13 +50,13 @@ public final class HproseHelper {
     private static final ConcurrentHashMap<Class<?>, SoftReference<Constructor<?>>> ctorCache = new ConcurrentHashMap<Class<?>, SoftReference<Constructor<?>>>();
     private static final ConcurrentHashMap<Constructor<?>, SoftReference<Object[]>> argsCache = new ConcurrentHashMap<Constructor<?>, SoftReference<Object[]>>();
     private static final Object[] nullArgs = new Object[0];
-    private static final Byte byteZero = Byte.valueOf((byte) 0);
-    private static final Short shortZero = Short.valueOf((short) 0);
-    private static final Integer intZero = Integer.valueOf(0);
-    private static final Long longZero = Long.valueOf((long) 0);
-    private static final Character charZero = Character.valueOf((char) 0);
-    private static final Float floatZero = new Float((float) 0);
-    private static final Double doubleZero = new Double((double) 0);
+    private static final Byte byteZero = (byte) 0;
+    private static final Short shortZero = (short) 0;
+    private static final Integer intZero = 0;
+    private static final Long longZero = (long) 0;
+    private static final Character charZero = (char) 0;
+    private static final Float floatZero = (float) 0;
+    private static final Double doubleZero = (double) 0;
     private static final char[] base64EncodeChars = new char[] {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
         'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -140,7 +141,7 @@ public final class HproseHelper {
         ArrayList<Integer> pos = new ArrayList<Integer>();
         int i = -1;
         while ((i = s.indexOf((int) c, i + 1)) > 0) {
-            pos.add(Integer.valueOf(i));
+            pos.add(i);
         }
         int n = pos.size();
         int[] p = new int[n];
@@ -325,7 +326,7 @@ public final class HproseHelper {
             try {
                 return Class.forName(className.toString());
             }
-            catch (Exception e) {
+            catch (ClassNotFoundException e) {
                 return null;
             }
         }
@@ -350,7 +351,7 @@ public final class HproseHelper {
             try {
                 return Class.forName(className.toString());
             }
-            catch (Exception e) {
+            catch (ClassNotFoundException e) {
                 return null;
             }
         }
@@ -364,7 +365,7 @@ public final class HproseHelper {
         ArrayList<Integer> al = new ArrayList<Integer>();
         int p = cn.indexOf("_");
         while (p > -1) {
-            al.add(Integer.valueOf(p));
+            al.add(p);
             p = cn.indexOf("_", p + 1);
         }
         Class type = null;
@@ -391,7 +392,7 @@ public final class HproseHelper {
             try {
                 type = Class.forName(className);
             }
-            catch (Exception e) {
+            catch (ClassNotFoundException e) {
             }
         }
         if (type == null) {
@@ -589,7 +590,7 @@ public final class HproseHelper {
         try {
             return new String(bytes, "UTF-8");
         }
-        catch (Exception e) {
+        catch (UnsupportedEncodingException e) {
             return new String(bytes);
         }
     }

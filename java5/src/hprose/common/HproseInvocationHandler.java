@@ -13,7 +13,7 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,16 +26,16 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class HproseInvocationHandler implements InvocationHandler {
-    private static final Byte byteZero = Byte.valueOf((byte) 0);
-    private static final Short shortZero = Short.valueOf((short) 0);
-    private static final Integer intZero = Integer.valueOf(0);
-    private static final Long longZero = Long.valueOf((long) 0);
-    private static final Character charZero = Character.valueOf((char) 0);
-    private static final Float floatZero = new Float((float) 0);
-    private static final Double doubleZero = new Double((double) 0);
+    private static final Byte byteZero = (byte) 0;
+    private static final Short shortZero = (short) 0;
+    private static final Integer intZero = 0;
+    private static final Long longZero = (long) 0;
+    private static final Character charZero = (char) 0;
+    private static final Float floatZero = (float) 0;
+    private static final Double doubleZero = (double) 0;
 
-    private HproseInvoker client;
-    private String ns;
+    private final HproseInvoker client;
+    private final String ns;
 
     public HproseInvocationHandler(HproseInvoker client, String ns) {
         this.client = client;

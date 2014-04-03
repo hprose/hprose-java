@@ -13,7 +13,7 @@
  *                                                        *
  * hprose remote methods class for Java.                  *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,7 +38,7 @@ public class HproseMethods {
         if (methods == null) {
             return null;
         }
-        return methods.get(Integer.valueOf(paramCount));
+        return methods.get(paramCount);
     }
 
     public Collection<String> getAllNames() {
@@ -70,7 +70,7 @@ public class HproseMethods {
             return;
         }
         int i = getCount(method.paramTypes);
-        methods.put(Integer.valueOf(i), method);
+        methods.put(i, method);
         remoteMethods.put(name, methods);
     }
 

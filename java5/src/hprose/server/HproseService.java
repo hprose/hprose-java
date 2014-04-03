@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 21, 2014                             *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -43,7 +43,7 @@ public abstract class HproseService {
     private boolean debugEnabled = false;
     protected HproseServiceEvent event = null;
     protected HproseMethods globalMethods = null;
-    private static ThreadLocal<Object> currentContext = new ThreadLocal<Object>();
+    private static final ThreadLocal<Object> currentContext = new ThreadLocal<Object>();
 
     public static Object getCurrentContext() {
         return currentContext.get();

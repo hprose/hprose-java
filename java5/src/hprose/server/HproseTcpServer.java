@@ -13,7 +13,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Mar 18, 2014                             *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,8 +35,8 @@ import java.util.Iterator;
 
 public class HproseTcpServer extends HproseService {
     class HandlerThread extends Thread {
-        private Selector selector;
-        private HproseTcpServer server;
+        private final Selector selector;
+        private final HproseTcpServer server;
         public HandlerThread(HproseTcpServer server, Selector selector) {
             this.server = server;
             this.selector = selector;
@@ -75,7 +75,7 @@ public class HproseTcpServer extends HproseService {
                         }
                     }
                 }
-                catch (Throwable ex) {
+                catch (IOException ex) {
                     server.fireErrorEvent(ex, null);
                 }
             }

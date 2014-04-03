@@ -13,7 +13,7 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Dec 26, 2012                             *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,7 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 final class FieldAccessor extends MemberAccessor {
-    private Field accessor;
+    private final Field accessor;
 
     public FieldAccessor(Field accessor) {
         accessor.setAccessible(true);

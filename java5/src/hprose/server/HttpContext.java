@@ -13,7 +13,7 @@
  *                                                        *
  * http application class for Java.                       *
  *                                                        *
- * LastModified: May 16, 2010                             *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,10 +26,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 public class HttpContext {
-    private ServletContext application;
-    private ServletConfig config;
-    private HttpServletRequest request;
-    private HttpServletResponse response;
+    private final ServletContext application;
+    private final ServletConfig config;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
 
     public HttpContext(HttpServletRequest request,
                        HttpServletResponse response,

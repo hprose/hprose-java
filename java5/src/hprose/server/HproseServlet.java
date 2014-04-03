@@ -13,7 +13,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Mar 20, 2014                             *
+ * LastModified: Apr 4, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 public class HproseServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1716958719284073368L;
-    private HproseHttpService service = new HproseHttpService();
+    private final HproseHttpService service = new HproseHttpService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -157,7 +157,7 @@ public class HproseServlet extends HttpServlet {
                     }
                 }
             }
-            catch (Exception ex) {
+            catch (ClassNotFoundException ex) {
                 throw new ServletException(ex);
             }
         }
@@ -170,7 +170,7 @@ public class HproseServlet extends HttpServlet {
                     HproseClassManager.register(Class.forName(name[0]), name[1]);
                 }
             }
-            catch (Exception ex) {
+            catch (ClassNotFoundException ex) {
                 throw new ServletException(ex);
             }
         }

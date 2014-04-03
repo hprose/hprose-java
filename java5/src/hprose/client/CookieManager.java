@@ -13,7 +13,7 @@
  *                                                        *
  * cookie manager class for Java.                         *
  *                                                        *
- * LastModified: Jan 4, 2013                              *
+ * LastModified: Apr 3, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -82,7 +82,7 @@ public class CookieManager {
         return calendar;
     }
 
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>> container = new ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>> container = new ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, String>>>();
 
     public CookieManager() {
     }

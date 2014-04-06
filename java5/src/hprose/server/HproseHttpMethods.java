@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http methods class for Java.                    *
  *                                                        *
- * LastModified: May 11, 2011                             *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -40,7 +40,7 @@ public class HproseHttpMethods extends HproseMethods {
                 paramType.equals(HttpSession.class) ||
                 paramType.equals(ServletContext.class) ||
                 paramType.equals(ServletConfig.class)) {
-                i--;
+                --i;
             }
         }
         return i;

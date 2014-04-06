@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http methods class for Java.                    *
  *                                                        *
- * LastModified: May 11, 2011                             *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,7 +31,7 @@ public class HproseTcpMethods extends HproseMethods {
         if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
             Class<?> paramType = (Class<?>) paramTypes[i - 1];
             if (paramType.equals(SocketChannel.class)) {
-                i--;
+                --i;
             }
         }
         return i;

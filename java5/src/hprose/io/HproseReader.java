@@ -13,7 +13,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -442,7 +442,7 @@ public final class HproseReader {
     private char[] readChars() throws IOException {
         int count = readInt(HproseTags.TagQuote);
         char[] buf = new char[count];
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             int c = stream.read();
             switch (c >>> 4) {
                 case 0:
@@ -485,8 +485,8 @@ public final class HproseReader {
                                 ((c3 & 0x3f) << 6) |
                                 (c4 & 0x3f) - 0x10000;
                         if (0 <= s && s <= 0xfffff) {
-                            buf[i++] = (char)(((s >> 10) & 0x03ff) | 0xd800);
-                            buf[i] = (char)((s & 0x03ff) | 0xdc00);
+                            buf[i] = (char)(((s >> 10) & 0x03ff) | 0xd800);
+                            buf[++i] = (char)((s & 0x03ff) | 0xdc00);
                             break;
                         }
                     }
@@ -512,7 +512,7 @@ public final class HproseReader {
         String[] memberNames = membersref.get(c);
         refer.set(map);
         int count = memberNames.length;
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             map.put(memberNames[i], unserialize());
         }
         stream.read();
@@ -527,7 +527,7 @@ public final class HproseReader {
         refer.set(obj);
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
         int count = readInt(HproseTags.TagOpenbrace);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString());
             if (member != null) {
                 Object value = unserialize(member.cls, member.type, member.typecode);
@@ -550,7 +550,7 @@ public final class HproseReader {
         String className = readCharsAsString();
         int count = readInt(HproseTags.TagOpenbrace);
         String[] memberNames = new String[count];
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             memberNames[i] = readString();
         }
         stream.read();
@@ -637,7 +637,7 @@ public final class HproseReader {
     public UUID readUUIDWithoutTag() throws IOException {
         checkTag(HproseTags.TagOpenbrace);
         char[] buf = new char[36];
-        for (int i = 0; i < 36; i++) {
+        for (int i = 0; i < 36; ++i) {
             buf[i] = (char) stream.read();
         }
         checkTag(HproseTags.TagClosebrace);
@@ -651,7 +651,7 @@ public final class HproseReader {
         int count = readInt(HproseTags.TagOpenbrace);
         ArrayList a = new ArrayList(count);
         refer.set(a);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             a.add(unserialize());
         }
         stream.read();
@@ -663,7 +663,7 @@ public final class HproseReader {
         int count = readInt(HproseTags.TagOpenbrace);
         HashMap map = new HashMap(count);
         refer.set(map);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             Object key = unserialize();
             Object value = unserialize();
             map.put(key, value);
@@ -685,7 +685,7 @@ public final class HproseReader {
         if (type == null) {
             HashMap<String, Object> map = new HashMap<String, Object>(count);
             refer.set(map);
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < count; ++i) {
                 map.put(memberNames[i], unserialize());
             }
             stream.read();
@@ -695,7 +695,7 @@ public final class HproseReader {
             Object obj = HproseHelper.newInstance(type);
             refer.set(obj);
             Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
                     Object value = unserialize(member.cls, member.type, member.typecode);
@@ -1530,7 +1530,7 @@ public final class HproseReader {
 
     public void readArray(Type[] types, Object[] a, int count) throws IOException {
         refer.set(a);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             a[i] = unserialize(types[i]);
         }
         stream.read();
@@ -1539,7 +1539,7 @@ public final class HproseReader {
     public Object[] readArray(int count) throws IOException {
         Object[] a = new Object[count];
         refer.set(a);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             a[i] = unserialize();
         }
         stream.read();
@@ -1564,7 +1564,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 boolean[] a = new boolean[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readBoolean();
                 }
                 stream.read();
@@ -1585,7 +1585,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 char[] a = new char[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readChar();
                 }
                 stream.read();
@@ -1616,7 +1616,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 byte[] a = new byte[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readByte();
                 }
                 stream.read();
@@ -1644,7 +1644,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 short[] a = new short[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readShort();
                 }
                 stream.read();
@@ -1663,7 +1663,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 int[] a = new int[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readInt();
                 }
                 stream.read();
@@ -1682,7 +1682,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 long[] a = new long[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readLong();
                 }
                 stream.read();
@@ -1701,7 +1701,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 float[] a = new float[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readFloat();
                 }
                 stream.read();
@@ -1720,7 +1720,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 double[] a = new double[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readDouble();
                 }
                 stream.read();
@@ -1739,7 +1739,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 String[] a = new String[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readString();
                 }
                 stream.read();
@@ -1758,7 +1758,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 BigInteger[] a = new BigInteger[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readBigInteger();
                 }
                 stream.read();
@@ -1777,7 +1777,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 Date[] a = new Date[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readDate();
                 }
                 stream.read();
@@ -1796,7 +1796,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 Time[] a = new Time[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readTime();
                 }
                 stream.read();
@@ -1815,7 +1815,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 Timestamp[] a = new Timestamp[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readTimestamp();
                 }
                 stream.read();
@@ -1834,7 +1834,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 java.util.Date[] a = new java.util.Date[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readDateTime();
                 }
                 stream.read();
@@ -1853,7 +1853,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 Calendar[] a = new Calendar[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readCalendar();
                 }
                 stream.read();
@@ -1872,7 +1872,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 BigDecimal[] a = new BigDecimal[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readBigDecimal();
                 }
                 stream.read();
@@ -1891,7 +1891,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 StringBuilder[] a = new StringBuilder[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readStringBuilder();
                 }
                 stream.read();
@@ -1910,7 +1910,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 StringBuffer[] a = new StringBuffer[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readStringBuffer();
                 }
                 stream.read();
@@ -1929,7 +1929,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 UUID[] a = new UUID[count];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readUUID();
                 }
                 stream.read();
@@ -1948,7 +1948,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 char[][] a = new char[count][];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readCharArray();
                 }
                 stream.read();
@@ -1967,7 +1967,7 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 byte[][] a = new byte[count][];
                 refer.set(a);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = readByteArray();
                 }
                 stream.read();
@@ -1988,7 +1988,7 @@ public final class HproseReader {
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 refer.set(a);
                 int typecode = TypeCode.get(componentClass);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a[i] = (T)unserialize(componentClass, componentType, typecode);
                 }
                 stream.read();
@@ -2019,7 +2019,7 @@ public final class HproseReader {
                     componentClass = Object.class;
                 }
                 int typecode = TypeCode.get(componentClass);
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; ++i) {
                     a.add(unserialize(componentClass, componentType, typecode));
                 }
                 stream.read();
@@ -2057,7 +2057,7 @@ public final class HproseReader {
                 keyClass.equals(Object.class)) {
                 throw castError(tagToString(HproseTags.TagList), cls);
             }
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < count; ++i) {
                 Object key = (keyClass.equals(String.class) ? String.valueOf(i) : i);
                 Object value = unserialize(valueClass, valueType, valueTypecode);
                 m.put(key, value);
@@ -2089,7 +2089,7 @@ public final class HproseReader {
         }
         int keyTypecode = TypeCode.get(keyClass);
         int valueTypecode = TypeCode.get(valueClass);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             Object key = unserialize(keyClass, keyType, keyTypecode);
             Object value = unserialize(valueClass, valueType, valueTypecode);
             m.put(key, value);
@@ -2397,7 +2397,7 @@ public final class HproseReader {
             tag = stream.read();
             ostream.write(tag);
         } while (tag != HproseTags.TagQuote);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             tag = stream.read();
             switch (tag >>> 4) {
                 case 0:
@@ -2433,6 +2433,7 @@ public final class HproseReader {
                         ostream.write(stream.read());
                         ostream.write(stream.read());
                         ostream.write(stream.read());
+                        ++i;
                         break;
                     }
                 }

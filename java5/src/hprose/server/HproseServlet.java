@@ -13,7 +13,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Apr 4, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -109,7 +109,7 @@ public class HproseServlet extends HttpServlet {
         if (param != null) {
             try {
                 String[] classNames = HproseHelper.split(param, ',', 0);
-                for (int i = 0, n = classNames.length; i < n; i++) {
+                for (int i = 0, n = classNames.length; i < n; ++i) {
                     String[] name = HproseHelper.split(classNames[i], '|', 3);
                     Class<?> type = Class.forName(name[0]);
                     Object obj = type.newInstance();
@@ -146,7 +146,7 @@ public class HproseServlet extends HttpServlet {
         if (param != null) {
             try {
                 String[] classNames = HproseHelper.split(param, ',', 0);
-                for (int i = 0, n = classNames.length; i < n; i++) {
+                for (int i = 0, n = classNames.length; i < n; ++i) {
                     String[] name = HproseHelper.split(classNames[i], '|', 2);
                     Class<?> type = Class.forName(name[0]);
                     if (name.length == 1) {
@@ -165,7 +165,7 @@ public class HproseServlet extends HttpServlet {
         if (param != null) {
             try {
                 String[] classNames = HproseHelper.split(param, ',', 0);
-                for (int i = 0, n = classNames.length; i < n; i++) {
+                for (int i = 0, n = classNames.length; i < n; ++i) {
                     String[] name = HproseHelper.split(classNames[i], '|', 2);
                     HproseClassManager.register(Class.forName(name[0]), name[1]);
                 }

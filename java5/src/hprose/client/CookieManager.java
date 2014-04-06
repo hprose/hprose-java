@@ -13,7 +13,7 @@
  *                                                        *
  * cookie manager class for Java.                         *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -91,7 +91,7 @@ public class CookieManager {
         if (cookieList == null) {
             return;
         }
-        for (int i = 0, n = cookieList.size(); i < n; i++) {
+        for (int i = 0, n = cookieList.size(); i < n; ++i) {
             String cookieString = cookieList.get(i);
             if (cookieString.equals("")) {
                 continue;
@@ -161,7 +161,7 @@ public class CookieManager {
                         }
                     }
                 }
-                for (int i = 0, n = names.size(); i < n; i++) {
+                for (int i = 0, n = names.size(); i < n; ++i) {
                     container.get(domain).remove(names.get(i));
                 }
             }

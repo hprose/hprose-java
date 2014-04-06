@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -192,7 +192,7 @@ public class HproseHttpClient extends HproseClient {
                 key.equalsIgnoreCase("set-cookie2")) {
                 cookieList.add(conn.getHeaderField(i));
             }
-            i++;
+            ++i;
         }
         cookieManager.setCookie(cookieList, url.getHost());
         InputStream istream = conn.getInputStream();

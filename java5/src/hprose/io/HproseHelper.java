@@ -410,7 +410,7 @@ public final class HproseHelper {
         }
         Class<?>[] params = ctor.getParameterTypes();
         args = new Object[params.length];
-        for (int i = 0; i < params.length; i++) {
+        for (int i = 0; i < params.length; ++i) {
             Class<?> type = params[i];
             if (int.class.equals(type) || Integer.class.equals(type)) {
                 args[i] = intZero;

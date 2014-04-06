@@ -13,7 +13,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -478,7 +478,7 @@ public abstract class HproseService {
 
     private ByteBufferStream responseEnd(ByteBufferStream data, Object context) throws IOException {
         data.flip();
-        for (int i = 0, n = filters.size(); i < n; i++) {
+        for (int i = 0, n = filters.size(); i < n; ++i) {
             data.buffer = filters.get(i).outputFilter(data.buffer, context);
             data.flip();
         }
@@ -493,7 +493,7 @@ public abstract class HproseService {
         if (debugEnabled) {
             StackTraceElement[] st = e.getStackTrace();
             StringBuffer es = new StringBuffer(e.toString()).append("\r\n");
-            for (int i = 0, n = st.length; i < n; i++) {
+            for (int i = 0, n = st.length; i < n; ++i) {
                 es.append(st[i].toString()).append("\r\n");
             }
             return es.toString();
@@ -665,7 +665,7 @@ public abstract class HproseService {
         try {
             currentContext.set(context);
             stream.flip();
-            for (int i = filters.size() - 1; i >= 0; i--) {
+            for (int i = filters.size() - 1; i >= 0; --i) {
                 stream.buffer = filters.get(i).inputFilter(stream.buffer, context);
                 stream.flip();
             }

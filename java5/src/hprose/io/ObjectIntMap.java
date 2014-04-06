@@ -13,7 +13,7 @@
  *                                                        *
  * ObjectIntMap class for Java.                           *
  *                                                        *
- * LastModified: Dec 18, 2012                             *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -100,7 +100,7 @@ public final class ObjectIntMap {
 
     public void clear() {
         Entry[] tab = table;
-        for (int i = 0; i < tab.length; i++) {
+        for (int i = 0; i < tab.length; ++i) {
             tab[i] = null;
         }
         size = 0;

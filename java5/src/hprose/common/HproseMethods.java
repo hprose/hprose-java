@@ -13,7 +13,7 @@
  *                                                        *
  * hprose remote methods class for Java.                  *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 6, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -234,7 +234,7 @@ public class HproseMethods {
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple) {
         Method[] methods = type.getMethods();
-        for (int i = 0; i < methodNames.length; i++) {
+        for (int i = 0; i < methodNames.length; ++i) {
             String methodName = methodNames[i];
             String aliasName = aliasNames[i];
             for (Method method : methods) {
@@ -252,7 +252,7 @@ public class HproseMethods {
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         String[] aliasNames = new String[methodNames.length];
-        for (int i = 0; i < methodNames.length; i++) {
+        for (int i = 0; i < methodNames.length; ++i) {
             aliasNames[i] = aliasPrefix + "_" + methodNames[i];
         }
         addMethods(methodNames, obj, type, aliasNames, mode, simple);

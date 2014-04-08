@@ -13,7 +13,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Apr 8, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -812,7 +812,7 @@ public final class HproseReader {
             case HproseTags.TagTrue: return true;
             case HproseTags.TagFalse: return false;
             case HproseTags.TagNaN: return true;
-            case HproseTags.TagInfinity: return true;
+            case HproseTags.TagInfinity: stream.read(); return true;
             case HproseTags.TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar()) > -1;
             case HproseTags.TagString: return Boolean.parseBoolean(readStringWithoutTag());
             case HproseTags.TagRef: return Boolean.parseBoolean(readRef(String.class));

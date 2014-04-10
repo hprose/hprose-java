@@ -13,7 +13,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Apr 10, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -67,7 +67,12 @@ public class ByteBufferStream {
     }
 
     public int read() throws IOException {
-        return buffer.get();
+        if (buffer.hasRemaining()) {
+            return (int)buffer.get() & 0xff;
+        }
+        else {
+            return -1;
+        }
     }
 
     public int read(byte b[]) throws IOException {

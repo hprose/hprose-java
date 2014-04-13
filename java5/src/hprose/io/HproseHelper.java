@@ -616,10 +616,11 @@ public final class HproseHelper {
     }
 
     public static ByteBufferStream receiveDataOverTcp(SocketChannel channel) throws IOException {
-        ByteBufferStream buf = new ByteBufferStream(4);
+        ByteBufferStream buf = new ByteBufferStream();
         buf.readFrom(channel, 4);
         buf.rewind();
         int len = (buf.read() << 24) | (buf.read() << 16) | (buf.read() << 8) | buf.read();
+        buf.close();
         ByteBufferStream data = new ByteBufferStream(len);
         data.readFrom(channel, len);
         return data;

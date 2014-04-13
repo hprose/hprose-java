@@ -1,6 +1,7 @@
 
 import hprose.client.HproseTcpClient;
 import hprose.common.HproseFilter;
+import hprose.io.ByteBufferStream;
 import hprose.io.ObjectIntMap;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -31,7 +32,7 @@ public class TCPSessionClient {
         public ByteBuffer outputFilter(ByteBuffer ostream, Object context) {
             if (sidMap.containsKey(context)) {
                 int sid = sidMap.get(context);
-                ByteBuffer buf = ByteBuffer.allocateDirect(ostream.remaining() + 7);
+                ByteBuffer buf = ByteBufferStream.allocate(ostream.remaining() + 7);
                 buf.put((byte)'s');
                 buf.put((byte)'i');
                 buf.put((byte)'d');
@@ -40,6 +41,7 @@ public class TCPSessionClient {
                 buf.put((byte)(sid >> 8 & 0xff));
                 buf.put((byte)(sid & 0xff));
                 buf.put(ostream);
+                ByteBufferStream.free(ostream);
                 return buf;
             }
             return ostream;

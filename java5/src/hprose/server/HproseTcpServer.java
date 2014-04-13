@@ -20,6 +20,7 @@
 package hprose.server;
 
 import hprose.common.HproseMethods;
+import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -63,14 +64,21 @@ public class HproseTcpServer extends HproseService {
                         }
                         else if (key.isReadable()) {
                             SocketChannel socketChannel = (SocketChannel) key.channel();
+                            ByteBufferStream istream = null;
+                            ByteBufferStream ostream = null;
                             try {
-                                HproseHelper.sendDataOverTcp(socketChannel,
-                                    server.handle(HproseHelper.receiveDataOverTcp(socketChannel), socketChannel));
+                                istream = HproseHelper.receiveDataOverTcp(socketChannel);
+                                ostream = server.handle(istream, socketChannel);
+                                HproseHelper.sendDataOverTcp(socketChannel, ostream);
                                 socketChannel.register(selector, SelectionKey.OP_READ);
                             }
                             catch (IOException e) {
                                 server.fireErrorEvent(e, socketChannel);
                                 socketChannel.close();
+                            }
+                            finally {
+                                if (istream != null) istream.close();
+                                if (ostream != null) ostream.close();
                             }
                         }
                     }

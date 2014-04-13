@@ -13,7 +13,7 @@
  *                                                        *
  * ByteBuffer InputStream for Java.                       *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -60,12 +60,17 @@ class ByteBufferInputStream extends InputStream {
     }
 
     @Override
-    public void mark(int readlimit) {
+    public synchronized void mark(int readlimit) {
 	stream.mark(readlimit);
     }
 
     @Override
-    public void reset() {
+    public synchronized void reset() throws IOException {
         stream.reset();
+    }
+    
+    @Override
+    public void close() throws IOException {
+        stream.close();
     }
 }

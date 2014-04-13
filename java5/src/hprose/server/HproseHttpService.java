@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -141,17 +141,21 @@ public class HproseHttpService extends HproseService {
     }
 
     public void handle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
+        ByteBufferStream ostream = null;
         try {
             currentContext.set(httpContext);
             sendHeader(httpContext);
             String method = httpContext.getRequest().getMethod();
             if (method.equals("GET") && getEnabled) {
-                doFunctionList(methods, httpContext).writeTo(httpContext.getResponse().getOutputStream());
+                ostream = doFunctionList(methods, httpContext);
+                ostream.writeTo(httpContext.getResponse().getOutputStream());
             }
             else if (method.equals("POST")) {
-                ByteBufferStream stream = new ByteBufferStream();
-                stream.readFrom(httpContext.getRequest().getInputStream());
-                handle(stream, methods, httpContext).writeTo(httpContext.getResponse().getOutputStream());
+                ByteBufferStream istream = new ByteBufferStream();
+                istream.readFrom(httpContext.getRequest().getInputStream());
+                ostream = handle(istream, methods, httpContext);
+                istream.close();
+                ostream.writeTo(httpContext.getResponse().getOutputStream());
             }
             else {
                 httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -159,6 +163,9 @@ public class HproseHttpService extends HproseService {
         }
         finally {
             currentContext.remove();
+            if (ostream != null) {
+                ostream.close();
+            }
         }
     }
 }

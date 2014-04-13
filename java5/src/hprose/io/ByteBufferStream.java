@@ -13,7 +13,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Apr 10, 2014                             *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,18 +26,72 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ByteBufferStream {
+
+    private static final ConcurrentHashMap<Integer, ConcurrentLinkedQueue<ByteBuffer>> byteBufferPool = new ConcurrentHashMap<Integer, ConcurrentLinkedQueue<ByteBuffer>>();
     public ByteBuffer buffer;
     InputStream istream;
     OutputStream ostream;
 
+    static {
+        byteBufferPool.put(512, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(2 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(4 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(8 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(16 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(32 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(64 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(128 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(256 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(512 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(2 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(4 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+        byteBufferPool.put(8 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+    }
+
+    private static int pow2roundup(int x) {
+        --x;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        return x + 1;
+    }
+
+    public static ByteBuffer allocate(int capacity) {
+        capacity = pow2roundup(capacity);
+        if (capacity < 512) capacity = 512;
+        ConcurrentLinkedQueue<ByteBuffer> queue = byteBufferPool.get(capacity);
+        if (queue != null) {
+            ByteBuffer byteBuffer = queue.poll();
+            if (byteBuffer != null) return byteBuffer;
+        }
+        return ByteBuffer.allocateDirect(capacity);
+    }
+
+    public static void free(ByteBuffer buffer) {
+        if (buffer.isDirect()) {
+            buffer.clear();
+            int capacity = buffer.capacity();
+            ConcurrentLinkedQueue<ByteBuffer> queue = byteBufferPool.get(capacity);
+            if (queue != null) {
+                queue.add(buffer);
+            }
+        }
+    }
+
     public ByteBufferStream() {
-        this(1024);
+        this(512);
     }
 
     public ByteBufferStream(int capacity) {
-        buffer = ByteBuffer.allocateDirect(capacity);
+        buffer = allocate(capacity);
     }
 
     public ByteBufferStream(ByteBuffer buffer) {
@@ -50,6 +104,13 @@ public class ByteBufferStream {
 
     public static ByteBufferStream wrap(byte[] array) {
         return new ByteBufferStream(ByteBuffer.wrap(array));
+    }
+
+    public void close() {
+        if (buffer != null) {
+            free(buffer);
+            buffer = null;
+        }
     }
 
     public InputStream getInputStream() {
@@ -66,7 +127,7 @@ public class ByteBufferStream {
         return ostream;
     }
 
-    public int read() throws IOException {
+    public int read() {
         if (buffer.hasRemaining()) {
             return (int)buffer.get() & 0xff;
         }
@@ -75,11 +136,11 @@ public class ByteBufferStream {
         }
     }
 
-    public int read(byte b[]) throws IOException {
+    public int read(byte b[]) {
         return read(b, 0, b.length);
     }
 
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte b[], int off, int len) {
         if (len <= 0) {
             return 0;
         }
@@ -95,7 +156,7 @@ public class ByteBufferStream {
         return len;
     }
 
-    public long skip(long n) throws IOException {
+    public long skip(long n) {
         if (n <= 0) {
             return 0;
         }
@@ -111,7 +172,7 @@ public class ByteBufferStream {
         return n;
     }
 
-    public int available() throws IOException {
+    public int available() {
         return buffer.remaining();
     }
 
@@ -127,24 +188,15 @@ public class ByteBufferStream {
         buffer.reset();
     }
 
-    private int pow2roundup(int x) {
-        --x;
-        x |= x >> 1;
-        x |= x >> 2;
-        x |= x >> 4;
-        x |= x >> 8;
-        x |= x >> 16;
-        return x + 1;
-    }
-
     private void grow(int n) {
         if (buffer.remaining() < n) {
             int required = buffer.position() + n;
             int size = pow2roundup(required) << 1;
             if (size > buffer.capacity()) {
-                ByteBuffer buf = ByteBuffer.allocateDirect(size);
+                ByteBuffer buf = allocate(size);
                 buffer.flip();
                 buf.put(buffer);
+                free(buffer);
                 buffer = buf;
             }
             else {
@@ -153,16 +205,16 @@ public class ByteBufferStream {
         }
     }
 
-    public void write(int b) throws IOException {
+    public void write(int b) {
         grow(1);
         buffer.put((byte) b);
     }
 
-    public void write(byte b[]) throws IOException {
+    public void write(byte b[]) {
         write(b, 0, b.length);
     }
 
-    public void write(byte b[], int off, int len) throws IOException {
+    public void write(byte b[], int off, int len) {
         grow(len);
         buffer.put(b, off, len);
     }

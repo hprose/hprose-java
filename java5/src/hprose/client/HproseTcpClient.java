@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Mar 9, 2014                              *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,6 @@ import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.SocketChannel;
@@ -238,7 +237,6 @@ public class HproseTcpClient extends HproseClient {
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress(u.getHost(), u.getPort()));
             while (!channel.finishConnect()) {}
-            Socket socket = channel.socket();
             return channel;
         }
         catch (URISyntaxException e) {

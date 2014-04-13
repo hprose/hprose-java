@@ -13,7 +13,7 @@
  *                                                        *
  * ByteBuffer OutputStream for Java.                      *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -42,5 +42,10 @@ class ByteBufferOutputStream extends OutputStream {
     @Override
     public void write(byte b[], int off, int len) throws IOException {
         stream.write(b, off, len);
+    }
+    
+    @Override
+    public void close() throws IOException {
+        stream.close();
     }
 }

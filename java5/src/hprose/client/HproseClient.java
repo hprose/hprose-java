@@ -13,7 +13,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Apr 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -490,14 +490,21 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     public Object invoke(String functionName, Object[] arguments, Type returnType, boolean byRef, HproseResultMode resultMode, boolean simple) throws IOException {
-        Object result = doInput(
-                sendAndReceive(
-                    doOutput(functionName, arguments, byRef, simple)),
-                        arguments, returnType, resultMode);
-        if (result instanceof HproseException) {
-            throw (HproseException) result;
+        ByteBufferStream ostream = null;
+        ByteBufferStream istream = null;
+        try {
+            ostream = doOutput(functionName, arguments, byRef, simple);
+            istream = sendAndReceive(ostream);
+            Object result = doInput(istream, arguments, returnType, resultMode);
+            if (result instanceof HproseException) {
+                throw (HproseException) result;
+            }
+            return result;
         }
-        return result;
+        finally {
+            if (ostream != null) ostream.close();
+            if (istream != null) istream.close();
+        }
     }
 
     private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple) throws IOException {
@@ -533,7 +540,9 @@ public abstract class HproseClient implements HproseInvoker {
             return stream;
         }
         else if (returnType == byte[].class) {
-            return stream.toArray();
+            byte[] bytes = stream.toArray();
+            stream.close();
+            return bytes;
         }
         throw new HproseException("Can't Convert ByteBuffer to Type: " + returnType.toString());
     }

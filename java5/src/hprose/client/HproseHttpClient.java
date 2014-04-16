@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Apr 16, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -45,7 +45,7 @@ public class HproseHttpClient extends HproseClient {
     private int proxyPort = 80;
     private String proxyUser = null;
     private String proxyPass = null;
-    private int timeout = -1;
+    private int timeout = 0;
 
     public HproseHttpClient() {
         super();
@@ -145,8 +145,6 @@ public class HproseHttpClient extends HproseClient {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
-        System.setProperty("sun.net.client.defaultConnectTimeout", Integer.toString(timeout));
-        System.setProperty("sun.net.client.defaultReadTimeout", Integer.toString(timeout));
     }
 
     @Override
@@ -163,6 +161,8 @@ public class HproseHttpClient extends HproseClient {
             prop.remove("http.proxyPort");
         }
         HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+        conn.setConnectTimeout(timeout);
+        conn.setReadTimeout(timeout);
         conn.setRequestProperty("Cookie", cookieManager.getCookie(url.getHost(),
                                                                   url.getFile(),
                                                                   url.getProtocol().equals("https")));
@@ -178,12 +178,18 @@ public class HproseHttpClient extends HproseClient {
         }
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
+        conn.setUseCaches(false);
         conn.setRequestProperty("Content-Type", "application/hprose");
         conn.setFixedLengthStreamingMode(stream.buffer.limit());
-        OutputStream ostream = conn.getOutputStream();
-        stream.writeTo(ostream);
-        ostream.flush();
-        ostream.close();
+        OutputStream ostream = null;
+        try {
+            ostream = conn.getOutputStream();
+            stream.writeTo(ostream);
+            ostream.flush();
+        }
+        finally {
+            if (ostream != null) ostream.close();
+        }
         List<String> cookieList = new ArrayList<String>();
         int i = 1;
         String key;
@@ -195,10 +201,28 @@ public class HproseHttpClient extends HproseClient {
             ++i;
         }
         cookieManager.setCookie(cookieList, url.getHost());
-        InputStream istream = conn.getInputStream();
-        stream.buffer.clear();
-        stream.readFrom(istream);
-        istream.close();
-        return stream;
+        InputStream istream = null;
+        try {
+            istream = conn.getInputStream();
+            stream.buffer.clear();
+            stream.readFrom(istream);
+            return stream;
+        }
+        catch (IOException e) {
+            InputStream estream = null;
+            try {
+                int respCode = conn.getResponseCode();
+                estream = conn.getErrorStream();
+                stream.buffer.clear();
+                stream.readFrom(estream);
+                return stream;
+            }
+            finally {
+                if (estream != null) estream.close();
+            }
+        }
+        finally {
+            if (istream != null) istream.close();
+        }
     }
 }

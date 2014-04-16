@@ -13,7 +13,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 13, 2014                             *
+ * LastModified: Apr 16, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -42,8 +42,11 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public abstract class HproseClient implements HproseInvoker {
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private static final Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
@@ -272,7 +275,7 @@ public abstract class HproseClient implements HproseInvoker {
 
     @SuppressWarnings("unchecked")
     public void invoke(final String functionName, final Object[] arguments, final HproseCallback1 callback, final HproseErrorEvent errorEvent, final Type returnType, final HproseResultMode resultMode, final boolean simple) {
-        new Thread() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -288,7 +291,7 @@ public abstract class HproseClient implements HproseInvoker {
                     }
                 }
             }
-        }.start();
+        });
     }
 
     public final void invoke(String functionName, Object[] arguments, HproseCallback<?> callback) {

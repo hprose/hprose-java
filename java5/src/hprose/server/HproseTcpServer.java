@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HproseTcpServer extends HproseService {
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
     class HandlerThread extends Thread {
         private final Selector selector;
         private final HproseTcpServer server;
@@ -203,7 +203,7 @@ public class HproseTcpServer extends HproseService {
     public int getThreadCount() {
         return tCount;
     }
-    
+
     /**
      * Set the service thread count.
      * @param value is the count of service threads.
@@ -211,7 +211,7 @@ public class HproseTcpServer extends HproseService {
     public void setThreadCount(int value) {
         tCount = value;
     }
-    
+
     /**
      * Is enabled thread pool.
      * This thread pool is not for the service threads, it is for the user service method.
@@ -221,7 +221,7 @@ public class HproseTcpServer extends HproseService {
     public boolean isEnabledThreadPool() {
         return enabledThreadPool;
     }
-    
+
     /**
      * Set enabled thread pool.
      * This thread pool is not for the service threads, it is for the user service method.

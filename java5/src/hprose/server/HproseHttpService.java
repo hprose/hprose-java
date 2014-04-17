@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Apr 13, 2014                             *
+ * LastModified: Apr 17, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,6 +23,7 @@ import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ public class HproseHttpService extends HproseService {
     private boolean crossDomainEnabled = false;
     private boolean p3pEnabled = false;
     private boolean getEnabled = true;
+    private final HashMap<String, Boolean> origins = new HashMap<String, Boolean>();
     private static final ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
 
     public static HttpContext getCurrentContext() {
@@ -81,6 +83,14 @@ public class HproseHttpService extends HproseService {
         getEnabled = enabled;
     }
 
+    public void addAccessControlAllowOrigin(String origin) {
+        origins.put(origin, true);
+    }
+
+    public void removeAccessControlAllowOrigin(String origin) {
+        origins.remove(origin);
+    }
+
     @Override
     protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, int count, Object context) {
         HttpContext httpContext = (HttpContext)context;
@@ -127,8 +137,10 @@ public class HproseHttpService extends HproseService {
         if (crossDomainEnabled) {
             String origin = request.getHeader("Origin");
             if (origin != null && !origin.equals("null")) {
-                response.setHeader("Access-Control-Allow-Origin", origin);
-                response.setHeader("Access-Control-Allow-Credentials", "true");
+                if (origins.isEmpty() || origins.containsKey(origin)) {
+                    response.setHeader("Access-Control-Allow-Origin", origin);
+                    response.setHeader("Access-Control-Allow-Credentials", "true");
+                }
             }
             else {
                 response.setHeader("Access-Control-Allow-Origin", "*");

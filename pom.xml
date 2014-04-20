@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>hprose</groupId>
+    <artifactId>hprose-java</artifactId>
+    <version>1.4.0</version>
+    <name>Hprose for Java</name>
+    <description>Hprose is a High Performance Remote Object Service Engine.
+
+        It is a modern, lightweight, cross-language, cross-platform, object-oriented, high performance, remote dynamic communication middleware. It is not only easy to use, but powerful. You just need a little time to learn, then you can use it to easily construct cross language cross platform distributed application system.
+
+        Hprose supports many programming languages, for example:
+
+        * AAuto Quicker
+        * ActionScript
+        * ASP
+        * C++
+        * Dart
+        * Delphi/Free Pascal
+        * dotNET(C#, Visual Basic...)
+        * Golang
+        * Java
+        * JavaScript
+        * Node.js
+        * Objective-C
+        * Perl
+        * PHP
+        * Python
+        * Ruby
+        * ...
+
+        Through Hprose, You can conveniently and efficiently intercommunicate between those programming languages.
+
+        This project is the implementation of Hprose for Java.</description>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://raw.github.com/hprose/hprose-java/master/LICENSE.md</url>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/hprose/hprose-java.git</connection>
+        <developerConnection>scm:https://github.com/hprose/hprose-java.git</developerConnection>
+        <url>https://github.com/hprose/hprose-java</url>
+    </scm>
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

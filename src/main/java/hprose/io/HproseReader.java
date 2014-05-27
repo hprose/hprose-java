@@ -13,7 +13,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Apr 8, 2014                              *
+ * LastModified: May 27, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -70,7 +70,6 @@ public final class HproseReader {
     private final ReaderRefer refer;
     private final ArrayList<Object> classref = new ArrayList<Object>();
     private final HashMap<Object, String[]> membersref = new HashMap<Object, String[]>();
-    private static final Object[] nullArgs = new Object[0];
 
     public HproseReader(InputStream stream) {
         this(stream, HproseMode.MemberMode, false);

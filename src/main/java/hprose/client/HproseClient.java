@@ -55,16 +55,15 @@ public abstract class HproseClient implements HproseInvoker {
     public HproseErrorEvent onError = null;
 
     protected HproseClient() {
-        this.mode = HproseMode.MemberMode;
+        this(null, HproseMode.MemberMode);
     }
 
     protected HproseClient(String uri) {
-        this.mode = HproseMode.MemberMode;
-        this.uri = uri;
+        this(uri, HproseMode.MemberMode);
     }
 
     protected HproseClient(HproseMode mode) {
-        this.mode = mode;
+        this(null, mode);
     }
 
     protected HproseClient(String uri, HproseMode mode) {

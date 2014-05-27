@@ -13,7 +13,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Mar 1, 2014                              *
+ * LastModified: May 27, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -80,7 +80,6 @@ public final class HproseWriter {
             lastref = 0;
         }
     }
-    private static final Object[] nullArgs = new Object[0];
     private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> fieldsCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();
     private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> propertiesCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();
     private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> membersCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();

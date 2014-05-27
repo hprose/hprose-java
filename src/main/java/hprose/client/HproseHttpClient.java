@@ -13,7 +13,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 16, 2014                             *
+ * LastModified: May 27, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -211,7 +211,6 @@ public class HproseHttpClient extends HproseClient {
         catch (IOException e) {
             InputStream estream = null;
             try {
-                int respCode = conn.getResponseCode();
                 estream = conn.getErrorStream();
                 stream.buffer.clear();
                 stream.readFrom(estream);

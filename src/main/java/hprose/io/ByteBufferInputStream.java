@@ -3,7 +3,6 @@
 |                          hprose                          |
 |                                                          |
 | Official WebSite: http://www.hprose.com/                 |
-|                   http://www.hprose.net/                 |
 |                   http://www.hprose.org/                 |
 |                                                          |
 \**********************************************************/
@@ -68,7 +67,7 @@ class ByteBufferInputStream extends InputStream {
     public synchronized void reset() throws IOException {
         stream.reset();
     }
-    
+
     @Override
     public void close() throws IOException {
         stream.close();

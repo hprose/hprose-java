@@ -3,7 +3,6 @@
 |                          hprose                          |
 |                                                          |
 | Official WebSite: http://www.hprose.com/                 |
-|                   http://www.hprose.net/                 |
 |                   http://www.hprose.org/                 |
 |                                                          |
 \**********************************************************/
@@ -812,7 +811,7 @@ public final class HproseReader {
             case HproseTags.TagFalse: return false;
             case HproseTags.TagNaN: return true;
             case HproseTags.TagInfinity: stream.read(); return true;
-            case HproseTags.TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar()) > -1;
+            case HproseTags.TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar()) == -1;
             case HproseTags.TagString: return Boolean.parseBoolean(readStringWithoutTag());
             case HproseTags.TagRef: return Boolean.parseBoolean(readRef(String.class));
             default: throw castError(tagToString(tag), boolean.class);

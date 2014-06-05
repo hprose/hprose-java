@@ -3,7 +3,6 @@
 |                          hprose                          |
 |                                                          |
 | Official WebSite: http://www.hprose.com/                 |
-|                   http://www.hprose.net/                 |
 |                   http://www.hprose.org/                 |
 |                                                          |
 \**********************************************************/
@@ -43,7 +42,7 @@ class ByteBufferOutputStream extends OutputStream {
     public void write(byte b[], int off, int len) throws IOException {
         stream.write(b, off, len);
     }
-    
+
     @Override
     public void close() throws IOException {
         stream.close();

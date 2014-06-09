@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: May 27, 2014                             *
+ * LastModified: Jun 9, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 public class HproseHttpClient extends HproseClient {
     private final ConcurrentHashMap<String, String> headers = new ConcurrentHashMap<String, String>();
@@ -45,6 +48,8 @@ public class HproseHttpClient extends HproseClient {
     private String proxyUser = null;
     private String proxyPass = null;
     private int timeout = 0;
+    private HostnameVerifier hv = null;
+    private SSLSocketFactory sslsf = null;
 
     public HproseHttpClient() {
         super();
@@ -145,6 +150,22 @@ public class HproseHttpClient extends HproseClient {
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
+    
+    public HostnameVerifier getHostnameVerifier() {
+        return hv;
+    }
+
+    public void setHostnameVerifier(HostnameVerifier hv) {
+        this.hv = hv;
+    }
+    
+    public SSLSocketFactory getSSLSocketFactory() {
+        return sslsf;
+    }
+
+    public void setSSLSocketFactory(SSLSocketFactory sslsf) {
+        this.sslsf = sslsf;
+    }
 
     @Override
     protected ByteBufferStream sendAndReceive(ByteBufferStream stream) throws IOException {
@@ -160,6 +181,10 @@ public class HproseHttpClient extends HproseClient {
             prop.remove("http.proxyPort");
         }
         HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+        if (url.getProtocol().equals("https")) {
+            if (hv != null) ((HttpsURLConnection)conn).setHostnameVerifier(hv);
+            if (sslsf != null) ((HttpsURLConnection)conn).setSSLSocketFactory(sslsf);
+        }
         conn.setConnectTimeout(timeout);
         conn.setReadTimeout(timeout);
         conn.setRequestProperty("Cookie", cookieManager.getCookie(url.getHost(),

@@ -1607,6 +1607,7 @@ public final class HproseReader {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
+            case HproseTags.TagEmpty: return new byte[0];
             case HproseTags.TagUTF8Char: return readUTF8CharWithoutTag().getBytes("UTF-8");
             case HproseTags.TagString: return readStringWithoutTag().getBytes("UTF-8");
             case HproseTags.TagBytes: return readBytesWithoutTag();

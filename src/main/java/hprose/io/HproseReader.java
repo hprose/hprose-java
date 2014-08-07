@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: May 27, 2014                             *
+ * LastModified: Aug 7, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1194,7 +1194,7 @@ public final class HproseReader {
             case HproseTags.TagInteger: return BigInteger.valueOf(readIntWithoutTag());
             case HproseTags.TagLong: return readBigIntegerWithoutTag();
             case HproseTags.TagDouble: return BigInteger.valueOf(Double.valueOf(readDoubleWithoutTag()).longValue());
-            case HproseTags.TagNull: return BigInteger.ZERO;
+            case HproseTags.TagNull: return null;
             case HproseTags.TagEmpty: return BigInteger.ZERO;
             case HproseTags.TagTrue: return BigInteger.ONE;
             case HproseTags.TagFalse: return BigInteger.ZERO;
@@ -1407,7 +1407,7 @@ public final class HproseReader {
             case HproseTags.TagInteger: return new BigDecimal(readIntWithoutTag());
             case HproseTags.TagLong: return new BigDecimal(readLongWithoutTag());
             case HproseTags.TagDouble: return new BigDecimal(readUntil(HproseTags.TagSemicolon).toString());
-            case HproseTags.TagNull: return BigDecimal.ZERO;
+            case HproseTags.TagNull: return null;
             case HproseTags.TagEmpty: return BigDecimal.ZERO;
             case HproseTags.TagTrue: return BigDecimal.ONE;
             case HproseTags.TagFalse: return BigDecimal.ZERO;

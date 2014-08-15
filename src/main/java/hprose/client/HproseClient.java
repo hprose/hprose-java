@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 20, 2014                             *
+ * LastModified: Aug 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -78,8 +78,8 @@ public abstract class HproseClient implements HproseInvoker {
 
     @Override
     protected void finalize() throws Throwable {
-        super.finalize();
         close();
+        super.finalize();
     }
 
     private static final HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
@@ -292,7 +292,7 @@ public abstract class HproseClient implements HproseInvoker {
                     Object result = invoke(functionName, arguments, returnType, false, resultMode, simple);
                     callback.handler(result);
                 }
-                catch (Throwable ex) {
+                catch (Exception ex) {
                     if (errorEvent != null) {
                         errorEvent.handler(functionName, ex);
                     }
@@ -405,7 +405,7 @@ public abstract class HproseClient implements HproseInvoker {
                     Object result = invoke(functionName, arguments, returnType, byRef, resultMode, simple);
                     callback.handler(result, arguments);
                 }
-                catch (Throwable ex) {
+                catch (Exception ex) {
                     if (errorEvent != null) {
                         errorEvent.handler(functionName, ex);
                     }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Aug 7, 2014                              *
+ * LastModified: Aug 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -890,7 +890,7 @@ public final class HproseReader {
             case HproseTags.TagEmpty: return 0;
             case HproseTags.TagTrue: return 1;
             case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return (byte)readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Byte.parseByte(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Byte.parseByte(readStringWithoutTag());
             case HproseTags.TagRef: return Byte.parseByte(readRef(String.class));
             default: throw castError(tagToString(tag), byte.class);
@@ -931,7 +931,7 @@ public final class HproseReader {
             case HproseTags.TagEmpty: return 0;
             case HproseTags.TagTrue: return 1;
             case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return (short)readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Short.parseShort(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Short.parseShort(readStringWithoutTag());
             case HproseTags.TagRef: return Short.parseShort(readRef(String.class));
             default: throw castError(tagToString(tag), short.class);
@@ -972,7 +972,7 @@ public final class HproseReader {
             case HproseTags.TagEmpty: return 0;
             case HproseTags.TagTrue: return 1;
             case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return (int)readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Integer.parseInt(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Integer.parseInt(readStringWithoutTag());
             case HproseTags.TagRef: return Integer.parseInt(readRef(String.class));
             default: throw castError(tagToString(tag), int.class);
@@ -1015,7 +1015,7 @@ public final class HproseReader {
             case HproseTags.TagFalse: return 0l;
             case HproseTags.TagDate: return readDateWithoutTag().getTimeInMillis();
             case HproseTags.TagTime: return readTimeWithoutTag().getTimeInMillis();
-            case HproseTags.TagUTF8Char: return (long)readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Long.parseLong(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Long.parseLong(readStringWithoutTag());
             case HproseTags.TagRef: return Long.parseLong(readRef(String.class));
             default: throw castError(tagToString(tag), long.class);
@@ -1060,7 +1060,7 @@ public final class HproseReader {
             case HproseTags.TagInfinity: return (stream.read() == HproseTags.TagPos) ?
                                                  Float.POSITIVE_INFINITY :
                                                  Float.NEGATIVE_INFINITY;
-            case HproseTags.TagUTF8Char: return readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Float.parseFloat(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Float.parseFloat(readStringWithoutTag());
             case HproseTags.TagRef: return Float.parseFloat(readRef(String.class));
             default: throw castError(tagToString(tag), float.class);
@@ -1103,7 +1103,7 @@ public final class HproseReader {
             case HproseTags.TagFalse: return 0.0;
             case HproseTags.TagNaN: return Double.NaN;
             case HproseTags.TagInfinity: return readInfinityWithoutTag();
-            case HproseTags.TagUTF8Char: return (double)readUTF8CharAsChar();
+            case HproseTags.TagUTF8Char: return Double.parseDouble(readUTF8CharWithoutTag());
             case HproseTags.TagString: return Double.parseDouble(readStringWithoutTag());
             case HproseTags.TagRef: return Double.parseDouble(readRef(String.class));
             default: throw castError(tagToString(tag), double.class);
@@ -1200,7 +1200,7 @@ public final class HproseReader {
             case HproseTags.TagFalse: return BigInteger.ZERO;
             case HproseTags.TagDate: return BigInteger.valueOf(readDateWithoutTag().getTimeInMillis());
             case HproseTags.TagTime: return BigInteger.valueOf(readTimeWithoutTag().getTimeInMillis());
-            case HproseTags.TagUTF8Char: return BigInteger.valueOf((long)readUTF8CharAsChar());
+            case HproseTags.TagUTF8Char: return new BigInteger(readUTF8CharWithoutTag());
             case HproseTags.TagString: return new BigInteger(readStringWithoutTag());
             case HproseTags.TagRef: return new BigInteger(readRef(String.class));
             default: throw castError(tagToString(tag), BigInteger.class);
@@ -1411,7 +1411,7 @@ public final class HproseReader {
             case HproseTags.TagEmpty: return BigDecimal.ZERO;
             case HproseTags.TagTrue: return BigDecimal.ONE;
             case HproseTags.TagFalse: return BigDecimal.ZERO;
-            case HproseTags.TagUTF8Char: return new BigDecimal((long)readUTF8CharAsChar());
+            case HproseTags.TagUTF8Char: return new BigDecimal(readUTF8CharWithoutTag());
             case HproseTags.TagString: return new BigDecimal(readStringWithoutTag());
             case HproseTags.TagRef: return new BigDecimal(readRef(String.class));
             default: throw castError(tagToString(tag), BigDecimal.class);

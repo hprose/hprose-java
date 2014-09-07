@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Aug 15, 2014                             *
+ * LastModified: Sep 7, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,6 +33,7 @@ import hprose.io.HproseReader;
 import hprose.io.HproseTags;
 import hprose.io.HproseWriter;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -41,8 +42,10 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public abstract class HproseClient implements HproseInvoker {
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
@@ -502,7 +505,24 @@ public abstract class HproseClient implements HproseInvoker {
         return (T) invoke(functionName, arguments, (Type)returnType, byRef, resultMode, simple);
     }
 
-    public Object invoke(String functionName, Object[] arguments, Type returnType, boolean byRef, HproseResultMode resultMode, boolean simple) throws IOException {
+    public Object invoke(final String functionName, final Object[] arguments, Type returnType, final boolean byRef, final HproseResultMode resultMode, final boolean simple) throws IOException {
+        if (Future.class.equals(HproseHelper.toClass(returnType))) {
+            if (returnType instanceof ParameterizedType) {
+                returnType = ((ParameterizedType)returnType).getActualTypeArguments()[0];
+            }
+            else {
+                returnType = null;
+            }
+            if (void.class.equals(returnType) || Void.class.equals(returnType)) {
+                returnType = null;
+            }
+            final Type _returnType = returnType;
+            return threadPool.submit(new Callable<Object>() {
+                public Object call() throws Exception {
+                    return invoke(functionName, arguments, _returnType, byRef, resultMode, simple);
+                }
+            });
+        }
         ByteBufferStream ostream = null;
         ByteBufferStream istream = null;
         try {

@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 interface ITest {
     void swapKeyAndValue(Map<String, String> strmap, HproseCallback<Map<String, String>> callback);
@@ -19,6 +22,7 @@ interface ITest {
     void getUserList(HproseCallback1<List<User>> callback);
     @MethodName("getUserList")
     void getUserArray(HproseCallback1<User[]> callback);
+    Future<List<User>> getUserList();
 }
 
 public class ClientExam10 {
@@ -67,6 +71,7 @@ public class ClientExam10 {
         test.getUserList(new HproseCallback1<List<User>>() {
             public void handler(List<User> users) {
                 synchronized (test) {
+                    System.out.println("getUserList:");        
                     for (User user : users) {
                         System.out.printf("name: %s, ", user.getName());
                         System.out.printf("age: %d, ", user.getAge());
@@ -82,6 +87,7 @@ public class ClientExam10 {
         test.getUserArray(new HproseCallback1<User[]>() {
             public void handler(User[] users) {
                 synchronized (test) {
+                    System.out.println("getUserArray:");        
                     for (User user : users) {
                         System.out.printf("name: %s, ", user.getName());
                         System.out.printf("age: %d, ", user.getAge());
@@ -94,6 +100,25 @@ public class ClientExam10 {
                 }
             }
         });
+        Future<List<User>> result = test.getUserList();
+        List<User> users;
+        try {
+            users = result.get();
+            synchronized (test) {
+                System.out.println("Future<List<User>> getUserList:");        
+                for (User user : users) {
+                    System.out.printf("name: %s, ", user.getName());
+                    System.out.printf("age: %d, ", user.getAge());
+                    System.out.printf("sex: %s, ", user.getSex());
+                    System.out.printf("birthday: %s, ", user.getBirthday());
+                    System.out.printf("married: %s.", user.isMarried());
+                    System.out.println();
+                }
+                System.out.println();        
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ClientExam10.class.getName()).log(Level.SEVERE, null, ex);
+        }
         client.close();
     }
 }

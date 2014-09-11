@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Aug 15, 2014                             *
+ * LastModified: Sep 12, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -37,6 +37,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -68,7 +69,7 @@ public final class HproseReader {
     private final HproseMode mode;
     private final ReaderRefer refer;
     private final ArrayList<Object> classref = new ArrayList<Object>();
-    private final HashMap<Object, String[]> membersref = new HashMap<Object, String[]>();
+    private final IdentityHashMap<Object, String[]> membersref = new IdentityHashMap<Object, String[]>();
 
     public HproseReader(InputStream stream) {
         this(stream, HproseMode.MemberMode, false);
@@ -154,12 +155,12 @@ public final class HproseReader {
         return sb;
     }
 
-    private void skipUntil(int tag) throws IOException {
-        int i = stream.read();
-        while ((i != tag) && (i != -1)) {
-            i = stream.read();
-        }
-    }
+//    private void skipUntil(int tag) throws IOException {
+//        int i = stream.read();
+//        while ((i != tag) && (i != -1)) {
+//            i = stream.read();
+//        }
+//    }
 
     @SuppressWarnings({"fallthrough"})
     public byte readByte(int tag) throws IOException {

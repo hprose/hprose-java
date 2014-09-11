@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: May 27, 2014                              *
+ * LastModified: Sep 12, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,8 +22,6 @@ import hprose.common.HproseException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -32,6 +30,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -79,9 +78,12 @@ public final class HproseWriter {
             lastref = 0;
         }
     }
-    private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> fieldsCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();
-    private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> propertiesCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();
-    private static final ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>> membersCache = new ConcurrentHashMap<Class<?>, SoftReference<SerializeCache>>();
+    private static final EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>>(HproseMode.class);
+    static {
+        memberCache.put(HproseMode.FieldMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.PropertyMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.MemberMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+    }
     public final OutputStream stream;
     private final HproseMode mode;
     private final WriterRefer refer;
@@ -1230,35 +1232,8 @@ public final class HproseWriter {
         }
     }
 
-    private SerializeCache getSerializeCache(Class<?> type, HproseMode mode) {
-        SoftReference<SerializeCache> sref =
-            ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(type)) ?
-            (mode == HproseMode.FieldMode) ?
-            fieldsCache.get(type) :
-            propertiesCache.get(type) :
-            membersCache.get(type);
-        if (sref != null) {
-            return sref.get();
-        }
-        return null;
-    }
-
-    private void putSerializeCache(Class<?> type, HproseMode mode, SerializeCache cache) {
-        if ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(type)) {
-            if (mode == HproseMode.FieldMode) {
-                fieldsCache.put(type, new SoftReference<SerializeCache>(cache));
-            }
-            else {
-                propertiesCache.put(type, new SoftReference<SerializeCache>(cache));
-            }
-        }
-        else {
-            membersCache.put(type, new SoftReference<SerializeCache>(cache));
-        }
-    }
-
     private int writeClass(Class<?> type) throws IOException {
-        SerializeCache cache = getSerializeCache(type, mode);
+        SerializeCache cache = memberCache.get(mode).get(type);
         if (cache == null) {
             cache = new SerializeCache();
             ByteArrayOutputStream cachestream = new ByteArrayOutputStream();
@@ -1277,7 +1252,7 @@ public final class HproseWriter {
             }
             cachestream.write(HproseTags.TagClosebrace);
             cache.data = cachestream.toByteArray();
-            putSerializeCache(type, mode, cache);
+            memberCache.get(mode).put(type, cache);
         }
         stream.write(cache.data);
         refer.addCount(cache.refcount);

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Sep 12, 2014                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -43,11 +42,11 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HproseHelper {
-    private static final ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>> fieldsCache = new ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>>();
-    private static final ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>> propertiesCache = new ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>>();
-    private static final ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>> membersCache = new ConcurrentHashMap<Class<?>, SoftReference<ConcurrentHashMap<String, MemberAccessor>>>();
-    private static final ConcurrentHashMap<Class<?>, SoftReference<Constructor<?>>> ctorCache = new ConcurrentHashMap<Class<?>, SoftReference<Constructor<?>>>();
-    private static final ConcurrentHashMap<Constructor<?>, SoftReference<Object[]>> argsCache = new ConcurrentHashMap<Constructor<?>, SoftReference<Object[]>>();
+    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> fieldsCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
+    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> propertiesCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
+    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> membersCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
+    private static final ConcurrentHashMap<Class<?>, Constructor<?>> ctorCache = new ConcurrentHashMap<Class<?>, Constructor<?>>();
+    private static final ConcurrentHashMap<Constructor<?>, Object[]> argsCache = new ConcurrentHashMap<Constructor<?>, Object[]>();
     private static final Object[] nullArgs = new Object[0];
     private static final Byte byteZero = (byte) 0;
     private static final Short shortZero = (short) 0;
@@ -75,6 +74,7 @@ public final class HproseHelper {
     -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1 };
 
+    private static final Constructor<Object> nullCtor;
     private static final Method newInstance;
     static final TimeZone UTC = TimeZone.getTimeZone("UTC");
     static final TimeZone DefaultTZ = TimeZone.getDefault();
@@ -83,14 +83,25 @@ public final class HproseHelper {
     }
 
     static {
+        Constructor<Object> _nullCtor;
+        try {
+            _nullCtor = Object.class.getConstructor((Class<?>[]) null);
+        }
+        catch (Exception e) {
+            _nullCtor = null;
+        }
+        assert(_nullCtor != null);
+        nullCtor = _nullCtor;
+
         Method _newInstance;
         try {
             _newInstance = ObjectStreamClass.class.getDeclaredMethod("newInstance", new Class[0]);
-            _newInstance.setAccessible(true);
+            _newInstance.setAccessible(true);            
         }
         catch (Exception e) {
             _newInstance = null;
         }
+        assert(_newInstance != null);
         newInstance = _newInstance;
     }
 
@@ -188,109 +199,99 @@ public final class HproseHelper {
     }
 
     static Map<String, MemberAccessor> getProperties(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> properties;
-        SoftReference<ConcurrentHashMap<String, MemberAccessor>> sref = propertiesCache.get(type);
-        if ((sref != null) && (properties = sref.get()) != null) {
-            return properties;
+        ConcurrentHashMap<String, MemberAccessor> properties = propertiesCache.get(type);
+        if (properties == null) {
+            properties = new ConcurrentHashMap<String, MemberAccessor>();
+            Method[] methods = type.getMethods();
+            for (Method setter : methods) {
+                if (Modifier.isStatic(setter.getModifiers())) {
+                    continue;
+                }
+                String name = setter.getName();
+                if (!name.startsWith("set")) {
+                    continue;
+                }
+                if (!setter.getReturnType().equals(void.class)) {
+                    continue;
+                }
+                Class<?>[] paramTypes = setter.getParameterTypes();
+                if (paramTypes.length != 1) {
+                    continue;
+                }
+                String propertyName = name.substring(3);
+                Method getter = findGetter(methods, propertyName, paramTypes[0]);
+                if (getter != null) {
+                    PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
+                    char[] cname = propertyName.toCharArray();
+                    cname[0] = Character.toLowerCase(cname[0]);
+                    propertyName = new String(cname);
+                    properties.put(propertyName, propertyAccessor);
+                }
+            }
+            propertiesCache.put(type, properties);
         }
-        properties = new ConcurrentHashMap<String, MemberAccessor>();
-        Method[] methods = type.getMethods();
-        for (Method setter : methods) {
-            if (Modifier.isStatic(setter.getModifiers())) {
-                continue;
-            }
-            String name = setter.getName();
-            if (!name.startsWith("set")) {
-                continue;
-            }
-            if (!setter.getReturnType().equals(void.class)) {
-                continue;
-            }
-            Class<?>[] paramTypes = setter.getParameterTypes();
-            if (paramTypes.length != 1) {
-                continue;
-            }
-            String propertyName = name.substring(3);
-            Method getter = findGetter(methods, propertyName, paramTypes[0]);
-            if (getter != null) {
-                PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
-                char[] cname = propertyName.toCharArray();
-                cname[0] = Character.toLowerCase(cname[0]);
-                propertyName = new String(cname);
-                properties.put(propertyName, propertyAccessor);
-            }
-        }
-        propertiesCache.put(type, new SoftReference<ConcurrentHashMap<String, MemberAccessor>>(properties));
         return properties;
     }
 
     static Map<String, MemberAccessor> getFields(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> fields;
-        SoftReference<ConcurrentHashMap<String, MemberAccessor>> sref = fieldsCache.get(type);
-        if ((sref != null) && (fields = sref.get()) != null) {
-            return fields;
-        }
-        fields = new ConcurrentHashMap<String, MemberAccessor>();
-        for (Class<?> clazz = type; clazz != null; clazz = clazz.getSuperclass()) {
-            Field[] fs = clazz.getDeclaredFields();
-            for (Field field : fs) {
-                int mod = field.getModifiers();
-                if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
-                    String fieldName = field.getName();
-                    if (!fields.containsKey(fieldName)) {
-                        fields.put(fieldName, new FieldAccessor(field));
+        ConcurrentHashMap<String, MemberAccessor> fields = fieldsCache.get(type);
+        if (fields == null) {
+            fields = new ConcurrentHashMap<String, MemberAccessor>();
+            for (Class<?> clazz = type; clazz != null; clazz = clazz.getSuperclass()) {
+                Field[] fs = clazz.getDeclaredFields();
+                for (Field field : fs) {
+                    int mod = field.getModifiers();
+                    if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
+                        String fieldName = field.getName();
+                        fields.putIfAbsent(fieldName, new FieldAccessor(field));
                     }
                 }
             }
+            fieldsCache.put(type, fields);
         }
-        fieldsCache.put(type, new SoftReference<ConcurrentHashMap<String, MemberAccessor>>(fields));
         return fields;
     }
 
     static Map<String, MemberAccessor> getMembers(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> members;
-        SoftReference<ConcurrentHashMap<String, MemberAccessor>> sref = membersCache.get(type);
-        if ((sref != null) && (members = sref.get()) != null) {
-            return members;
-        }
-        members = new ConcurrentHashMap<String, MemberAccessor>();
-        Method[] methods = type.getMethods();
-        for (Method setter : methods) {
-            if (Modifier.isStatic(setter.getModifiers())) {
-                continue;
-            }
-            String name = setter.getName();
-            if (!name.startsWith("set")) {
-                continue;
-            }
-            if (!setter.getReturnType().equals(void.class)) {
-                continue;
-            }
-            Class<?>[] paramTypes = setter.getParameterTypes();
-            if (paramTypes.length != 1) {
-                continue;
-            }
-            String propertyName = name.substring(3);
-            Method getter = findGetter(methods, propertyName, paramTypes[0]);
-            if (getter != null) {
-                PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
-                char[] cname = propertyName.toCharArray();
-                cname[0] = Character.toLowerCase(cname[0]);
-                propertyName = new String(cname);
-                members.put(propertyName, propertyAccessor);
-            }
-        }
-        Field[] fs = type.getFields();
-        for (Field field : fs) {
-            int mod = field.getModifiers();
-            if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
-                String fieldName = field.getName();
-                if (!members.containsKey(fieldName)) {
-                    members.put(fieldName, new FieldAccessor(field));
+        ConcurrentHashMap<String, MemberAccessor> members = membersCache.get(type);
+        if (members == null) {
+            members = new ConcurrentHashMap<String, MemberAccessor>();
+            Method[] methods = type.getMethods();
+            for (Method setter : methods) {
+                if (Modifier.isStatic(setter.getModifiers())) {
+                    continue;
+                }
+                String name = setter.getName();
+                if (!name.startsWith("set")) {
+                    continue;
+                }
+                if (!setter.getReturnType().equals(void.class)) {
+                    continue;
+                }
+                Class<?>[] paramTypes = setter.getParameterTypes();
+                if (paramTypes.length != 1) {
+                    continue;
+                }
+                String propertyName = name.substring(3);
+                Method getter = findGetter(methods, propertyName, paramTypes[0]);
+                if (getter != null) {
+                    PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
+                    char[] cname = propertyName.toCharArray();
+                    cname[0] = Character.toLowerCase(cname[0]);
+                    propertyName = new String(cname);
+                    members.put(propertyName, propertyAccessor);
                 }
             }
+            Field[] fs = type.getFields();
+            for (Field field : fs) {
+                int mod = field.getModifiers();
+                if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
+                    String fieldName = field.getName();
+                    members.putIfAbsent(fieldName, new FieldAccessor(field));
+                }
+            }
+            membersCache.put(type, members);
         }
-        membersCache.put(type, new SoftReference<ConcurrentHashMap<String, MemberAccessor>>(members));
         return members;
     }
 
@@ -357,89 +358,86 @@ public final class HproseHelper {
     }
 
     public static Class<?> getClass(String className) {
-        if (HproseClassManager.containsClass(className)) {
-            return HproseClassManager.getClass(className);
-        }
-        StringBuilder cn = new StringBuilder(className);
-        ArrayList<Integer> al = new ArrayList<Integer>();
-        int p = cn.indexOf("_");
-        while (p > -1) {
-            al.add(p);
-            p = cn.indexOf("_", p + 1);
-        }
-        Class type = null;
-        if (al.size() > 0) {
-            try {
-                int size = al.size();
-                int[] pos = new int[size];
-                int i = -1;
-                for (int x : al) {
-                    pos[++i] = x;
-                }
-                type = getClass(cn, pos, 0, '.');
-                if (type == null) {
-                    type = getClass(cn, pos, 0, '_');
-                }
-                if (type == null) {
-                    type = getInnerClass(cn, pos, 0, '$');
-                }
-            }
-            catch (Exception e) {
-            }
-        }
-        else {
-            try {
-                type = Class.forName(className);
-            }
-            catch (ClassNotFoundException e) {
-            }
-        }
+        Class<?> type = HproseClassManager.getClass(className);
         if (type == null) {
-            type = void.class;
+            StringBuilder cn = new StringBuilder(className);
+            ArrayList<Integer> al = new ArrayList<Integer>();
+            int p = cn.indexOf("_");
+            while (p > -1) {
+                al.add(p);
+                p = cn.indexOf("_", p + 1);
+            }
+            if (al.size() > 0) {
+                try {
+                    int size = al.size();
+                    int[] pos = new int[size];
+                    int i = -1;
+                    for (int x : al) {
+                        pos[++i] = x;
+                    }
+                    type = getClass(cn, pos, 0, '.');
+                    if (type == null) {
+                        type = getClass(cn, pos, 0, '_');
+                    }
+                    if (type == null) {
+                        type = getInnerClass(cn, pos, 0, '$');
+                    }
+                }
+                catch (Exception e) {
+                }
+            }
+            else {
+                try {
+                    type = Class.forName(className);
+                }
+                catch (ClassNotFoundException e) {
+                }
+            }
+            if (type == null) {
+                type = void.class;
+            }
+            HproseClassManager.register(type, className);
         }
-        HproseClassManager.register(type, className);
         return type;
     }
 
     private static Object[] getArgs(Constructor ctor) {
-        Object[] args;
-        SoftReference<Object[]> sref = argsCache.get(ctor);
-        if ((sref != null) && (args = sref.get()) != null) {
-            return args;
+        Object[] args = argsCache.get(ctor);
+        if (args == null) {
+            Class<?>[] params = ctor.getParameterTypes();
+            args = new Object[params.length];
+            for (int i = 0; i < params.length; ++i) {
+                Class<?> type = params[i];
+                if (int.class.equals(type) || Integer.class.equals(type)) {
+                    args[i] = intZero;
+                }
+                else if (long.class.equals(type) || Long.class.equals(type)) {
+                    args[i] = longZero;
+                }
+                else if (byte.class.equals(type) || Byte.class.equals(type)) {
+                    args[i] = byteZero;
+                }
+                else if (short.class.equals(type) || Short.class.equals(type)) {
+                    args[i] = shortZero;
+                }
+                else if (float.class.equals(type) || Float.class.equals(type)) {
+                    args[i] = floatZero;
+                }
+                else if (double.class.equals(type) || Double.class.equals(type)) {
+                    args[i] = doubleZero;
+                }
+                else if (char.class.equals(type) || Character.class.equals(type)) {
+                    args[i] = charZero;
+                }
+                else if (boolean.class.equals(type) || Boolean.class.equals(type)) {
+                    args[i] = Boolean.FALSE;
+                }
+                else {
+                    args[i] = null;
+                }
+            }
+            argsCache.put(ctor, args);
         }
-        Class<?>[] params = ctor.getParameterTypes();
-        args = new Object[params.length];
-        for (int i = 0; i < params.length; ++i) {
-            Class<?> type = params[i];
-            if (int.class.equals(type) || Integer.class.equals(type)) {
-                args[i] = intZero;
-            }
-            else if (long.class.equals(type) || Long.class.equals(type)) {
-                args[i] = longZero;
-            }
-            else if (byte.class.equals(type) || Byte.class.equals(type)) {
-                args[i] = byteZero;
-            }
-            else if (short.class.equals(type) || Short.class.equals(type)) {
-                args[i] = shortZero;
-            }
-            else if (float.class.equals(type) || Float.class.equals(type)) {
-                args[i] = floatZero;
-            }
-            else if (double.class.equals(type) || Double.class.equals(type)) {
-                args[i] = doubleZero;
-            }
-            else if (char.class.equals(type) || Character.class.equals(type)) {
-                args[i] = charZero;
-            }
-            else if (boolean.class.equals(type) || Boolean.class.equals(type)) {
-                args[i] = Boolean.FALSE;
-            }
-            else {
-                args[i] = null;
-            }
-        }
-        argsCache.put(ctor, new SoftReference<Object[]>(args));
         return args;
     }
 
@@ -452,45 +450,28 @@ public final class HproseHelper {
 
     @SuppressWarnings({"unchecked"})
     public static <T> T newInstance(Class<T> type) {
-        Constructor<T> ctor = null;
-        boolean ctorCached = false;
-        if (ctorCache.containsKey(type)) {
-            ctorCached = true;
-            SoftReference<Constructor<?>> sref = ctorCache.get(type);
-            if (sref != null) {
-                ctor = (Constructor<T>) sref.get();
-                if (ctor == null) {
-                    ctorCached = false;
+        Constructor<?> ctor = ctorCache.get(type);
+        if (ctor == null) {
+            Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();
+            Arrays.sort(ctors, new ConstructorComparator());
+            for (Constructor<T> c : ctors) {
+                try {
+                    c.setAccessible(true);
+                    T obj = c.newInstance(getArgs(c));
+                    ctorCache.put(type, c);
+                    return obj;
+                }
+                catch (Exception e) {
                 }
             }
+            ctor = nullCtor;
+            ctorCache.put(type, ctor);
         }
         try {
-            if (ctor != null) {
-                return ctor.newInstance(getArgs(ctor));
+            if (ctor == nullCtor) {
+                return (T) newInstance.invoke(ObjectStreamClass.lookup(type), nullArgs);
             }
-            else {
-                if (!ctorCached) {
-                    Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();
-                    Arrays.sort(ctors, new ConstructorComparator());
-                    for (Constructor<T> c : ctors) {
-                        try {
-                            c.setAccessible(true);
-                            T obj = c.newInstance(getArgs(c));
-                            ctorCache.put(type, new SoftReference<Constructor<?>>(c));
-                            return obj;
-                        }
-                        catch (Exception e) {
-                        }
-                    }
-                    ctorCache.put(type, new SoftReference<Constructor<?>>(null));
-                }
-                if (newInstance != null) {
-                    return (T)newInstance.invoke(ObjectStreamClass.lookup(type), nullArgs);
-                }
-                else {
-                    return null;
-                }
-            }
+            return (T) ctor.newInstance(getArgs(ctor));
         }
         catch (Exception e) {
             return null;

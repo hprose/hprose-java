@@ -12,7 +12,7 @@
  *                                                        *
  * TypeCode class for Java.                               *
  *                                                        *
- * LastModified: Dec 26, 2012                             *
+ * LastModified: Sep 11, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -190,23 +190,26 @@ public final class TypeCode {
         typeMap.put(SortedMap.class, TypeCode.SortedMap);
     }
 
-    public static int get(Class<?> type) {
+    public synchronized static int get(Class<?> type) {
         int typeCode = typeMap.get(type);
-        if (typeCode != -1) {
-            return typeCode;
+        if (typeCode == -1) {
+            if (type.isEnum()) {
+                typeCode = TypeCode.Enum;
+            }
+            else if (type.isArray()) {
+                typeCode = TypeCode.OtherTypeArray;
+            }
+            else if (Collection.class.isAssignableFrom(type)) {
+                typeCode = TypeCode.CollectionType;
+            }
+            else if (Map.class.isAssignableFrom(type)) {
+                typeCode = TypeCode.MapType;
+            }
+            else {
+                typeCode = TypeCode.OtherType;
+            }
+            typeMap.put(type, typeCode);
         }
-        else if (type.isEnum()) {
-            return TypeCode.Enum;
-        }
-        else if (type.isArray()) {
-            return TypeCode.OtherTypeArray;
-        }
-        else if (Collection.class.isAssignableFrom(type)) {
-            return TypeCode.CollectionType;
-        }
-        else if (Map.class.isAssignableFrom(type)) {
-            return TypeCode.MapType;
-        }
-        return TypeCode.OtherType;
+        return typeCode;
     }
 }

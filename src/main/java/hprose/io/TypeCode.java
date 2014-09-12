@@ -12,7 +12,7 @@
  *                                                        *
  * TypeCode class for Java.                               *
  *                                                        *
- * LastModified: Sep 11, 2014                             *
+ * LastModified: Sep 12, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -42,6 +42,13 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class TypeCode {
     public static final int Null = 0;
@@ -116,7 +123,14 @@ public final class TypeCode {
     public static final int TreeMap = 69;
     public static final int SortedMap = 70;
     public static final int MapType = 71;
-    public static final int OtherType = 72;
+    public static final int AtomicBoolean = 72;
+    public static final int AtomicInteger = 73;
+    public static final int AtomicLong = 74;
+    public static final int AtomicReference = 75;
+    public static final int AtomicIntegerArray = 76;
+    public static final int AtomicLongArray = 77;
+    public static final int AtomicReferenceArray = 78;
+    public static final int OtherType = 79;
 
     static final ObjectIntMap typeMap = new ObjectIntMap();
 
@@ -188,6 +202,13 @@ public final class TypeCode {
         typeMap.put(Map.class, TypeCode.Map);
         typeMap.put(TreeMap.class, TypeCode.TreeMap);
         typeMap.put(SortedMap.class, TypeCode.SortedMap);
+        typeMap.put(AtomicBoolean.class, TypeCode.AtomicBoolean);
+        typeMap.put(AtomicInteger.class, TypeCode.AtomicInteger);
+        typeMap.put(AtomicLong.class, TypeCode.AtomicLong);
+        typeMap.put(AtomicReference.class, TypeCode.AtomicReference);
+        typeMap.put(AtomicIntegerArray.class, TypeCode.AtomicIntegerArray);
+        typeMap.put(AtomicLongArray.class, TypeCode.AtomicLongArray);
+        typeMap.put(AtomicReferenceArray.class, TypeCode.AtomicReferenceArray);
     }
 
     public synchronized static int get(Class<?> type) {

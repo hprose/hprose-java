@@ -43,6 +43,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class HproseReader {
 
@@ -2000,6 +2007,16 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
+    public AtomicReference<?> readAtomicReference(Type type) throws IOException {
+        return new AtomicReference(unserialize(type));
+    }
+    
+    @SuppressWarnings({"unchecked"})
+    public <T> AtomicReferenceArray<T> readAtomicReferenceArray(Class<T> componentClass, Type componentType) throws IOException {
+        return new AtomicReferenceArray<T>(readOtherTypeArray(componentClass, componentType));
+    }
+
+    @SuppressWarnings({"unchecked"})
     public Collection readCollection(Class<?> cls, Type type) throws IOException {
         int tag = stream.read();
         switch (tag) {
@@ -2232,6 +2249,29 @@ public final class HproseReader {
                 }
                 else {
                     throw new HproseException(type.toString() + " is not an instantiable class.");
+                }
+            }
+            case TypeCode.AtomicBoolean: return new AtomicBoolean(readBoolean());
+            case TypeCode.AtomicInteger: return new AtomicInteger(readInt());
+            case TypeCode.AtomicLong: return new AtomicLong(readLong());
+            case TypeCode.AtomicReference: {
+                if (type instanceof ParameterizedType) {
+                    return readAtomicReference(((ParameterizedType)type).getActualTypeArguments()[0]);
+                }
+                else {
+                    return readAtomicReference(Object.class);
+                }
+            }
+            case TypeCode.AtomicIntegerArray: return new AtomicIntegerArray(readIntArray());
+            case TypeCode.AtomicLongArray: return new AtomicLongArray(readLongArray());
+            case TypeCode.AtomicReferenceArray: {
+                if (type instanceof ParameterizedType) {
+                    type = ((ParameterizedType)type).getActualTypeArguments()[0];
+                    cls = HproseHelper.toClass(type);
+                    return readAtomicReferenceArray(cls, type);
+                }
+                else {
+                    return readAtomicReferenceArray(Object.class, Object.class);
                 }
             }
             case TypeCode.OtherType: return readObject(cls);

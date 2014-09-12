@@ -37,6 +37,13 @@ import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class HproseWriter {
     interface WriterRefer {
@@ -237,6 +244,13 @@ public final class HproseWriter {
                 case TypeCode.TreeMap:
                 case TypeCode.SortedMap:
                 case TypeCode.MapType: writeMapWithRef((Map) obj); break;
+                case TypeCode.AtomicBoolean: writeBoolean(((AtomicBoolean)obj).get()); break;
+                case TypeCode.AtomicInteger: writeInteger(((AtomicInteger)obj).get()); break;
+                case TypeCode.AtomicLong: writeLong(((AtomicLong)obj).get()); break;
+                case TypeCode.AtomicReference: serialize(((AtomicReference)obj).get()); break;
+                case TypeCode.AtomicIntegerArray: writeArrayWithRef((AtomicIntegerArray)obj); break;
+                case TypeCode.AtomicLongArray: writeArrayWithRef((AtomicLongArray)obj); break;
+                case TypeCode.AtomicReferenceArray: writeArrayWithRef((AtomicReferenceArray)obj); break;
                 case TypeCode.OtherType: writeObjectWithRef(obj); break;
             }
         }
@@ -1115,6 +1129,66 @@ public final class HproseWriter {
     }
 
     public void writeArrayWithRef(Object[] array) throws IOException {
+        if (!refer.write(array)) {
+            writeArray(array);
+        }
+    }
+
+    public void writeArray(AtomicIntegerArray array) throws IOException {
+        refer.set(array);
+        int length = array.length();
+        stream.write(HproseTags.TagList);
+        if (length > 0) {
+            writeInt(length);
+        }
+        stream.write(HproseTags.TagOpenbrace);
+        for (int i = 0; i < length; ++i) {
+            writeInteger(array.get(i));
+        }
+        stream.write(HproseTags.TagClosebrace);
+    }
+
+    public void writeArrayWithRef(AtomicIntegerArray array) throws IOException {
+        if (!refer.write(array)) {
+            writeArray(array);
+        }
+    }
+
+    public void writeArray(AtomicLongArray array) throws IOException {
+        refer.set(array);
+        int length = array.length();
+        stream.write(HproseTags.TagList);
+        if (length > 0) {
+            writeInt(length);
+        }
+        stream.write(HproseTags.TagOpenbrace);
+        for (int i = 0; i < length; ++i) {
+            writeLong(array.get(i));
+        }
+        stream.write(HproseTags.TagClosebrace);
+    }
+
+    public void writeArrayWithRef(AtomicLongArray array) throws IOException {
+        if (!refer.write(array)) {
+            writeArray(array);
+        }
+    }
+
+    public void writeArray(AtomicReferenceArray array) throws IOException {
+        refer.set(array);
+        int length = array.length();
+        stream.write(HproseTags.TagList);
+        if (length > 0) {
+            writeInt(length);
+        }
+        stream.write(HproseTags.TagOpenbrace);
+        for (int i = 0; i < length; ++i) {
+            serialize(array.get(i));
+        }
+        stream.write(HproseTags.TagClosebrace);
+    }
+
+    public void writeArrayWithRef(AtomicReferenceArray array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }

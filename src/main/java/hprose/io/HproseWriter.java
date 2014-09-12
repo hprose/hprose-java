@@ -19,6 +19,7 @@
 package hprose.io;
 
 import hprose.common.HproseException;
+import hprose.io.serialize.SerializerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,12 +38,8 @@ import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class HproseWriter {
@@ -123,136 +120,7 @@ public final class HproseWriter {
             writeNull();
         }
         else {
-            serialize(obj, TypeCode.get(obj.getClass()));
-        }
-    }
-
-    private void serialize(Object obj, int typecode) throws IOException {
-        if (obj == null) {
-            writeNull();
-        }
-        else {
-            switch (typecode) {
-                case TypeCode.Null: writeNull(); break;
-                case TypeCode.BooleanType: writeBoolean((Boolean)obj); break;
-                case TypeCode.CharType: writeUTF8Char((Character)obj); break;
-                case TypeCode.ByteType: writeInteger((Byte)obj); break;
-                case TypeCode.ShortType: writeInteger((Short)obj); break;
-                case TypeCode.IntType: writeInteger((Integer)obj); break;
-                case TypeCode.LongType: writeLong((Long)obj); break;
-                case TypeCode.FloatType: writeDouble((Float)obj); break;
-                case TypeCode.DoubleType: writeDouble((Double)obj); break;
-                case TypeCode.Enum: writeInteger(((Enum)obj).ordinal()); break;
-                case TypeCode.Object: {
-                    Class<?> cls = obj.getClass();
-                    if (Object.class.equals(cls)) {
-                        throw new HproseException("Can't serialize an object of the Object class.");
-                    }
-                    serialize(obj, TypeCode.get(cls));
-                    break;
-                }
-                case TypeCode.Boolean: writeBoolean((Boolean)obj); break;
-                case TypeCode.Character: writeUTF8Char((Character)obj); break;
-                case TypeCode.Byte: writeInteger((Byte)obj); break;
-                case TypeCode.Short: writeInteger((Short)obj); break;
-                case TypeCode.Integer: writeInteger((Integer)obj); break;
-                case TypeCode.Long: writeLong((Long)obj); break;
-                case TypeCode.Float: writeDouble((Float)obj); break;
-                case TypeCode.Double: writeDouble((Double)obj); break;
-                case TypeCode.String: {
-                    String s = (String)obj;
-                    switch (s.length()) {
-                        case 0: writeEmpty(); break;
-                        case 1: writeUTF8Char(s.charAt(0)); break;
-                        default: writeStringWithRef(s); break;
-                    }
-                    break;
-                }
-                case TypeCode.BigInteger: writeLong((BigInteger) obj); break;
-                case TypeCode.Date: writeDateWithRef((Date) obj); break;
-                case TypeCode.Time: writeDateWithRef((Time) obj); break;
-                case TypeCode.Timestamp: writeDateWithRef((Timestamp) obj); break;
-                case TypeCode.DateTime: writeDateWithRef((java.util.Date) obj); break;
-                case TypeCode.Calendar: writeDateWithRef((Calendar) obj); break;
-                case TypeCode.BigDecimal: writeDouble((BigDecimal) obj); break;
-                case TypeCode.StringBuilder: {
-                    StringBuilder s = (StringBuilder)obj;
-                    switch (s.length()) {
-                        case 0: writeEmpty(); break;
-                        case 1: writeUTF8Char(s.charAt(0)); break;
-                        default: writeStringWithRef(s); break;
-                    }
-                    break;
-                }
-                case TypeCode.StringBuffer: {
-                    StringBuffer s = (StringBuffer)obj;
-                    switch (s.length()) {
-                        case 0: writeEmpty(); break;
-                        case 1: writeUTF8Char(s.charAt(0)); break;
-                        default: writeStringWithRef(s); break;
-                    }
-                    break;
-                }
-                case TypeCode.UUID: writeUUIDWithRef((UUID) obj); break;
-                case TypeCode.ObjectArray: writeArrayWithRef((Object[]) obj); break;
-                case TypeCode.BooleanArray: writeArrayWithRef((boolean[]) obj); break;
-                case TypeCode.CharArray: {
-                    char[] cs = (char[]) obj;
-                    switch (cs.length) {
-                        case 0: writeEmpty(); break;
-                        case 1: writeUTF8Char(cs[0]); break;
-                        default: writeStringWithRef(cs); break;
-                    }
-                    break;
-                }
-                case TypeCode.ByteArray: writeBytesWithRef((byte[]) obj); break;
-                case TypeCode.ShortArray: writeArrayWithRef((short[]) obj); break;
-                case TypeCode.IntArray: writeArrayWithRef((int[]) obj); break;
-                case TypeCode.LongArray: writeArrayWithRef((long[]) obj); break;
-                case TypeCode.FloatArray: writeArrayWithRef((float[]) obj); break;
-                case TypeCode.DoubleArray: writeArrayWithRef((double[]) obj); break;
-                case TypeCode.StringArray: writeArrayWithRef((String[]) obj); break;
-                case TypeCode.BigIntegerArray: writeArrayWithRef((BigInteger[]) obj); break;
-                case TypeCode.DateArray: writeArrayWithRef((Date[]) obj); break;
-                case TypeCode.TimeArray: writeArrayWithRef((Time[]) obj); break;
-                case TypeCode.TimestampArray: writeArrayWithRef((Timestamp[]) obj); break;
-                case TypeCode.DateTimeArray: writeArrayWithRef((java.util.Date[]) obj); break;
-                case TypeCode.CalendarArray: writeArrayWithRef((Calendar[]) obj); break;
-                case TypeCode.BigDecimalArray: writeArrayWithRef((BigDecimal[]) obj); break;
-                case TypeCode.StringBuilderArray: writeArrayWithRef((StringBuilder[]) obj); break;
-                case TypeCode.StringBufferArray: writeArrayWithRef((StringBuffer[]) obj); break;
-                case TypeCode.UUIDArray: writeArrayWithRef((UUID[]) obj); break;
-                case TypeCode.CharsArray: writeArrayWithRef((char[][]) obj); break;
-                case TypeCode.BytesArray: writeArrayWithRef((byte[][]) obj); break;
-                case TypeCode.OtherTypeArray: writeArrayWithRef(obj); break;
-                case TypeCode.ArrayList: writeListWithRef((List) obj); break;
-                case TypeCode.AbstractList:
-                case TypeCode.AbstractCollection:
-                case TypeCode.List:
-                case TypeCode.Collection:
-                case TypeCode.AbstractSequentialList:
-                case TypeCode.LinkedList:
-                case TypeCode.HashSet:
-                case TypeCode.AbstractSet:
-                case TypeCode.Set:
-                case TypeCode.TreeSet:
-                case TypeCode.SortedSet:
-                case TypeCode.CollectionType: writeCollectionWithRef((Collection) obj); break;
-                case TypeCode.HashMap:
-                case TypeCode.AbstractMap:
-                case TypeCode.Map:
-                case TypeCode.TreeMap:
-                case TypeCode.SortedMap:
-                case TypeCode.MapType: writeMapWithRef((Map) obj); break;
-                case TypeCode.AtomicBoolean: writeBoolean(((AtomicBoolean)obj).get()); break;
-                case TypeCode.AtomicInteger: writeInteger(((AtomicInteger)obj).get()); break;
-                case TypeCode.AtomicLong: writeLong(((AtomicLong)obj).get()); break;
-                case TypeCode.AtomicReference: serialize(((AtomicReference)obj).get()); break;
-                case TypeCode.AtomicIntegerArray: writeArrayWithRef((AtomicIntegerArray)obj); break;
-                case TypeCode.AtomicLongArray: writeArrayWithRef((AtomicLongArray)obj); break;
-                case TypeCode.AtomicReferenceArray: writeArrayWithRef((AtomicReferenceArray)obj); break;
-                case TypeCode.OtherType: writeObjectWithRef(obj); break;
-            }
+            SerializerFactory.get(obj.getClass()).write(this, obj);
         }
     }
 
@@ -1295,7 +1163,7 @@ public final class HproseWriter {
             catch (Exception e) {
                 throw new HproseException(e.getMessage());
             }
-            serialize(value, member.typecode);
+            SerializerFactory.get(member.cls).write(this, value);
         }
         stream.write(HproseTags.TagClosebrace);
     }

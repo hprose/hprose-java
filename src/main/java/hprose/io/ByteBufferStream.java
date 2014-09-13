@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Apr 13, 2014                             *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,32 +25,39 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ByteBufferStream {
 
-    private static final ConcurrentHashMap<Integer, ConcurrentLinkedQueue<ByteBuffer>> byteBufferPool = new ConcurrentHashMap<Integer, ConcurrentLinkedQueue<ByteBuffer>>();
+    @SuppressWarnings({"unchecked"})
+    private static final ConcurrentLinkedQueue<ByteBuffer>[] byteBufferPool = new ConcurrentLinkedQueue[] {
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>(),
+        new ConcurrentLinkedQueue<ByteBuffer>()
+    };
     public ByteBuffer buffer;
     InputStream istream;
     OutputStream ostream;
-
-    static {
-        byteBufferPool.put(512, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(2 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(4 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(8 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(16 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(32 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(64 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(128 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(256 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(512 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(2 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(4 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
-        byteBufferPool.put(8 * 1024 * 1024, new ConcurrentLinkedQueue<ByteBuffer>());
+    private static final int[] debruijn = new int[] {
+        0,  1, 28,  2, 29, 14, 24,  3, 30, 22, 20, 15, 25, 17,  4,  8,
+        31, 27, 13, 23, 21, 19, 16,  7, 26, 12, 18,  6, 11,  5, 10,  9
+    };
+    
+    private static int log2(int x) {
+        return debruijn[(x & -x) * 0x077CB531 >>> 27];
     }
 
     private static int pow2roundup(int x) {
@@ -66,9 +73,9 @@ public class ByteBufferStream {
     public static ByteBuffer allocate(int capacity) {
         capacity = pow2roundup(capacity);
         if (capacity < 512) capacity = 512;
-        ConcurrentLinkedQueue<ByteBuffer> queue = byteBufferPool.get(capacity);
-        if (queue != null) {
-            ByteBuffer byteBuffer = queue.poll();
+        int index = log2(capacity) - 9;
+        if (index < 16) {
+            ByteBuffer byteBuffer = byteBufferPool[index].poll();
             if (byteBuffer != null) return byteBuffer;
         }
         return ByteBuffer.allocateDirect(capacity);
@@ -78,9 +85,9 @@ public class ByteBufferStream {
         if (buffer.isDirect()) {
             buffer.clear();
             int capacity = buffer.capacity();
-            ConcurrentLinkedQueue<ByteBuffer> queue = byteBufferPool.get(capacity);
-            if (queue != null) {
-                queue.add(buffer);
+            int index = log2(capacity) - 9;
+            if (index < 16) {
+                byteBufferPool[index].offer(buffer);
             }
         }
     }

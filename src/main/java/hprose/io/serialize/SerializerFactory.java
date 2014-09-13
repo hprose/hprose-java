@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseSerializer.java                                  *
+ * SerializerFactory.java                                 *
  *                                                        *
- * hprose serializer interface for Java.                  *
+ * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class SerializerFactory {
+public final class SerializerFactory {
     private static final ConcurrentHashMap<Class<?>, HproseSerializer> serializers = new ConcurrentHashMap<Class<?>, HproseSerializer>();
     static {
         serializers.put(void.class, NullSerializer.instance);
@@ -132,7 +132,7 @@ public class SerializerFactory {
         serializers.put(AtomicReferenceArray.class, AtomicReferenceArraySerializer.instance);
     }
     
-    public static HproseSerializer get(Class<?> type) {
+    public final static HproseSerializer get(Class<?> type) {
         HproseSerializer serializer = serializers.get(type);
         if (serializer == null) {
             if (type.isEnum()) {

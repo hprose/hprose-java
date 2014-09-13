@@ -12,18 +12,19 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
 import hprose.common.HproseException;
+import hprose.io.unserialize.HproseUnserializer;
+import hprose.io.unserialize.UnserializerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -36,18 +37,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -536,7 +528,7 @@ public final class HproseReader {
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString());
             if (member != null) {
-                Object value = unserialize(member.cls, member.type, member.typecode);
+                Object value = member.unserializer.read(this, member.cls, member.type);
                 try {
                     member.set(obj, value);
                 }
@@ -704,7 +696,7 @@ public final class HproseReader {
             for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
-                    Object value = unserialize(member.cls, member.type, member.typecode);
+                    Object value = member.unserializer.read(this, member.cls, member.type);
                     try {
                         member.set(obj, value);
                     }
@@ -1994,9 +1986,9 @@ public final class HproseReader {
                 int count = readInt(HproseTags.TagOpenbrace);
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 refer.set(a);
-                int typecode = TypeCode.get(componentClass);
+                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
-                    a[i] = (T)unserialize(componentClass, componentType, typecode);
+                    a[i] = (T) unserializer.read(this, componentClass, componentType);
                 }
                 stream.read();
                 return a;
@@ -2035,9 +2027,9 @@ public final class HproseReader {
                     componentType = Object.class;
                     componentClass = Object.class;
                 }
-                int typecode = TypeCode.get(componentClass);
+                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
-                    a.add(unserialize(componentClass, componentType, typecode));
+                    a.add(unserializer.read(this, componentClass, componentType));
                 }
                 stream.read();
                 return a;
@@ -2067,16 +2059,16 @@ public final class HproseReader {
                 keyClass = Object.class;
                 valueClass = Object.class;
             }
-            int valueTypecode = TypeCode.get(valueClass);
             if (keyClass.equals(int.class) &&
                 keyClass.equals(Integer.class) &&
                 keyClass.equals(String.class) &&
                 keyClass.equals(Object.class)) {
                 throw castError(tagToString(HproseTags.TagList), cls);
             }
+            HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
                 Object key = (keyClass.equals(String.class) ? String.valueOf(i) : i);
-                Object value = unserialize(valueClass, valueType, valueTypecode);
+                Object value = valueUnserializer.read(this, valueClass, valueType);
                 m.put(key, value);
             }
         }
@@ -2104,11 +2096,11 @@ public final class HproseReader {
             keyClass = Object.class;
             valueClass = Object.class;
         }
-        int keyTypecode = TypeCode.get(keyClass);
-        int valueTypecode = TypeCode.get(valueClass);
+        HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
+        HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
         for (int i = 0; i < count; ++i) {
-            Object key = unserialize(keyClass, keyType, keyTypecode);
-            Object value = unserialize(valueClass, valueType, valueTypecode);
+            Object key = keyUnserializer.read(this, keyClass, keyType);
+            Object value = valueUnserializer.read(this, valueClass, valueType);
             m.put(key, value);
         }
         stream.read();
@@ -2146,137 +2138,16 @@ public final class HproseReader {
             return unserialize();
         }
         Class<?> cls = HproseHelper.toClass(type);
-        return unserialize(cls, type, TypeCode.get(cls));
+        return unserialize(cls, type);
     }
 
     @SuppressWarnings({"unchecked"})
     public <T> T unserialize(Class<T> type) throws IOException {
-        return (T) unserialize(type, type, TypeCode.get(type));
+        return (T) unserialize(type, type);
     }
 
-    private Object unserialize(Class<?> cls, Type type, int typecode) throws IOException {
-        switch (typecode) {
-            case TypeCode.Null: return unserialize();
-            case TypeCode.BooleanType: return readBoolean();
-            case TypeCode.CharType: return readChar();
-            case TypeCode.ByteType: return readByte();
-            case TypeCode.ShortType: return readShort();
-            case TypeCode.IntType: return readInt();
-            case TypeCode.LongType: return readLong();
-            case TypeCode.FloatType: return readFloat();
-            case TypeCode.DoubleType: return readDouble();
-            case TypeCode.Enum: return readEnum(cls);
-            case TypeCode.Object: return unserialize();
-            case TypeCode.Boolean: return readBooleanObject();
-            case TypeCode.Character: return readCharObject();
-            case TypeCode.Byte: return readByteObject();
-            case TypeCode.Short: return readShortObject();
-            case TypeCode.Integer: return readIntObject();
-            case TypeCode.Long: return readLongObject();
-            case TypeCode.Float: return readFloatObject();
-            case TypeCode.Double: return readDoubleObject();
-            case TypeCode.String: return readString();
-            case TypeCode.BigInteger: return readBigInteger();
-            case TypeCode.Date: return readDate();
-            case TypeCode.Time: return readTime();
-            case TypeCode.Timestamp: return readTimestamp();
-            case TypeCode.DateTime: return readDateTime();
-            case TypeCode.Calendar: return readCalendar();
-            case TypeCode.BigDecimal: return readBigDecimal();
-            case TypeCode.StringBuilder: return readStringBuilder();
-            case TypeCode.StringBuffer: return readStringBuffer();
-            case TypeCode.UUID: return readUUID();
-            case TypeCode.ObjectArray: return readObjectArray();
-            case TypeCode.BooleanArray: return readBooleanArray();
-            case TypeCode.CharArray: return readCharArray();
-            case TypeCode.ByteArray: return readByteArray();
-            case TypeCode.ShortArray: return readShortArray();
-            case TypeCode.IntArray: return readIntArray();
-            case TypeCode.LongArray: return readLongArray();
-            case TypeCode.FloatArray: return readFloatArray();
-            case TypeCode.DoubleArray: return readDoubleArray();
-            case TypeCode.StringArray: return readStringArray();
-            case TypeCode.BigIntegerArray: return readBigIntegerArray();
-            case TypeCode.DateArray: return readDateArray();
-            case TypeCode.TimeArray: return readTimeArray();
-            case TypeCode.TimestampArray: return readTimestampArray();
-            case TypeCode.DateTimeArray: return readDateTimeArray();
-            case TypeCode.CalendarArray: return readCalendarArray();
-            case TypeCode.BigDecimalArray: return readBigDecimalArray();
-            case TypeCode.StringBuilderArray: return readStringBuilderArray();
-            case TypeCode.StringBufferArray: return readStringBufferArray();
-            case TypeCode.UUIDArray: return readUUIDArray();
-            case TypeCode.CharsArray: return readCharsArray();
-            case TypeCode.BytesArray: return readBytesArray();
-            case TypeCode.OtherTypeArray: {
-                Class<?> componentClass = cls.getComponentType();
-                if (type instanceof GenericArrayType) {
-                    Type componentType = ((GenericArrayType)type).getGenericComponentType();
-                    return readOtherTypeArray(componentClass, componentType);
-                }
-                else {
-                    return readOtherTypeArray(componentClass, componentClass);
-                }
-            }
-            case TypeCode.ArrayList:
-            case TypeCode.AbstractList:
-            case TypeCode.AbstractCollection:
-            case TypeCode.List:
-            case TypeCode.Collection: return readCollection(ArrayList.class, type);
-            case TypeCode.AbstractSequentialList:
-            case TypeCode.LinkedList: return readCollection(LinkedList.class, type);
-            case TypeCode.HashSet:
-            case TypeCode.AbstractSet:
-            case TypeCode.Set: return readCollection(HashSet.class, type);
-            case TypeCode.TreeSet:
-            case TypeCode.SortedSet: return readCollection(TreeSet.class, type);
-            case TypeCode.CollectionType: {
-                if (isInstantiableClass(cls)) {
-                    return readCollection(cls, type);
-                }
-                else {
-                    throw new HproseException(type.toString() + " is not an instantiable class.");
-                }
-            }
-            case TypeCode.HashMap:
-            case TypeCode.AbstractMap:
-            case TypeCode.Map: return readMap(HashMap.class, type);
-            case TypeCode.TreeMap:
-            case TypeCode.SortedMap: return readMap(TreeMap.class, type);
-            case TypeCode.MapType: {
-                if (isInstantiableClass(cls)) {
-                    return readMap(cls, type);
-                }
-                else {
-                    throw new HproseException(type.toString() + " is not an instantiable class.");
-                }
-            }
-            case TypeCode.AtomicBoolean: return new AtomicBoolean(readBoolean());
-            case TypeCode.AtomicInteger: return new AtomicInteger(readInt());
-            case TypeCode.AtomicLong: return new AtomicLong(readLong());
-            case TypeCode.AtomicReference: {
-                if (type instanceof ParameterizedType) {
-                    return readAtomicReference(((ParameterizedType)type).getActualTypeArguments()[0]);
-                }
-                else {
-                    return readAtomicReference(Object.class);
-                }
-            }
-            case TypeCode.AtomicIntegerArray: return new AtomicIntegerArray(readIntArray());
-            case TypeCode.AtomicLongArray: return new AtomicLongArray(readLongArray());
-            case TypeCode.AtomicReferenceArray: {
-                if (type instanceof ParameterizedType) {
-                    type = ((ParameterizedType)type).getActualTypeArguments()[0];
-                    cls = HproseHelper.toClass(type);
-                    return readAtomicReferenceArray(cls, type);
-                }
-                else {
-                    return readAtomicReferenceArray(Object.class, Object.class);
-                }
-            }
-            case TypeCode.OtherType: return readObject(cls);
-        }
-        throw new HproseException("Can not unserialize this type: " + type.toString());
+    private Object unserialize(Class<?> cls, Type type) throws IOException {
+        return UnserializerFactory.get(cls).read(this, cls, type);
     }
 
     public ByteBufferStream readRaw() throws IOException {

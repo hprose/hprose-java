@@ -1,0 +1,28 @@
+/**********************************************************\
+|                                                          |
+|                          hprose                          |
+|                                                          |
+| Official WebSite: http://www.hprose.com/                 |
+|                   http://www.hprose.org/                 |
+|                                                          |
+\**********************************************************/
+/**********************************************************\
+ *                                                        *
+ * HproseUnserializer.java                                *
+ *                                                        *
+ * hprose unserializer interface for Java.                *
+ *                                                        *
+ * LastModified: Sep 13, 2014                             *
+ * Author: Ma Bingyao <andot@hprose.com>                  *
+ *                                                        *
+\**********************************************************/
+
+package hprose.io.unserialize;
+
+import hprose.io.HproseReader;
+import java.io.IOException;
+import java.lang.reflect.Type;
+
+public interface HproseUnserializer {
+    Object read(HproseReader reader, Class<?> cls, Type type) throws IOException;
+}

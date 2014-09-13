@@ -12,12 +12,14 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
+import hprose.io.serialize.SerializerFactory;
+import hprose.io.unserialize.UnserializerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -33,7 +35,8 @@ final class PropertyAccessor extends MemberAccessor {
         this.setter = setter;
         this.type = getter.getGenericReturnType();
         this.cls =  HproseHelper.toClass(type);
-        this.typecode = TypeCode.get(cls);
+        this.serializer = SerializerFactory.get(cls);
+        this.unserializer = UnserializerFactory.get(cls);
     }
 
     @Override

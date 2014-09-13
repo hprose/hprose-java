@@ -12,12 +12,14 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
+import hprose.io.serialize.SerializerFactory;
+import hprose.io.unserialize.UnserializerFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
@@ -29,7 +31,8 @@ final class FieldAccessor extends MemberAccessor {
         this.accessor = accessor;
         this.type = accessor.getGenericType();
         this.cls = HproseHelper.toClass(type);
-        this.typecode = TypeCode.get(cls);
+        this.serializer = SerializerFactory.get(cls);
+        this.unserializer = UnserializerFactory.get(cls);
     }
 
     @Override

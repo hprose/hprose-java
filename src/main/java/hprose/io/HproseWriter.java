@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 13, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1163,7 +1163,7 @@ public final class HproseWriter {
             catch (Exception e) {
                 throw new HproseException(e.getMessage());
             }
-            SerializerFactory.get(member.cls).write(this, value);
+            member.serializer.write(this, value);
         }
         stream.write(HproseTags.TagClosebrace);
     }

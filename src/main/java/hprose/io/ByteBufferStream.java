@@ -86,7 +86,7 @@ public class ByteBufferStream {
             buffer.clear();
             int capacity = buffer.capacity();
             int index = log2(capacity) - 9;
-            if (index < 16) {
+            if (index >= 0 && index < 16) {
                 byteBufferPool[index].offer(buffer);
             }
         }

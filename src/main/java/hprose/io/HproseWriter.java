@@ -409,39 +409,40 @@ public final class HproseWriter {
             writeInt(length, stream);
         }
         stream.write(HproseTags.TagQuote);
-        for (int i = 0; i < length; ++i) {
-            int c = 0xffff & s.charAt(i);
-            if (c < 0x80) {
-                stream.write(c);
-            }
-            else if (c < 0x800) {
-                stream.write(0xc0 | (c >>> 6));
-                stream.write(0x80 | (c & 0x3f));
-            }
-            else if (c < 0xd800 || c > 0xdfff) {
-                stream.write(0xe0 | (c >>> 12));
-                stream.write(0x80 | ((c >>> 6) & 0x3f));
-                stream.write(0x80 | (c & 0x3f));
-            }
-            else {
-                if (++i < length) {
-                    int c2 = 0xffff & s.charAt(i);
-                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
-                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
-                        stream.write(0xf0 | (c >>> 18));
-                        stream.write(0x80 | ((c >>> 12) & 0x3f));
-                        stream.write(0x80 | ((c >>> 6) & 0x3f));
-                        stream.write(0x80 | (c & 0x3f));
-                    }
-                    else {
-                        throw new HproseException("wrong unicode string");
-                    }
-                }
-                else {
-                    throw new HproseException("wrong unicode string");
-                }
-            }
-        }
+        stream.write(s.getBytes("UTF-8"));
+//        for (int i = 0; i < length; ++i) {
+//            int c = 0xffff & s.charAt(i);
+//            if (c < 0x80) {
+//                stream.write(c);
+//            }
+//            else if (c < 0x800) {
+//                stream.write(0xc0 | (c >>> 6));
+//                stream.write(0x80 | (c & 0x3f));
+//            }
+//            else if (c < 0xd800 || c > 0xdfff) {
+//                stream.write(0xe0 | (c >>> 12));
+//                stream.write(0x80 | ((c >>> 6) & 0x3f));
+//                stream.write(0x80 | (c & 0x3f));
+//            }
+//            else {
+//                if (++i < length) {
+//                    int c2 = 0xffff & s.charAt(i);
+//                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
+//                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
+//                        stream.write(0xf0 | (c >>> 18));
+//                        stream.write(0x80 | ((c >>> 12) & 0x3f));
+//                        stream.write(0x80 | ((c >>> 6) & 0x3f));
+//                        stream.write(0x80 | (c & 0x3f));
+//                    }
+//                    else {
+//                        throw new HproseException("wrong unicode string");
+//                    }
+//                }
+//                else {
+//                    throw new HproseException("wrong unicode string");
+//                }
+//            }
+//        }
         stream.write(HproseTags.TagQuote);
     }
 
@@ -487,39 +488,40 @@ public final class HproseWriter {
             writeInt(length);
         }
         stream.write(HproseTags.TagQuote);
-        for (int i = 0; i < length; ++i) {
-            int c = 0xffff & s[i];
-            if (c < 0x80) {
-                stream.write(c);
-            }
-            else if (c < 0x800) {
-                stream.write(0xc0 | (c >>> 6));
-                stream.write(0x80 | (c & 0x3f));
-            }
-            else if (c < 0xd800 || c > 0xdfff) {
-                stream.write(0xe0 | (c >>> 12));
-                stream.write(0x80 | ((c >>> 6) & 0x3f));
-                stream.write(0x80 | (c & 0x3f));
-            }
-            else {
-                if (++i < length) {
-                    int c2 = 0xffff & s[i];
-                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
-                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
-                        stream.write(0xf0 | ((c >>> 18) & 0x3f));
-                        stream.write(0x80 | ((c >>> 12) & 0x3f));
-                        stream.write(0x80 | ((c >>> 6) & 0x3f));
-                        stream.write(0x80 | (c & 0x3f));
-                    }
-                    else {
-                        throw new HproseException("wrong unicode string");
-                    }
-                }
-                else {
-                    throw new HproseException("wrong unicode string");
-                }
-            }
-        }
+        stream.write(new String(s).getBytes("UTF-8"));
+//        for (int i = 0; i < length; ++i) {
+//            int c = 0xffff & s[i];
+//            if (c < 0x80) {
+//                stream.write(c);
+//            }
+//            else if (c < 0x800) {
+//                stream.write(0xc0 | (c >>> 6));
+//                stream.write(0x80 | (c & 0x3f));
+//            }
+//            else if (c < 0xd800 || c > 0xdfff) {
+//                stream.write(0xe0 | (c >>> 12));
+//                stream.write(0x80 | ((c >>> 6) & 0x3f));
+//                stream.write(0x80 | (c & 0x3f));
+//            }
+//            else {
+//                if (++i < length) {
+//                    int c2 = 0xffff & s[i];
+//                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
+//                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
+//                        stream.write(0xf0 | ((c >>> 18) & 0x3f));
+//                        stream.write(0x80 | ((c >>> 12) & 0x3f));
+//                        stream.write(0x80 | ((c >>> 6) & 0x3f));
+//                        stream.write(0x80 | (c & 0x3f));
+//                    }
+//                    else {
+//                        throw new HproseException("wrong unicode string");
+//                    }
+//                }
+//                else {
+//                    throw new HproseException("wrong unicode string");
+//                }
+//            }
+//        }
         stream.write(HproseTags.TagQuote);
     }
 

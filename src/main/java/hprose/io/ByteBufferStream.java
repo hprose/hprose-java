@@ -154,12 +154,32 @@ public class ByteBufferStream {
         if (remain <= 0) {
             return -1;
         }
-        if (len > remain) {
+        if (len >= remain) {
             buffer.get(b, off, remain);
             return remain;
         }
         buffer.get(b, off, len);
         return len;
+    }
+    
+    public int read(ByteBuffer b) {
+        int len = b.remaining();
+        if (len <= 0) {
+            return 0;
+        }
+        int remain = buffer.remaining();
+        if (remain <= 0) {
+            return -1;
+        }
+        if (len >= remain) {
+            b.put(buffer);
+            return remain;
+        }
+        int oldlimit = buffer.limit();
+        buffer.limit(buffer.position() + len);
+        b.put(buffer);
+        buffer.limit(oldlimit);
+        return len;        
     }
 
     public long skip(long n) {
@@ -223,6 +243,11 @@ public class ByteBufferStream {
     public void write(byte b[], int off, int len) {
         grow(len);
         buffer.put(b, off, len);
+    }
+
+    public void write(ByteBuffer b) {
+        grow(b.remaining());
+        buffer.put(b);
     }
 
     public void flip() {

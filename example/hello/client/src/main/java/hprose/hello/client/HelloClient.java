@@ -9,5 +9,7 @@ public class HelloClient {
         client.useService("http://localhost:8084/helloserver/Hello");
         String result = (String) client.invoke("sayHello", new Object[] { "Hprose" });
         System.out.println(result);
+        result = (String) client.invoke("sayHello", new Object[] { "中国" });
+        System.out.println(result);
     }
 }

@@ -395,6 +395,12 @@ public final class HproseReader {
         return calendar;
     }
 
+    private static HproseException badEncoding(int c) {
+        return new HproseException("bad utf-8 encoding at " +
+                ((c < 0) ? "end of stream" :
+                        "0x" + Integer.toHexString(c & 0xff)));
+    }
+
     private char readUTF8CharAsChar() throws IOException {
         char u;
         int c = stream.read();
@@ -428,19 +434,84 @@ public final class HproseReader {
                             (c3 & 0x3f));
                 break;
             }
-            default: throw new HproseException("bad utf-8 encoding at " +
-                         ((c < 0) ? "end of stream" :
-                         "0x" + Integer.toHexString(c & 0xff)));
+            default: throw badEncoding(c);
         }
         return u;
     }
+
+//    @SuppressWarnings({"fallthrough"})
+//    private char[] readChars() throws IOException {
+//        int count = readInt(HproseTags.TagQuote);
+//        char[] buf = new char[count];
+//        for (int i = 0; i < count; ++i) {
+//            int c = stream.read();
+//            switch (c >>> 4) {
+//                case 0:
+//                case 1:
+//                case 2:
+//                case 3:
+//                case 4:
+//                case 5:
+//                case 6:
+//                case 7: {
+//                    // 0xxx xxxx
+//                    buf[i] = (char)c;
+//                    break;
+//                }
+//                case 12:
+//                case 13: {
+//                    // 110x xxxx   10xx xxxx
+//                    int c2 = stream.read();
+//                    buf[i] = (char)(((c & 0x1f) << 6) |
+//                                     (c2 & 0x3f));
+//                    break;
+//                }
+//                case 14: {
+//                    // 1110 xxxx  10xx xxxx  10xx xxxx
+//                    int c2 = stream.read();
+//                    int c3 = stream.read();
+//                    buf[i] = (char)(((c & 0x0f) << 12) |
+//                                     ((c2 & 0x3f) << 6) |
+//                                     (c3 & 0x3f));
+//                    break;
+//                }
+//                case 15: {
+//                    // 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx
+//                    if ((c & 0xf) <= 4) {
+//                        int c2 = stream.read();
+//                        int c3 = stream.read();
+//                        int c4 = stream.read();
+//                        int s = ((c & 0x07) << 18) |
+//                                ((c2 & 0x3f) << 12) |
+//                                ((c3 & 0x3f) << 6) |
+//                                (c4 & 0x3f) - 0x10000;
+//                        if (0 <= s && s <= 0xfffff) {
+//                            buf[i] = (char)(((s >> 10) & 0x03ff) | 0xd800);
+//                            buf[++i] = (char)((s & 0x03ff) | 0xdc00);
+//                            break;
+//                        }
+//                    }
+//                }
+//                // NO break here
+//                default:
+//                    throw badEncoding(c);
+//            }
+//        }
+//        stream.read();
+//        return buf;
+//    }
 
     @SuppressWarnings({"fallthrough"})
     private char[] readChars() throws IOException {
         int count = readInt(HproseTags.TagQuote);
         char[] buf = new char[count];
-        for (int i = 0; i < count; ++i) {
-            int c = stream.read();
+        byte[] b = new byte[count];
+        stream.read(b, 0, count);
+        int p = -1;
+        int len = count >> 2;
+        int n = len;
+        for (int i = 0; i < len; ++i) {
+            int c = b[++p] & 0xff;
             switch (c >>> 4) {
                 case 0:
                 case 1:
@@ -457,15 +528,15 @@ public final class HproseReader {
                 case 12:
                 case 13: {
                     // 110x xxxx   10xx xxxx
-                    int c2 = stream.read();
+                    int c2 = b[++p] & 0xff;
                     buf[i] = (char)(((c & 0x1f) << 6) |
                                      (c2 & 0x3f));
                     break;
                 }
                 case 14: {
                     // 1110 xxxx  10xx xxxx  10xx xxxx
-                    int c2 = stream.read();
-                    int c3 = stream.read();
+                    int c2 = b[++p] & 0xff;
+                    int c3 = b[++p] & 0xff;
                     buf[i] = (char)(((c & 0x0f) << 12) |
                                      ((c2 & 0x3f) << 6) |
                                      (c3 & 0x3f));
@@ -474,9 +545,65 @@ public final class HproseReader {
                 case 15: {
                     // 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx
                     if ((c & 0xf) <= 4) {
-                        int c2 = stream.read();
-                        int c3 = stream.read();
-                        int c4 = stream.read();
+                        int c2 = b[++p] & 0xff;
+                        int c3 = b[++p] & 0xff;
+                        int c4 = b[++p] & 0xff;
+                        int s = ((c & 0x07) << 18) |
+                                ((c2 & 0x3f) << 12) |
+                                ((c3 & 0x3f) << 6) |
+                                (c4 & 0x3f) - 0x10000;
+                        if (0 <= s && s <= 0xfffff) {
+                            buf[i] = (char)(((s >> 10) & 0x03ff) | 0xd800);
+                            buf[++i] = (char)((s & 0x03ff) | 0xdc00);
+                            ++n;
+                            break;
+                        }
+                    }
+                }
+                // NO break here
+                default:
+                    throw badEncoding(c);
+            }
+        }
+        len = count - 1;
+        for (int i = n; i < count; ++i) {
+            int c = p < len ? b[++p] & 0xff : stream.read();
+            switch (c >>> 4) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7: {
+                    // 0xxx xxxx
+                    buf[i] = (char)c;
+                    break;
+                }
+                case 12:
+                case 13: {
+                    // 110x xxxx   10xx xxxx
+                    int c2 = p < len ? b[++p] & 0xff : stream.read();
+                    buf[i] = (char)(((c & 0x1f) << 6) |
+                                     (c2 & 0x3f));
+                    break;
+                }
+                case 14: {
+                    // 1110 xxxx  10xx xxxx  10xx xxxx
+                    int c2 = p < len ? b[++p] & 0xff : stream.read();
+                    int c3 = p < len ? b[++p] & 0xff : stream.read();
+                    buf[i] = (char)(((c & 0x0f) << 12) |
+                                     ((c2 & 0x3f) << 6) |
+                                     (c3 & 0x3f));
+                    break;
+                }
+                case 15: {
+                    // 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx
+                    if ((c & 0xf) <= 4) {
+                        int c2 = p < len ? b[++p] & 0xff : stream.read();
+                        int c3 = p < len ? b[++p] & 0xff : stream.read();
+                        int c4 = p < len ? b[++p] & 0xff : stream.read();
                         int s = ((c & 0x07) << 18) |
                                 ((c2 & 0x3f) << 12) |
                                 ((c3 & 0x3f) << 6) |
@@ -490,9 +617,7 @@ public final class HproseReader {
                 }
                 // NO break here
                 default:
-                    throw new HproseException("bad utf-8 encoding at " +
-                        ((c < 0) ? "end of stream" :
-                        "0x" + Integer.toHexString(c & 0xff)));
+                    throw badEncoding(c);
             }
         }
         stream.read();
@@ -2271,9 +2396,7 @@ public final class HproseReader {
                 break;
             }
             default:
-                throw new HproseException("bad utf-8 encoding at " +
-                    ((tag < 0) ? "end of stream" :
-                    "0x" + Integer.toHexString(tag & 0xff)));
+                throw badEncoding(tag);
         }
     }
 
@@ -2349,9 +2472,7 @@ public final class HproseReader {
                 }
                 // No break here
                 default:
-                    throw new HproseException("bad utf-8 encoding at " +
-                        ((tag < 0) ? "end of stream" :
-                        "0x" + Integer.toHexString(tag & 0xff)));
+                    throw badEncoding(tag);
             }
         }
         ostream.write(stream.read());

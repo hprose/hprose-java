@@ -12,7 +12,7 @@
  *                                                        *
  * TreeMap unserializer class for Java.                   *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.TreeMap;
 
-public class TreeMapUnserializer implements HproseUnserializer {
+final class TreeMapUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new TreeMapUnserializer();
 

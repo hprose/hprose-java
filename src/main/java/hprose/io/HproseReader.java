@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -139,10 +138,10 @@ public final class HproseReader {
         return checkTags(stream.read(), expectTags);
     }
 
-    private boolean isInstantiableClass(Class<?> type) {
-        return !Modifier.isInterface(type.getModifiers()) &&
-               !Modifier.isAbstract(type.getModifiers());
-    }
+//    private boolean isInstantiableClass(Class<?> type) {
+//        return !Modifier.isInterface(type.getModifiers()) &&
+//               !Modifier.isAbstract(type.getModifiers());
+//    }
 
     private StringBuilder readUntil(int tag) throws IOException {
         StringBuilder sb = new StringBuilder();

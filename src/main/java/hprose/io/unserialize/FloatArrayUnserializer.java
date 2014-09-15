@@ -12,7 +12,7 @@
  *                                                        *
  * float array unserializer class for Java.               *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,7 +23,7 @@ import hprose.io.HproseReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public class FloatArrayUnserializer implements HproseUnserializer {
+final class FloatArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new FloatArrayUnserializer();
 

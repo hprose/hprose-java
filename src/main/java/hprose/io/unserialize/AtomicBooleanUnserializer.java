@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicBoolean unserializer class for Java.             *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AtomicBooleanUnserializer implements HproseUnserializer {
+final class AtomicBooleanUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicBooleanUnserializer();
 

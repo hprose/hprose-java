@@ -12,7 +12,7 @@
  *                                                        *
  * Map serializer class for Java.                         *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.util.Map;
 
-class MapSerializer implements HproseSerializer {
+final class MapSerializer implements HproseSerializer<Map> {
 
     public final static HproseSerializer instance = new MapSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeMapWithRef((Map) obj);
+    public void write(HproseWriter writer, Map obj) throws IOException {
+        writer.writeMapWithRef(obj);
     }
 }

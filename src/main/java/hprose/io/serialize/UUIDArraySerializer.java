@@ -12,7 +12,7 @@
  *                                                        *
  * UUID array serializer class for Java.                  *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.util.UUID;
 
-class UUIDArraySerializer implements HproseSerializer {
+final class UUIDArraySerializer implements HproseSerializer<UUID[]> {
 
     public final static HproseSerializer instance = new UUIDArraySerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeArrayWithRef((UUID[]) obj);
+    public void write(HproseWriter writer, UUID[] obj) throws IOException {
+        writer.writeArrayWithRef(obj);
     }
 }

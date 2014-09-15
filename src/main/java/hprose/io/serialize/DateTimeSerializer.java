@@ -12,7 +12,7 @@
  *                                                        *
  * DateTime serializer class for Java.                    *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.util.Date;
 
-class DateTimeSerializer implements HproseSerializer {
+final class DateTimeSerializer implements HproseSerializer<Date> {
 
     public final static HproseSerializer instance = new DateTimeSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeDateWithRef((Date) obj);
+    public void write(HproseWriter writer, Date obj) throws IOException {
+        writer.writeDateWithRef(obj);
     }
 }

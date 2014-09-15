@@ -12,7 +12,7 @@
  *                                                        *
  * integer serializer class for Java.                     *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,11 +22,11 @@ package hprose.io.serialize;
 import hprose.io.HproseWriter;
 import java.io.IOException;
 
-class IntegerSerializer implements HproseSerializer {
+final class IntegerSerializer implements HproseSerializer<Integer> {
 
     public final static HproseSerializer instance = new IntegerSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeInteger((Integer) obj);
+    public void write(HproseWriter writer, Integer obj) throws IOException {
+        writer.writeInteger(obj);
     }
 }

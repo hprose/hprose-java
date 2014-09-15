@@ -12,7 +12,7 @@
  *                                                        *
  * BigDecimal array serializer class for Java.            *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 
-class BigDecimalArraySerializer implements HproseSerializer {
+final class BigDecimalArraySerializer implements HproseSerializer<BigDecimal[]> {
 
     public final static HproseSerializer instance = new BigDecimalArraySerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeArrayWithRef((BigDecimal[]) obj);
+    public void write(HproseWriter writer, BigDecimal[] obj) throws IOException {
+        writer.writeArrayWithRef(obj);
     }
 }

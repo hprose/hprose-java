@@ -115,6 +115,7 @@ public final class HproseWriter {
         this.refer = simple ? new FakeWriterRefer() : new RealWriterRefer(this);
     }
 
+    @SuppressWarnings({"unchecked"})
     public void serialize(Object obj) throws IOException {
         if (obj == null) {
             writeNull();
@@ -1145,6 +1146,7 @@ public final class HproseWriter {
         }
     }
 
+    @SuppressWarnings({"unchecked"})
     public void writeObject(Object object) throws IOException {
         Class<?> type = object.getClass();
         int cr = classref.get(type);

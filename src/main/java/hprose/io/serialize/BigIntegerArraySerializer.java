@@ -12,7 +12,7 @@
  *                                                        *
  * BigInteger array serializer class for Java.            *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 
-class BigIntegerArraySerializer implements HproseSerializer {
+final class BigIntegerArraySerializer implements HproseSerializer<BigInteger[]> {
 
     public final static HproseSerializer instance = new BigIntegerArraySerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeArrayWithRef((BigInteger[]) obj);
+    public void write(HproseWriter writer, BigInteger[] obj) throws IOException {
+        writer.writeArrayWithRef(obj);
     }
 }

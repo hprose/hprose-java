@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.util.Calendar;
 
-class CalendarSerializer implements HproseSerializer {
+final class CalendarSerializer implements HproseSerializer<Calendar> {
 
     public final static HproseSerializer instance = new CalendarSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeDateWithRef((Calendar) obj);
+    public void write(HproseWriter writer, Calendar obj) throws IOException {
+        writer.writeDateWithRef(obj);
     }
 }

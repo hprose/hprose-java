@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicIntegerArray serializer class for Java.          *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,11 +23,11 @@ import hprose.io.HproseWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-class AtomicIntegerArraySerializer implements HproseSerializer {
+final class AtomicIntegerArraySerializer implements HproseSerializer<AtomicIntegerArray> {
 
     public final static HproseSerializer instance = new AtomicIntegerArraySerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeArrayWithRef((AtomicIntegerArray) obj);
+    public void write(HproseWriter writer, AtomicIntegerArray obj) throws IOException {
+        writer.writeArrayWithRef(obj);
     }
 }

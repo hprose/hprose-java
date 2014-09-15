@@ -12,7 +12,7 @@
  *                                                        *
  * StringBuilder serializer class for Java.               *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,16 +22,15 @@ package hprose.io.serialize;
 import hprose.io.HproseWriter;
 import java.io.IOException;
 
-class StringBuilderSerializer implements HproseSerializer {
+final class StringBuilderSerializer implements HproseSerializer<StringBuilder> {
 
     public final static HproseSerializer instance = new StringBuilderSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        StringBuilder s = (StringBuilder) obj;
-        switch (s.length()) {
+    public void write(HproseWriter writer, StringBuilder obj) throws IOException {
+        switch (obj.length()) {
             case 0: writer.writeEmpty(); break;
-            case 1: writer.writeUTF8Char(s.charAt(0)); break;
-            default: writer.writeStringWithRef(s); break;
+            case 1: writer.writeUTF8Char(obj.charAt(0)); break;
+            default: writer.writeStringWithRef(obj); break;
         }
     }
 }

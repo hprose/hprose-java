@@ -12,7 +12,7 @@
  *                                                        *
  * float serializer class for Java.                       *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Sep 15, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,11 +22,11 @@ package hprose.io.serialize;
 import hprose.io.HproseWriter;
 import java.io.IOException;
 
-class FloatSerializer implements HproseSerializer {
+final class FloatSerializer implements HproseSerializer<Float> {
 
     public final static HproseSerializer instance = new FloatSerializer();
 
-    public void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeDouble((Float) obj);
+    public void write(HproseWriter writer, Float obj) throws IOException {
+        writer.writeDouble(obj);
     }
 }

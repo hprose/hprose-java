@@ -508,9 +508,8 @@ public final class HproseReader {
         byte[] b = new byte[count];
         stream.read(b, 0, count);
         int p = -1;
-        int len = count >> 2;
-        int n = len;
-        for (int i = 0; i < len; ++i) {
+        int n = count >> 2;
+        for (int i = 0; i < n; ++i) {
             int c = b[++p] & 0xff;
             switch (c >>> 4) {
                 case 0:
@@ -565,9 +564,9 @@ public final class HproseReader {
                     throw badEncoding(c);
             }
         }
-        len = count - 1;
+        int last = count - 1;
         for (int i = n; i < count; ++i) {
-            int c = p < len ? b[++p] & 0xff : stream.read();
+            int c = p < last ? b[++p] & 0xff : stream.read();
             switch (c >>> 4) {
                 case 0:
                 case 1:
@@ -584,15 +583,15 @@ public final class HproseReader {
                 case 12:
                 case 13: {
                     // 110x xxxx   10xx xxxx
-                    int c2 = p < len ? b[++p] & 0xff : stream.read();
+                    int c2 = p < last ? b[++p] & 0xff : stream.read();
                     buf[i] = (char)(((c & 0x1f) << 6) |
                                      (c2 & 0x3f));
                     break;
                 }
                 case 14: {
                     // 1110 xxxx  10xx xxxx  10xx xxxx
-                    int c2 = p < len ? b[++p] & 0xff : stream.read();
-                    int c3 = p < len ? b[++p] & 0xff : stream.read();
+                    int c2 = p < last ? b[++p] & 0xff : stream.read();
+                    int c3 = p < last ? b[++p] & 0xff : stream.read();
                     buf[i] = (char)(((c & 0x0f) << 12) |
                                      ((c2 & 0x3f) << 6) |
                                      (c3 & 0x3f));
@@ -601,9 +600,9 @@ public final class HproseReader {
                 case 15: {
                     // 1111 0xxx  10xx xxxx  10xx xxxx  10xx xxxx
                     if ((c & 0xf) <= 4) {
-                        int c2 = p < len ? b[++p] & 0xff : stream.read();
-                        int c3 = p < len ? b[++p] & 0xff : stream.read();
-                        int c4 = p < len ? b[++p] & 0xff : stream.read();
+                        int c2 = p < last ? b[++p] & 0xff : stream.read();
+                        int c3 = p < last ? b[++p] & 0xff : stream.read();
+                        int c4 = p < last ? b[++p] & 0xff : stream.read();
                         int s = ((c & 0x07) << 18) |
                                 ((c2 & 0x3f) << 12) |
                                 ((c3 & 0x3f) << 6) |

@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Dec 24, 2014                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -55,7 +55,7 @@ public class ByteBufferStream {
         0,  1, 28,  2, 29, 14, 24,  3, 30, 22, 20, 15, 25, 17,  4,  8,
         31, 27, 13, 23, 21, 19, 16,  7, 26, 12, 18,  6, 11,  5, 10,  9
     };
-    
+
     private static int log2(int x) {
         return debruijn[(x & -x) * 0x077CB531 >>> 27];
     }
@@ -161,7 +161,7 @@ public class ByteBufferStream {
         buffer.get(b, off, len);
         return len;
     }
-    
+
     public int read(ByteBuffer b) {
         int len = b.remaining();
         if (len <= 0) {
@@ -179,7 +179,7 @@ public class ByteBufferStream {
         buffer.limit(buffer.position() + len);
         b.put(buffer);
         buffer.limit(oldlimit);
-        return len;        
+        return len;
     }
 
     public long skip(long n) {
@@ -280,7 +280,8 @@ public class ByteBufferStream {
 
     public void writeTo(OutputStream ostream) throws IOException {
         if (buffer.hasArray()) {
-            ostream.write(buffer.array(), 0, buffer.limit());
+            int offset = buffer.arrayOffset();
+            ostream.write(buffer.array(), offset, buffer.limit() + offset);
         }
         else {
             byte[] b = new byte[8192];

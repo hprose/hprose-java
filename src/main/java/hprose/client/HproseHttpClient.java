@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Jun 25, 2014                             *
+ * LastModified: Feb 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -40,7 +40,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class HproseHttpClient extends HproseClient {
     private final ConcurrentHashMap<String, String> headers = new ConcurrentHashMap<String, String>();
-    private static CookieManager cookieManager = new CookieManager();
+    private static boolean disableGlobalCookie = false;
+    private static CookieManager globalCookieManager = new CookieManager();
+    private CookieManager cookieManager = disableGlobalCookie ? new CookieManager() : globalCookieManager;
     private boolean keepAlive = true;
     private int keepAliveTimeout = 300;
     private String proxyHost = null;
@@ -50,6 +52,14 @@ public class HproseHttpClient extends HproseClient {
     private int timeout = 0;
     private HostnameVerifier hv = null;
     private SSLSocketFactory sslsf = null;
+
+    public static void setDisableGlobalCookie(boolean value) {
+        disableGlobalCookie = value;
+    }
+
+    public static boolean isDisableGlobalCookie() {
+        return disableGlobalCookie;
+    }
 
     public HproseHttpClient() {
         super();
@@ -150,7 +160,7 @@ public class HproseHttpClient extends HproseClient {
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
-    
+
     public HostnameVerifier getHostnameVerifier() {
         return hv;
     }
@@ -158,7 +168,7 @@ public class HproseHttpClient extends HproseClient {
     public void setHostnameVerifier(HostnameVerifier hv) {
         this.hv = hv;
     }
-    
+
     public SSLSocketFactory getSSLSocketFactory() {
         return sslsf;
     }

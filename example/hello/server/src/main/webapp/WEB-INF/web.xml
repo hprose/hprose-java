@@ -7,6 +7,10 @@
             <param-name>class</param-name>
             <param-value>hprose.hello.server.Hello</param-value>
         </init-param>
+        <init-param>
+            <param-name>crossDomain</param-name>
+            <param-value>true</param-value>
+        </init-param>
         </servlet>
     <servlet-mapping>
         <servlet-name>HelloServlet</servlet-name>

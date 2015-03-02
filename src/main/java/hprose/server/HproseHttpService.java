@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2014                             *
+ * LastModified: Mar 2, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -157,9 +157,14 @@ public class HproseHttpService extends HproseService {
             currentContext.set(httpContext);
             sendHeader(httpContext);
             String method = httpContext.getRequest().getMethod();
-            if (method.equals("GET") && getEnabled) {
-                ostream = doFunctionList(methods, httpContext);
-                ostream.writeTo(httpContext.getResponse().getOutputStream());
+            if (method.equals("GET")) {
+                if (getEnabled) {
+                    ostream = doFunctionList(methods, httpContext);
+                    ostream.writeTo(httpContext.getResponse().getOutputStream());
+                }
+                else {
+                    httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
+                }
             }
             else if (method.equals("POST")) {
                 ByteBufferStream istream = new ByteBufferStream();
@@ -167,9 +172,6 @@ public class HproseHttpService extends HproseService {
                 ostream = handle(istream, methods, httpContext);
                 istream.close();
                 ostream.writeTo(httpContext.getResponse().getOutputStream());
-            }
-            else {
-                httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
             }
         }
         finally {

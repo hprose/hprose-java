@@ -12,12 +12,13 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseContext;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
 import hprose.common.HproseMethod;
@@ -42,9 +43,9 @@ public abstract class HproseService {
     private boolean debugEnabled = false;
     protected HproseServiceEvent event = null;
     protected HproseMethods globalMethods = null;
-    private static final ThreadLocal<Object> currentContext = new ThreadLocal<Object>();
+    private static final ThreadLocal<HproseContext> currentContext = new ThreadLocal<HproseContext>();
 
-    public static Object getCurrentContext() {
+    public static HproseContext getCurrentContext() {
         return currentContext.get();
     }
 
@@ -475,7 +476,7 @@ public abstract class HproseService {
         getGlobalMethods().addMissingMethod(methodName, type, mode, simple);
     }
 
-    private ByteBufferStream responseEnd(ByteBufferStream data, Object context) throws IOException {
+    private ByteBufferStream responseEnd(ByteBufferStream data, HproseContext context) throws IOException {
         data.flip();
         for (int i = 0, n = filters.size(); i < n; ++i) {
             data.buffer = filters.get(i).outputFilter(data.buffer, context);
@@ -484,7 +485,17 @@ public abstract class HproseService {
         return data;
     }
 
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, int count, Object context) {
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+        int count = arguments.length;
+        if (argumentTypes.length != count) {
+            Object[] args = new Object[argumentTypes.length];
+            System.arraycopy(arguments, 0, args, 0, count);
+            Class<?> argType = (Class<?>) argumentTypes[count];
+            if (argType.equals(HproseContext.class)) {
+                args[count] = context;
+            }
+            return args;
+        }
         return arguments;
     }
 
@@ -500,7 +511,7 @@ public abstract class HproseService {
         return e.toString();
     }
 
-    protected ByteBufferStream sendError(Throwable e, Object context) throws IOException {
+    protected ByteBufferStream sendError(Throwable e, HproseContext context) throws IOException {
         if (event != null) {
             event.onSendError(e, context);
         }
@@ -512,7 +523,7 @@ public abstract class HproseService {
         return responseEnd(data, context);
     }
 
-    protected ByteBufferStream doInvoke(ByteBufferStream stream, HproseMethods methods, Object context) throws Throwable {
+    protected ByteBufferStream doInvoke(ByteBufferStream stream, HproseMethods methods, HproseContext context) throws Throwable {
         HproseReader reader = new HproseReader(stream.getInputStream(), mode);
         ByteBufferStream data = new ByteBufferStream();
         int tag;
@@ -521,7 +532,6 @@ public abstract class HproseService {
             String name = reader.readString();
             String aliasname = name.toLowerCase();
             HproseMethod remoteMethod = null;
-            int count = 0;
             Object[] args, arguments;
             boolean byRef = false;
             tag = reader.checkTags((char) HproseTags.TagList + "" +
@@ -529,7 +539,7 @@ public abstract class HproseService {
                                    (char) HproseTags.TagCall);
             if (tag == HproseTags.TagList) {
                 reader.reset();
-                count = reader.readInt(HproseTags.TagOpenbrace);
+                int count = reader.readInt(HproseTags.TagOpenbrace);
                 if (methods != null) {
                     remoteMethod = methods.get(aliasname, count);
                 }
@@ -568,7 +578,7 @@ public abstract class HproseService {
                 args = arguments;
             }
             else {
-                args = fixArguments(remoteMethod.paramTypes, arguments, count, context);
+                args = fixArguments(remoteMethod.paramTypes, arguments, context);
             }
             Object result;
             try {
@@ -603,7 +613,7 @@ public abstract class HproseService {
                 throw ex2;
             }
             if (byRef) {
-                System.arraycopy(args, 0, arguments, 0, count);
+                System.arraycopy(args, 0, arguments, 0, arguments.length);
             }
             if (event != null) {
                 event.onAfterInvoke(name, arguments, byRef, result, context);
@@ -636,7 +646,7 @@ public abstract class HproseService {
         return responseEnd(data, context);
     }
 
-    protected ByteBufferStream doFunctionList(HproseMethods methods, Object context) throws IOException {
+    protected ByteBufferStream doFunctionList(HproseMethods methods, HproseContext context) throws IOException {
         ArrayList<String> names = new ArrayList<String>();
         names.addAll(getGlobalMethods().getAllNames());
         if (methods != null) {
@@ -650,17 +660,17 @@ public abstract class HproseService {
         return responseEnd(data, context);
     }
 
-    protected void fireErrorEvent(Throwable e, Object context) {
+    protected void fireErrorEvent(Throwable e, HproseContext context) {
         if (event != null) {
             event.onSendError(e, context);
         }
     }
 
-    protected ByteBufferStream handle(ByteBufferStream stream, Object context) throws IOException {
+    protected ByteBufferStream handle(ByteBufferStream stream, HproseContext context) throws IOException {
         return handle(stream, null, context);
     }
 
-    protected ByteBufferStream handle(ByteBufferStream stream, HproseMethods methods, Object context) throws IOException {
+    protected ByteBufferStream handle(ByteBufferStream stream, HproseMethods methods, HproseContext context) throws IOException {
         try {
             currentContext.set(context);
             stream.flip();

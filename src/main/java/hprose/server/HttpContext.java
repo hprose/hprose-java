@@ -10,21 +10,22 @@
  *                                                        *
  * HttpContext.java                                       *
  *                                                        *
- * http application class for Java.                       *
+ * http context class for Java.                           *
  *                                                        *
- * LastModified: Apr 3, 2014                              *
+ * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-public class HttpContext {
+public class HttpContext extends HproseContext {
     private final ServletContext application;
     private final ServletConfig config;
     private final HttpServletRequest request;

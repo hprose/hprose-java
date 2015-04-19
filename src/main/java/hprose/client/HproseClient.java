@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Sep 7, 2014                              *
+ * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,7 @@ package hprose.client;
 
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
+import hprose.common.HproseContext;
 import hprose.common.HproseErrorEvent;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
@@ -526,9 +527,10 @@ public abstract class HproseClient implements HproseInvoker {
         ByteBufferStream ostream = null;
         ByteBufferStream istream = null;
         try {
-            ostream = doOutput(functionName, arguments, byRef, simple);
+            HproseContext context = new ClientContext(this);
+            ostream = doOutput(functionName, arguments, byRef, simple, context);
             istream = sendAndReceive(ostream);
-            Object result = doInput(istream, arguments, returnType, resultMode);
+            Object result = doInput(istream, arguments, returnType, resultMode, context);
             if (result instanceof HproseException) {
                 throw (HproseException) result;
             }
@@ -540,7 +542,7 @@ public abstract class HproseClient implements HproseInvoker {
         }
     }
 
-    private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple) throws IOException {
+    private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple, HproseContext context) throws IOException {
         ByteBufferStream stream = new ByteBufferStream();
         HproseWriter hproseWriter = new HproseWriter(stream.getOutputStream(), mode, simple);
         stream.write(HproseTags.TagCall);
@@ -555,7 +557,7 @@ public abstract class HproseClient implements HproseInvoker {
         stream.write(HproseTags.TagEnd);
         stream.flip();
         for (int i = 0, n = filters.size(); i < n; ++i) {
-            stream.buffer = filters.get(i).outputFilter(stream.buffer, this);
+            stream.buffer = filters.get(i).outputFilter(stream.buffer, context);
             stream.flip();
         }
         return stream;
@@ -580,10 +582,10 @@ public abstract class HproseClient implements HproseInvoker {
         throw new HproseException("Can't Convert ByteBuffer to Type: " + returnType.toString());
     }
 
-    private Object doInput(ByteBufferStream stream, Object[] arguments, Type returnType, HproseResultMode resultMode) throws IOException {
+    private Object doInput(ByteBufferStream stream, Object[] arguments, Type returnType, HproseResultMode resultMode, HproseContext context) throws IOException {
         stream.flip();
         for (int i = filters.size() - 1; i >= 0; --i) {
-            stream.buffer = filters.get(i).inputFilter(stream.buffer, this);
+            stream.buffer = filters.get(i).inputFilter(stream.buffer, context);
             stream.flip();
         }
         int tag = stream.buffer.get(stream.buffer.limit() - 1);

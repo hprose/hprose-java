@@ -1,5 +1,6 @@
 package hprose.tcpsessionexam;
 
+import hprose.common.HproseContext;
 import hprose.common.HproseFilter;
 import hprose.io.ByteBufferStream;
 import hprose.io.ObjectIntMap;
@@ -23,7 +24,7 @@ public class TCPSessionServer {
     static class MyServerFilter implements HproseFilter {
 
         @Override
-        public ByteBuffer inputFilter(ByteBuffer istream, Object context) {
+        public ByteBuffer inputFilter(ByteBuffer istream, HproseContext context) {
             int len = istream.limit() - 7;
             if (len > 0 &&
                 istream.get() == 's' &&
@@ -44,7 +45,7 @@ public class TCPSessionServer {
         }
 
         @Override
-        public ByteBuffer outputFilter(ByteBuffer ostream, Object context) {
+        public ByteBuffer outputFilter(ByteBuffer ostream, HproseContext context) {
             int sid = Session.sidMap.get(context);
             ByteBuffer buf = ByteBufferStream.allocate(ostream.remaining() + 7);
             buf.put((byte)'s');

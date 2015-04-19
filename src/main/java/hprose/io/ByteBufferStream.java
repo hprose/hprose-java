@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Dec 29, 2014                             *
+ * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -83,11 +83,13 @@ public class ByteBufferStream {
 
     public static void free(ByteBuffer buffer) {
         if (buffer.isDirect()) {
-            buffer.clear();
             int capacity = buffer.capacity();
-            int index = log2(capacity) - 9;
-            if (index >= 0 && index < 16) {
-                byteBufferPool[index].offer(buffer);
+            if (capacity == pow2roundup(capacity)) {
+                buffer.clear();
+                int index = log2(capacity) - 9;
+                if (index >= 0 && index < 16) {
+                    byteBufferPool[index].offer(buffer);
+                }
             }
         }
     }

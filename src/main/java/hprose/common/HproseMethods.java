@@ -49,7 +49,14 @@ public class HproseMethods {
     }
 
     protected int getCount(Type[] paramTypes) {
-        return paramTypes.length;
+        int i = paramTypes.length;
+        if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
+            Class<?> paramType = (Class<?>) paramTypes[i - 1];
+            if (paramType.equals(HproseContext.class)) {
+                --i;
+            }
+        }
+        return i;
     }
 
     void addMethod(String aliasName, HproseMethod method) {

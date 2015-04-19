@@ -18,6 +18,7 @@
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import java.io.IOException;
@@ -91,13 +92,17 @@ public class HproseHttpService extends HproseService {
     }
 
     @Override
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, int count, Object context) {
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+        int count = arguments.length;
         HttpContext httpContext = (HttpContext)context;
         if (argumentTypes.length != count) {
             Object[] args = new Object[argumentTypes.length];
             System.arraycopy(arguments, 0, args, 0, count);
             Class<?> argType = (Class<?>) argumentTypes[count];
-            if (argType.equals(HttpContext.class)) {
+            if (argType.equals(HproseContext.class)) {
+                args[count] = context;
+            }
+            else if (argType.equals(HttpContext.class)) {
                 args[count] = httpContext;
             }
             else if (argType.equals(HttpServletRequest.class)) {
@@ -152,6 +157,7 @@ public class HproseHttpService extends HproseService {
     }
 
     public void handle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
+        ByteBufferStream istream = null;
         ByteBufferStream ostream = null;
         try {
             currentContext.set(httpContext);
@@ -167,15 +173,17 @@ public class HproseHttpService extends HproseService {
                 }
             }
             else if (method.equals("POST")) {
-                ByteBufferStream istream = new ByteBufferStream();
+                istream = new ByteBufferStream();
                 istream.readFrom(httpContext.getRequest().getInputStream());
                 ostream = handle(istream, methods, httpContext);
-                istream.close();
                 ostream.writeTo(httpContext.getResponse().getOutputStream());
             }
         }
         finally {
             currentContext.remove();
+            if (istream != null) {
+                istream.close();
+            }
             if (ostream != null) {
                 ostream.close();
             }

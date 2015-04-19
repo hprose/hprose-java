@@ -8,36 +8,26 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseHttpMethods.java                                 *
+ * ClientContext.java                                     *
  *                                                        *
- * hprose http methods class for Java.                    *
+ * client context class for Java.                         *
  *                                                        *
  * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.client;
 
 import hprose.common.HproseContext;
-import hprose.common.HproseMethods;
-import java.lang.reflect.Type;
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
 
-public class HproseTcpMethods extends HproseMethods {
+public class ClientContext extends HproseContext {
+    private final HproseClient client;
 
-    @Override
-    protected int getCount(Type[] paramTypes) {
-        int i = paramTypes.length;
-        if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
-            Class<?> paramType = (Class<?>) paramTypes[i - 1];
-            if (paramType.equals(HproseContext.class) ||
-                paramType.equals(TcpContext.class) ||
-                paramType.equals(SocketChannel.class) ||
-                paramType.equals(Socket.class)) {
-                --i;
-            }
-        }
-        return i;
+    public ClientContext(HproseClient client) {
+        this.client = client;
+    }
+
+    public HproseClient getClient() {
+        return client;
     }
 }

@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseHttpMethods.java                                 *
+ * WebSocketContext.java                                  *
  *                                                        *
- * hprose http methods class for Java.                    *
+ * websocket context class for Java.                      *
  *                                                        *
  * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -19,25 +19,24 @@
 package hprose.server;
 
 import hprose.common.HproseContext;
-import hprose.common.HproseMethods;
-import java.lang.reflect.Type;
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
+import javax.websocket.EndpointConfig;
+import javax.websocket.Session;
 
-public class HproseTcpMethods extends HproseMethods {
+public class WebSocketContext extends HproseContext {
+    private final Session session;
+    private final EndpointConfig config;
 
-    @Override
-    protected int getCount(Type[] paramTypes) {
-        int i = paramTypes.length;
-        if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
-            Class<?> paramType = (Class<?>) paramTypes[i - 1];
-            if (paramType.equals(HproseContext.class) ||
-                paramType.equals(TcpContext.class) ||
-                paramType.equals(SocketChannel.class) ||
-                paramType.equals(Socket.class)) {
-                --i;
-            }
-        }
-        return i;
+    public WebSocketContext(Session session,
+                       EndpointConfig config) {
+        this.session = session;
+        this.config = config;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public EndpointConfig getConfig() {
+        return config;
     }
 }

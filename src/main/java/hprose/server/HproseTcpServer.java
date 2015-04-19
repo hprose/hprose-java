@@ -12,12 +12,13 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 20, 2014                             *
+ * LastModified: Apr 19, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.SelectionKey;
@@ -37,7 +39,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HproseTcpServer extends HproseService {
+    private static final ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
+    
+    public static TcpContext getCurrentContext() {
+        return currentContext.get();
+    }
+
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
+
     class HandlerThread extends Thread {
         private final Selector selector;
         private final HproseTcpServer server;
@@ -91,23 +100,27 @@ public class HproseTcpServer extends HproseService {
         private void execDirectly(final SocketChannel socketChannel) throws IOException {
             ByteBufferStream istream = null;
             ByteBufferStream ostream = null;
+            final TcpContext context = new TcpContext(socketChannel);
             try {
+                currentContext.set(context);
                 istream = HproseHelper.receiveDataOverTcp(socketChannel);
-                ostream = server.handle(istream, socketChannel);
+                ostream = server.handle(istream, context);
                 HproseHelper.sendDataOverTcp(socketChannel, ostream);
                 socketChannel.register(selector, SelectionKey.OP_READ);
             }
             catch (IOException e) {
-                server.fireErrorEvent(e, socketChannel);
+                server.fireErrorEvent(e, context);
                 socketChannel.close();
             }
             finally {
+                currentContext.remove();
                 if (istream != null) istream.close();
                 if (ostream != null) ostream.close();
             }
         }
 
         private void execInThreadPool(final SocketChannel socketChannel) throws IOException {
+            final TcpContext context = new TcpContext(socketChannel);
             try {
                 final ByteBufferStream istream = HproseHelper.receiveDataOverTcp(socketChannel);
                 socketChannel.register(selector, SelectionKey.OP_READ);
@@ -115,19 +128,21 @@ public class HproseTcpServer extends HproseService {
                     public void run() {
                         ByteBufferStream ostream = null;
                         try {
-                            ostream = server.handle(istream, socketChannel);
+                            currentContext.set(context);
+                            ostream = server.handle(istream, context);
                             HproseHelper.sendDataOverTcp(socketChannel, ostream);
                         }
                         catch (IOException e) {
-                            server.fireErrorEvent(e, socketChannel);
+                            server.fireErrorEvent(e, context);
                             try {
                                 socketChannel.close();
                             }
                             catch (IOException ex) {
-                                server.fireErrorEvent(ex, socketChannel);
+                                server.fireErrorEvent(ex, context);
                             }
                         }
                         finally {
+                            currentContext.remove();
                             if (istream != null) istream.close();
                             if (ostream != null) ostream.close();
                         }
@@ -135,7 +150,7 @@ public class HproseTcpServer extends HproseService {
                 });
             }
             catch (IOException e) {
-                server.fireErrorEvent(e, socketChannel);
+                server.fireErrorEvent(e, context);
                 socketChannel.close();
             }
         }
@@ -232,14 +247,24 @@ public class HproseTcpServer extends HproseService {
     }
 
     @Override
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, int count, Object context) {
-        SocketChannel channel = (SocketChannel)context;
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+        int count = arguments.length;
+        TcpContext tcpContext = (TcpContext)context;
         if (argumentTypes.length != count) {
             Object[] args = new Object[argumentTypes.length];
             System.arraycopy(arguments, 0, args, 0, count);
             Class<?> argType = (Class<?>) argumentTypes[count];
-            if (argType.equals(SocketChannel.class)) {
-                args[count] = channel;
+            if (argType.equals(HproseContext.class)) {
+                args[count] = context;
+            }
+            else if (argType.equals(TcpContext.class)) {
+                args[count] = tcpContext;
+            }
+            else if (argType.equals(SocketChannel.class)) {
+                args[count] = tcpContext.getSocketChannel();
+            }
+            else if (argType.equals(Socket.class)) {
+                args[count] = tcpContext.getSocket();
             }
             return args;
         }

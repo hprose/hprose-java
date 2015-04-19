@@ -18,6 +18,7 @@
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import java.lang.reflect.Type;
 import javax.servlet.ServletConfig;
@@ -33,7 +34,8 @@ public class HproseHttpMethods extends HproseMethods {
         int i = paramTypes.length;
         if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
             Class<?> paramType = (Class<?>) paramTypes[i - 1];
-            if (paramType.equals(HttpContext.class) ||
+            if (paramType.equals(HproseContext.class) ||
+                paramType.equals(HttpContext.class) ||
                 paramType.equals(HttpServletRequest.class) ||
                 paramType.equals(HttpServletResponse.class) ||
                 paramType.equals(HttpSession.class) ||

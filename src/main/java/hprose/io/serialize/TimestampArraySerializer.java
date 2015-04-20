@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp array serializer class for Java.             *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class TimestampArraySerializer implements HproseSerializer<Timestamp[]> {
 
     public final static HproseSerializer instance = new TimestampArraySerializer();
 
-    public void write(HproseWriter writer, Timestamp[] obj) throws IOException {
+    public final void write(HproseWriter writer, Timestamp[] obj) throws IOException {
         writer.writeArrayWithRef(obj);
     }
 }

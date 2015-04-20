@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -132,7 +132,7 @@ public final class UnserializerFactory {
         unserializers.put(AtomicReferenceArray.class, AtomicReferenceArrayUnserializer.instance);
     }
     
-    public static HproseUnserializer get(Class<?> type) {
+    public final static HproseUnserializer get(Class<?> type) {
         HproseUnserializer unserializer = unserializers.get(type);
         if (unserializer == null) {
             if (type.isEnum()) {

@@ -12,7 +12,7 @@
  *                                                        *
  * ArrayList unserializer class for Java.                 *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,7 +28,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new ArrayListUnserializer();
 
-    public Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
         return reader.readCollection(ArrayList.class, type);
     }
 

@@ -50,17 +50,17 @@ public final class HproseReader {
         void reset();
     }
     final class FakeReaderRefer implements ReaderRefer {
-        public void set(Object obj) {}
-        public Object read(int index) {
+        public final void set(Object obj) {}
+        public final Object read(int index) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-        public void reset() {}
+        public final void reset() {}
     }
     final class RealReaderRefer implements ReaderRefer {
         private final ArrayList<Object> ref = new ArrayList<Object>();
-        public void set(Object obj) { ref.add(obj); }
-        public Object read(int index) { return ref.get(index); }
-        public void reset() { ref.clear(); }
+        public final void set(Object obj) { ref.add(obj); }
+        public final Object read(int index) { return ref.get(index); }
+        public final void reset() { ref.clear(); }
     }
 
     public final InputStream stream;
@@ -87,11 +87,11 @@ public final class HproseReader {
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
 
-    public HproseException unexpectedTag(int tag) {
+    public final HproseException unexpectedTag(int tag) {
         return unexpectedTag(tag, null);
     }
 
-    public HproseException unexpectedTag(int tag, String expectTags) {
+    public final HproseException unexpectedTag(int tag, String expectTags) {
         if (tag == -1) {
             return new HproseException("No byte found in stream");
         }
@@ -106,35 +106,35 @@ public final class HproseReader {
         }
     }
 
-    private HproseException castError(String srctype, Type desttype) {
+    private final HproseException castError(String srctype, Type desttype) {
         return new HproseException(srctype + " can't change to " +
                                    desttype.toString());
     }
 
-    private HproseException castError(Object obj, Type type) {
+    private final HproseException castError(Object obj, Type type) {
         return new HproseException(obj.getClass().toString() +
                                    " can't change to " +
                                    type.toString());
     }
 
-    public void checkTag(int tag, int expectTag) throws HproseException {
+    public final void checkTag(int tag, int expectTag) throws HproseException {
         if (tag != expectTag) {
             throw unexpectedTag(tag, new String(new char[] {(char)expectTag}));
         }
     }
 
-    public void checkTag(int expectTag) throws IOException {
+    public final void checkTag(int expectTag) throws IOException {
         checkTag(stream.read(), expectTag);
     }
 
-    public int checkTags(int tag, String expectTags) throws IOException {
+    public final int checkTags(int tag, String expectTags) throws IOException {
         if (expectTags.indexOf(tag) == -1) {
             throw unexpectedTag(tag, expectTags);
         }
         return tag;
     }
 
-    public int checkTags(String expectTags) throws IOException {
+    public final int checkTags(String expectTags) throws IOException {
         return checkTags(stream.read(), expectTags);
     }
 
@@ -161,7 +161,7 @@ public final class HproseReader {
 //    }
 
     @SuppressWarnings({"fallthrough"})
-    public byte readByte(int tag) throws IOException {
+    public final byte readByte(int tag) throws IOException {
         byte result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -181,7 +181,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"fallthrough"})
-    public short readShort(int tag) throws IOException {
+    public final short readShort(int tag) throws IOException {
         short result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -201,7 +201,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"fallthrough"})
-    public int readInt(int tag) throws IOException {
+    public final int readInt(int tag) throws IOException {
         int result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -221,7 +221,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"fallthrough"})
-    public long readLong(int tag) throws IOException {
+    public final long readLong(int tag) throws IOException {
         long result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -241,7 +241,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"fallthrough"})
-    public float readIntAsFloat() throws IOException {
+    public final float readIntAsFloat() throws IOException {
         float result = 0.0f;
         float sign = 1.0f;
         int i = stream.read();
@@ -258,7 +258,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"fallthrough"})
-    public double readIntAsDouble() throws IOException {
+    public final double readIntAsDouble() throws IOException {
         double result = 0.0;
         double sign = 1.0;
         int i = stream.read();
@@ -696,36 +696,36 @@ public final class HproseReader {
         throw castError(objType.toString(), type);
     }
 
-    public int readIntWithoutTag() throws IOException {
+    public final int readIntWithoutTag() throws IOException {
         return readInt(HproseTags.TagSemicolon);
     }
 
-    public BigInteger readBigIntegerWithoutTag() throws IOException {
+    public final BigInteger readBigIntegerWithoutTag() throws IOException {
         return new BigInteger(readUntil(HproseTags.TagSemicolon).toString(), 10);
     }
 
-    public long readLongWithoutTag() throws IOException {
+    public final long readLongWithoutTag() throws IOException {
         return readLong(HproseTags.TagSemicolon);
     }
 
-    public double readDoubleWithoutTag() throws IOException {
+    public final double readDoubleWithoutTag() throws IOException {
         return parseDouble(readUntil(HproseTags.TagSemicolon));
     }
 
-    public double readInfinityWithoutTag() throws IOException {
+    public final double readInfinityWithoutTag() throws IOException {
         return ((stream.read() == HproseTags.TagNeg) ?
             Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
     }
 
-    public Calendar readDateWithoutTag()throws IOException {
+    public final Calendar readDateWithoutTag()throws IOException {
         return (Calendar)readDateAs(Calendar.class);
     }
 
-    public Calendar readTimeWithoutTag()throws IOException {
+    public final Calendar readTimeWithoutTag()throws IOException {
         return (Calendar)readTimeAs(Calendar.class);
     }
 
-    public byte[] readBytesWithoutTag() throws IOException {
+    public final byte[] readBytesWithoutTag() throws IOException {
         int len = readInt(HproseTags.TagQuote);
         int off = 0;
         byte[] b = new byte[len];
@@ -739,23 +739,23 @@ public final class HproseReader {
         return b;
     }
 
-    public String readUTF8CharWithoutTag() throws IOException {
+    public final String readUTF8CharWithoutTag() throws IOException {
         return new String(new char[] { readUTF8CharAsChar() });
     }
 
-    public String readStringWithoutTag() throws IOException {
+    public final String readStringWithoutTag() throws IOException {
         String str = readCharsAsString();
         refer.set(str);
         return str;
     }
 
-    public char[] readCharsWithoutTag() throws IOException {
+    public final char[] readCharsWithoutTag() throws IOException {
         char[] chars = readChars();
         refer.set(chars);
         return chars;
     }
 
-    public UUID readUUIDWithoutTag() throws IOException {
+    public final UUID readUUIDWithoutTag() throws IOException {
         checkTag(HproseTags.TagOpenbrace);
         char[] buf = new char[36];
         for (int i = 0; i < 36; ++i) {
@@ -768,7 +768,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public ArrayList readListWithoutTag() throws IOException {
+    public final ArrayList readListWithoutTag() throws IOException {
         int count = readInt(HproseTags.TagOpenbrace);
         ArrayList a = new ArrayList(count);
         refer.set(a);
@@ -780,7 +780,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public HashMap readMapWithoutTag() throws IOException {
+    public final HashMap readMapWithoutTag() throws IOException {
         int count = readInt(HproseTags.TagOpenbrace);
         HashMap map = new HashMap(count);
         refer.set(map);
@@ -793,7 +793,7 @@ public final class HproseReader {
         return map;
     }
 
-    public Object readObjectWithoutTag(Class<?> type) throws IOException {
+    public final Object readObjectWithoutTag(Class<?> type) throws IOException {
         Object c = classref.get(readInt(HproseTags.TagOpenbrace));
         String[] memberNames = membersref.get(c);
         int count = memberNames.length;
@@ -873,7 +873,7 @@ public final class HproseReader {
         }
     }
 
-    public Object unserialize() throws IOException {
+    public final Object unserialize() throws IOException {
         return unserialize(stream.read());
     }
 
@@ -941,7 +941,7 @@ public final class HproseReader {
         }
     }
 
-    public boolean readBoolean() throws IOException {
+    public final boolean readBoolean() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return false;
@@ -949,7 +949,7 @@ public final class HproseReader {
         }
     }
 
-    public Boolean readBooleanObject() throws IOException {
+    public final Boolean readBooleanObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -979,7 +979,7 @@ public final class HproseReader {
         }
     }
 
-    public char readChar() throws IOException {
+    public final char readChar() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return (char)0;
@@ -987,7 +987,7 @@ public final class HproseReader {
         }
     }
 
-    public Character readCharObject() throws IOException {
+    public final Character readCharObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1020,7 +1020,7 @@ public final class HproseReader {
         }
     }
 
-    public byte readByte() throws IOException {
+    public final byte readByte() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0;
@@ -1028,7 +1028,7 @@ public final class HproseReader {
         }
     }
 
-    public Byte readByteObject() throws IOException {
+    public final Byte readByteObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1061,7 +1061,7 @@ public final class HproseReader {
         }
     }
 
-    public short readShort() throws IOException {
+    public final short readShort() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0;
@@ -1069,7 +1069,7 @@ public final class HproseReader {
         }
     }
 
-    public Short readShortObject() throws IOException {
+    public final Short readShortObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1102,7 +1102,7 @@ public final class HproseReader {
         }
     }
 
-    public int readInt() throws IOException {
+    public final int readInt() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0;
@@ -1110,7 +1110,7 @@ public final class HproseReader {
         }
     }
 
-    public Integer readIntObject() throws IOException {
+    public final Integer readIntObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1145,7 +1145,7 @@ public final class HproseReader {
         }
     }
 
-    public long readLong() throws IOException {
+    public final long readLong() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0l;
@@ -1153,7 +1153,7 @@ public final class HproseReader {
         }
     }
 
-    public Long readLongObject() throws IOException {
+    public final Long readLongObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1190,7 +1190,7 @@ public final class HproseReader {
         }
     }
 
-    public float readFloat() throws IOException {
+    public final float readFloat() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0.0f;
@@ -1198,7 +1198,7 @@ public final class HproseReader {
         }
     }
 
-    public Float readFloatObject() throws IOException {
+    public final Float readFloatObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1233,7 +1233,7 @@ public final class HproseReader {
         }
     }
 
-    public double readDouble() throws IOException {
+    public final double readDouble() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return 0.0;
@@ -1241,7 +1241,7 @@ public final class HproseReader {
         }
     }
 
-    public Double readDoubleObject() throws IOException {
+    public final Double readDoubleObject() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1249,7 +1249,7 @@ public final class HproseReader {
         }
     }
 
-    public <T> T readEnum(Class<T> type) throws HproseException {
+    public final <T> T readEnum(Class<T> type) throws HproseException {
         try {
             return type.getEnumConstants()[readInt()];
         }
@@ -1258,7 +1258,7 @@ public final class HproseReader {
         }
     }
 
-    public String readString() throws IOException {
+    public final String readString() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return "0";
@@ -1301,7 +1301,7 @@ public final class HproseReader {
         }
     }
 
-    public BigInteger readBigInteger() throws IOException {
+    public final BigInteger readBigInteger() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return BigInteger.ZERO;
@@ -1330,7 +1330,7 @@ public final class HproseReader {
         }
     }
 
-    public Date readDate() throws IOException {
+    public final Date readDate() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new Date(0l);
@@ -1364,7 +1364,7 @@ public final class HproseReader {
         }
     }
 
-    public Time readTime() throws IOException {
+    public final Time readTime() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new Time(0l);
@@ -1398,7 +1398,7 @@ public final class HproseReader {
         }
     }
 
-    public java.util.Date readDateTime() throws IOException {
+    public final java.util.Date readDateTime() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new java.util.Date(0l);
@@ -1432,7 +1432,7 @@ public final class HproseReader {
         }
     }
 
-    public Timestamp readTimestamp() throws IOException {
+    public final Timestamp readTimestamp() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new Timestamp(0l);
@@ -1466,7 +1466,7 @@ public final class HproseReader {
         }
     }
 
-    public Calendar readCalendar() throws IOException {
+    public final Calendar readCalendar() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0':
@@ -1514,7 +1514,7 @@ public final class HproseReader {
         }
     }
 
-    public BigDecimal readBigDecimal() throws IOException {
+    public final BigDecimal readBigDecimal() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return BigDecimal.ZERO;
@@ -1541,7 +1541,7 @@ public final class HproseReader {
         }
     }
 
-    public StringBuilder readStringBuilder() throws IOException {
+    public final StringBuilder readStringBuilder() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new StringBuilder("0");
@@ -1581,7 +1581,7 @@ public final class HproseReader {
         }
     }
 
-    public StringBuffer readStringBuffer() throws IOException {
+    public final StringBuffer readStringBuffer() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case '0': return new StringBuffer("0");
@@ -1621,7 +1621,7 @@ public final class HproseReader {
         }
     }
 
-    public UUID readUUID() throws IOException  {
+    public final UUID readUUID() throws IOException  {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1649,7 +1649,7 @@ public final class HproseReader {
         }
     }
 
-    public void readArray(Type[] types, Object[] a, int count) throws IOException {
+    public final void readArray(Type[] types, Object[] a, int count) throws IOException {
         refer.set(a);
         for (int i = 0; i < count; ++i) {
             a[i] = unserialize(types[i]);
@@ -1657,7 +1657,7 @@ public final class HproseReader {
         stream.read();
     }
 
-    public Object[] readArray(int count) throws IOException {
+    public final Object[] readArray(int count) throws IOException {
         Object[] a = new Object[count];
         refer.set(a);
         for (int i = 0; i < count; ++i) {
@@ -1667,7 +1667,7 @@ public final class HproseReader {
         return a;
     }
 
-    public Object[] readObjectArray() throws IOException {
+    public final Object[] readObjectArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1677,7 +1677,7 @@ public final class HproseReader {
         }
     }
 
-    public boolean[] readBooleanArray() throws IOException {
+    public final boolean[] readBooleanArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1696,7 +1696,7 @@ public final class HproseReader {
         }
     }
 
-    public char[] readCharArray() throws IOException {
+    public final char[] readCharArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1726,7 +1726,7 @@ public final class HproseReader {
         }
     }
 
-    public byte[] readByteArray() throws IOException {
+    public final byte[] readByteArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1758,7 +1758,7 @@ public final class HproseReader {
         }
     }
 
-    public short[] readShortArray() throws IOException {
+    public final short[] readShortArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1777,7 +1777,7 @@ public final class HproseReader {
         }
     }
 
-    public int[] readIntArray() throws IOException {
+    public final int[] readIntArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1796,7 +1796,7 @@ public final class HproseReader {
         }
     }
 
-    public long[] readLongArray() throws IOException {
+    public final long[] readLongArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1815,7 +1815,7 @@ public final class HproseReader {
         }
     }
 
-    public float[] readFloatArray() throws IOException {
+    public final float[] readFloatArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1834,7 +1834,7 @@ public final class HproseReader {
         }
     }
 
-    public double[] readDoubleArray() throws IOException {
+    public final double[] readDoubleArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1853,7 +1853,7 @@ public final class HproseReader {
         }
     }
 
-    public String[] readStringArray() throws IOException {
+    public final String[] readStringArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1872,7 +1872,7 @@ public final class HproseReader {
         }
     }
 
-    public BigInteger[] readBigIntegerArray() throws IOException {
+    public final BigInteger[] readBigIntegerArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1891,7 +1891,7 @@ public final class HproseReader {
         }
     }
 
-    public Date[] readDateArray() throws IOException {
+    public final Date[] readDateArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1910,7 +1910,7 @@ public final class HproseReader {
         }
     }
 
-    public Time[] readTimeArray() throws IOException {
+    public final Time[] readTimeArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1929,7 +1929,7 @@ public final class HproseReader {
         }
     }
 
-    public Timestamp[] readTimestampArray() throws IOException {
+    public final Timestamp[] readTimestampArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1948,7 +1948,7 @@ public final class HproseReader {
         }
     }
 
-    public java.util.Date[] readDateTimeArray() throws IOException {
+    public final java.util.Date[] readDateTimeArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1967,7 +1967,7 @@ public final class HproseReader {
         }
     }
 
-    public Calendar[] readCalendarArray() throws IOException {
+    public final Calendar[] readCalendarArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -1986,7 +1986,7 @@ public final class HproseReader {
         }
     }
 
-    public BigDecimal[] readBigDecimalArray() throws IOException {
+    public final BigDecimal[] readBigDecimalArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2005,7 +2005,7 @@ public final class HproseReader {
         }
     }
 
-    public StringBuilder[] readStringBuilderArray() throws IOException {
+    public final StringBuilder[] readStringBuilderArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2024,7 +2024,7 @@ public final class HproseReader {
         }
     }
 
-    public StringBuffer[] readStringBufferArray() throws IOException {
+    public final StringBuffer[] readStringBufferArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2043,7 +2043,7 @@ public final class HproseReader {
         }
     }
 
-    public UUID[] readUUIDArray() throws IOException {
+    public final UUID[] readUUIDArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2062,7 +2062,7 @@ public final class HproseReader {
         }
     }
 
-    public char[][] readCharsArray() throws IOException {
+    public final char[][] readCharsArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2081,7 +2081,7 @@ public final class HproseReader {
         }
     }
 
-    public byte[][] readBytesArray() throws IOException {
+    public final byte[][] readBytesArray() throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2101,7 +2101,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> T[] readOtherTypeArray(Class<T> componentClass, Type componentType) throws IOException {
+    public final <T> T[] readOtherTypeArray(Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2122,17 +2122,17 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public AtomicReference<?> readAtomicReference(Type type) throws IOException {
+    public final AtomicReference<?> readAtomicReference(Type type) throws IOException {
         return new AtomicReference(unserialize(type));
     }
     
     @SuppressWarnings({"unchecked"})
-    public <T> AtomicReferenceArray<T> readAtomicReferenceArray(Class<T> componentClass, Type componentType) throws IOException {
+    public final <T> AtomicReferenceArray<T> readAtomicReferenceArray(Class<T> componentClass, Type componentType) throws IOException {
         return new AtomicReferenceArray<T>(readOtherTypeArray(componentClass, componentType));
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> Collection<T> readCollection(Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
+    public final <T> Collection<T> readCollection(Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2153,7 +2153,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public Collection readCollection(Class<?> cls, Type type) throws IOException {
+    public final Collection readCollection(Class<?> cls, Type type) throws IOException {
         Type componentType;
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
@@ -2207,7 +2207,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public <K, V> Map<K, V> readMap(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+    public final <K, V> Map<K, V> readMap(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2221,7 +2221,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public Map readMap(Class<?> cls, Type type) throws IOException {
+    public final Map readMap(Class<?> cls, Type type) throws IOException {
         Type keyType, valueType;
         Class<?> keyClass, valueClass;
         if (type instanceof ParameterizedType) {
@@ -2240,7 +2240,7 @@ public final class HproseReader {
         return readMap(cls, keyClass, valueClass, keyType, valueType);
     }
 
-    public Object readObject(Class<?> type) throws IOException {
+    public final Object readObject(Class<?> type) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
@@ -2252,7 +2252,7 @@ public final class HproseReader {
         }
     }
 
-    public Object unserialize(Type type) throws IOException {
+    public final Object unserialize(Type type) throws IOException {
         if (type == null) {
             return unserialize();
         }
@@ -2261,7 +2261,7 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public <T> T unserialize(Class<T> type) throws IOException {
+    public final <T> T unserialize(Class<T> type) throws IOException {
         return (T) unserialize(type, type);
     }
 
@@ -2269,14 +2269,14 @@ public final class HproseReader {
         return UnserializerFactory.get(cls).read(this, cls, type);
     }
 
-    public ByteBufferStream readRaw() throws IOException {
+    public final ByteBufferStream readRaw() throws IOException {
     	ByteBufferStream rawstream = new ByteBufferStream();
     	readRaw(rawstream.getOutputStream());
         rawstream.flip();
     	return rawstream;
     }
 
-    public void readRaw(OutputStream ostream) throws IOException {
+    public final void readRaw(OutputStream ostream) throws IOException {
         readRaw(ostream, stream.read());
     }
 
@@ -2497,7 +2497,7 @@ public final class HproseReader {
         ostream.write(tag);
     }
 
-    public void reset() {
+    public final void reset() {
         refer.reset();
         classref.clear();
         membersref.clear();

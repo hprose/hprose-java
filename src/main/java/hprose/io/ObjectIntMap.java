@@ -20,7 +20,7 @@ package hprose.io;
 
 public final class ObjectIntMap {
 
-    static class Entry {
+    static final class Entry {
 
         final Object key;
         int value;
@@ -49,7 +49,7 @@ public final class ObjectIntMap {
         table = new Entry[DEFAULT_INITIAL_CAPACITY];
     }
 
-    void transfer(Entry[] newTable) {
+    final void transfer(Entry[] newTable) {
         Entry[] src = table;
         int newCapacity = newTable.length;
         for (int j = 0; j < src.length; j++) {
@@ -67,7 +67,7 @@ public final class ObjectIntMap {
         }
     }
 
-    void resize(int newCapacity) {
+    final void resize(int newCapacity) {
         Entry[] oldTable = table;
         int oldCapacity = oldTable.length;
         if (oldCapacity == MAXIMUM_CAPACITY) {
@@ -81,7 +81,7 @@ public final class ObjectIntMap {
         threshold = (int) (newCapacity * loadFactor);
     }
 
-    void addEntry(int hash, Object key, int value, int bucketIndex) {
+    final void addEntry(int hash, Object key, int value, int bucketIndex) {
         Entry e = table[bucketIndex];
         table[bucketIndex] = new Entry(hash, key, value, e);
         if (size++ >= threshold) {
@@ -89,15 +89,15 @@ public final class ObjectIntMap {
         }
     }
 
-    public int size() {
+    public final int size() {
         return size;
     }
 
-    public boolean isEmpty() {
+    public final boolean isEmpty() {
         return size == 0;
     }
 
-    public void clear() {
+    public final void clear() {
         Entry[] tab = table;
         for (int i = 0; i < tab.length; ++i) {
             tab[i] = null;
@@ -105,7 +105,7 @@ public final class ObjectIntMap {
         size = 0;
     }
 
-    public int get(Object key) {
+    public final int get(Object key) {
         if (key == null) {
             for (Entry e = table[0]; e != null; e = e.next) {
                 if (e.key == null) {
@@ -125,7 +125,7 @@ public final class ObjectIntMap {
         return -1;
     }
 
-    public boolean containsKey(Object key) {
+    public final boolean containsKey(Object key) {
         if (key == null) {
             for (Entry e = table[0]; e != null; e = e.next) {
                 if (e.key == null) {
@@ -145,7 +145,7 @@ public final class ObjectIntMap {
         return false;
     }
 
-    public int put(Object key, int value) {
+    public final int put(Object key, int value) {
         if (key == null) {
             for (Entry e = table[0]; e != null; e = e.next) {
                 if (e.key == null) {

@@ -12,7 +12,7 @@
  *                                                        *
  * float array serializer class for Java.                 *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class FloatArraySerializer implements HproseSerializer<float[]> {
 
     public final static HproseSerializer instance = new FloatArraySerializer();
 
-    public void write(HproseWriter writer, float[] obj) throws IOException {
+    public final void write(HproseWriter writer, float[] obj) throws IOException {
         writer.writeArrayWithRef(obj);
     }
 }

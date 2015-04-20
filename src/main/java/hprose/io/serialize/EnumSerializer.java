@@ -12,7 +12,7 @@
  *                                                        *
  * enum serializer class for Java.                        *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class EnumSerializer implements HproseSerializer<Enum> {
 
     public final static HproseSerializer instance = new EnumSerializer();
 
-    public void write(HproseWriter writer, Enum obj) throws IOException {
+    public final void write(HproseWriter writer, Enum obj) throws IOException {
         writer.writeInteger(obj.ordinal());
     }
 }

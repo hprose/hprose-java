@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicInteger serializer class for Java.               *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class AtomicIntegerSerializer implements HproseSerializer<AtomicInteger> {
 
     public final static HproseSerializer instance = new AtomicIntegerSerializer();
 
-    public void write(HproseWriter writer, AtomicInteger obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicInteger obj) throws IOException {
         writer.writeInteger(obj.get());
     }
 }

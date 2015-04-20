@@ -12,7 +12,7 @@
  *                                                        *
  * int array serializer class for Java.                   *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class IntArraySerializer implements HproseSerializer<int[]> {
 
     public final static HproseSerializer instance = new IntArraySerializer();
 
-    public void write(HproseWriter writer, int[] obj) throws IOException {
+    public final void write(HproseWriter writer, int[] obj) throws IOException {
         writer.writeArrayWithRef(obj);
     }
 }

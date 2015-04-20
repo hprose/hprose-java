@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer InputStream for Java.                       *
  *                                                        *
- * LastModified: Apr 13, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,54 +22,54 @@ package hprose.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-class ByteBufferInputStream extends InputStream {
+final class ByteBufferInputStream extends InputStream {
     ByteBufferStream stream;
     ByteBufferInputStream(ByteBufferStream stream) {
         this.stream = stream;
     }
 
     @Override
-    public int read() throws IOException {
+    public final int read() throws IOException {
         return stream.read();
     }
 
     @Override
-    public int read(byte b[]) throws IOException {
+    public final int read(byte b[]) throws IOException {
         return stream.read(b);
     }
 
     @Override
-    public int read(byte b[], int off, int len) throws IOException {
+    public final int read(byte b[], int off, int len) throws IOException {
         return stream.read(b, off, len);
     }
 
     @Override
-    public long skip(long n) throws IOException {
+    public final long skip(long n) throws IOException {
         return stream.skip(n);
     }
 
     @Override
-    public int available() throws IOException {
+    public final int available() throws IOException {
 	return stream.available();
     }
 
     @Override
-    public boolean markSupported() {
+    public final boolean markSupported() {
 	return stream.markSupported();
     }
 
     @Override
-    public synchronized void mark(int readlimit) {
+    public final synchronized void mark(int readlimit) {
 	stream.mark(readlimit);
     }
 
     @Override
-    public synchronized void reset() throws IOException {
+    public final synchronized void reset() throws IOException {
         stream.reset();
     }
 
     @Override
-    public void close() throws IOException {
+    public final void close() throws IOException {
         stream.close();
     }
 }

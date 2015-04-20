@@ -12,7 +12,7 @@
  *                                                        *
  * bytes array serializer class for Java.                 *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class BytesArraySerializer implements HproseSerializer<byte[][]> {
 
     public final static HproseSerializer instance = new BytesArraySerializer();
 
-    public void write(HproseWriter writer, byte[][] obj) throws IOException {
+    public final void write(HproseWriter writer, byte[][] obj) throws IOException {
         writer.writeArrayWithRef(obj);
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * byte serializer class for Java.                        *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class ByteSerializer implements HproseSerializer<Byte> {
 
     public final static HproseSerializer instance = new ByteSerializer();
 
-    public void write(HproseWriter writer, Byte obj) throws IOException {
+    public final void write(HproseWriter writer, Byte obj) throws IOException {
         writer.writeInteger(obj);
     }
 }

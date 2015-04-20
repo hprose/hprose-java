@@ -49,26 +49,26 @@ public final class HproseWriter {
         boolean write(Object obj) throws IOException;
         void reset();
     }
-    class FakeWriterRefer implements WriterRefer {
-        public void addCount(int count) {}
-        public void set(Object obj) {}
-        public boolean write(Object obj) throws IOException { return false; }
-        public void reset() {}
+    final class FakeWriterRefer implements WriterRefer {
+        public final void addCount(int count) {}
+        public final void set(Object obj) {}
+        public final boolean write(Object obj) throws IOException { return false; }
+        public final void reset() {}
     }
-    class RealWriterRefer implements WriterRefer {
+    final class RealWriterRefer implements WriterRefer {
         private final HproseWriter writer;
         private final ObjectIntMap ref = new ObjectIntMap();
         private int lastref = 0;
         public RealWriterRefer(HproseWriter writer) {
             this.writer = writer;
         }
-        public void addCount(int count) {
+        public final void addCount(int count) {
             lastref += count;
         }
-        public void set(Object obj) {
+        public final void set(Object obj) {
             ref.put(obj, lastref++);
         }
-        public boolean write(Object obj) throws IOException {
+        public final boolean write(Object obj) throws IOException {
             if (ref.containsKey(obj)) {
                 writer.stream.write(HproseTags.TagRef);
                 writer.writeInt(ref.get(obj));
@@ -77,7 +77,7 @@ public final class HproseWriter {
             }
             return false;
         }
-        public void reset() {
+        public final void reset() {
             ref.clear();
             lastref = 0;
         }
@@ -116,7 +116,7 @@ public final class HproseWriter {
     }
 
     @SuppressWarnings({"unchecked"})
-    public void serialize(Object obj) throws IOException {
+    public final void serialize(Object obj) throws IOException {
         if (obj == null) {
             writeNull();
         }
@@ -125,7 +125,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeInteger(int i) throws IOException {
+    public final void writeInteger(int i) throws IOException {
         if (i >= 0 && i <= 9) {
             stream.write(i + '0');
         }
@@ -136,7 +136,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeLong(long l) throws IOException {
+    public final void writeLong(long l) throws IOException {
         if (l >= 0 && l <= 9) {
             stream.write((int)l + '0');
         }
@@ -147,7 +147,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeLong(BigInteger l) throws IOException {
+    public final void writeLong(BigInteger l) throws IOException {
         if (l.equals(BigInteger.ZERO)) {
             stream.write('0');
         }
@@ -161,7 +161,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeDouble(float d) throws IOException {
+    public final void writeDouble(float d) throws IOException {
         if (Float.isNaN(d)) {
             stream.write(HproseTags.TagNaN);
         }
@@ -176,7 +176,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeDouble(double d) throws IOException {
+    public final void writeDouble(double d) throws IOException {
         if (Double.isNaN(d)) {
             stream.write(HproseTags.TagNaN);
         }
@@ -191,34 +191,34 @@ public final class HproseWriter {
         }
     }
 
-    public void writeDouble(BigDecimal d) throws IOException {
+    public final void writeDouble(BigDecimal d) throws IOException {
         stream.write(HproseTags.TagDouble);
         stream.write(getAscii(d.toString()));
         stream.write(HproseTags.TagSemicolon);
     }
 
-    public void writeNaN() throws IOException {
+    public final void writeNaN() throws IOException {
         stream.write(HproseTags.TagNaN);
     }
 
-    public void writeInfinity(boolean positive) throws IOException {
+    public final void writeInfinity(boolean positive) throws IOException {
         stream.write(HproseTags.TagInfinity);
         stream.write(positive ? HproseTags.TagPos : HproseTags.TagNeg);
     }
 
-    public void writeNull() throws IOException {
+    public final void writeNull() throws IOException {
         stream.write(HproseTags.TagNull);
     }
 
-    public void writeEmpty() throws IOException {
+    public final void writeEmpty() throws IOException {
         stream.write(HproseTags.TagEmpty);
     }
 
-    public void writeBoolean(boolean b) throws IOException {
+    public final void writeBoolean(boolean b) throws IOException {
         stream.write(b ? HproseTags.TagTrue : HproseTags.TagFalse);
     }
 
-    public void writeDate(Date date) throws IOException {
+    public final void writeDate(Date date) throws IOException {
         refer.set(date);
         Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
         calendar.setTime(date);
@@ -226,13 +226,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagSemicolon);
     }
 
-    public void writeDateWithRef(Date date) throws IOException {
+    public final void writeDateWithRef(Date date) throws IOException {
         if (!refer.write(date)) {
             writeDate(date);
         }
     }
 
-    public void writeDate(Time time) throws IOException {
+    public final void writeDate(Time time) throws IOException {
         refer.set(time);
         Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
         calendar.setTime(time);
@@ -240,13 +240,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagSemicolon);
     }
 
-    public void writeDateWithRef(Time time) throws IOException {
+    public final void writeDateWithRef(Time time) throws IOException {
         if (!refer.write(time)) {
             writeDate(time);
         }
     }
 
-    public void writeDate(Timestamp time) throws IOException {
+    public final void writeDate(Timestamp time) throws IOException {
         refer.set(time);
         Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
         calendar.setTime(time);
@@ -272,13 +272,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagSemicolon);
     }
 
-    public void writeDateWithRef(Timestamp time) throws IOException {
+    public final void writeDateWithRef(Timestamp time) throws IOException {
         if (!refer.write(time)) {
             writeDate(time);
         }
     }
 
-    public void writeDate(java.util.Date date) throws IOException {
+    public final void writeDate(java.util.Date date) throws IOException {
         refer.set(date);
         Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
         calendar.setTime(date);
@@ -287,13 +287,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagSemicolon);
     }
 
-    public void writeDateWithRef(java.util.Date date) throws IOException {
+    public final void writeDateWithRef(java.util.Date date) throws IOException {
         if (!refer.write(date)) {
             writeDate(date);
         }
     }
 
-    public void writeDate(Calendar calendar) throws IOException {
+    public final void writeDate(Calendar calendar) throws IOException {
         refer.set(calendar);
         TimeZone tz = calendar.getTimeZone();
         if (!(tz.hasSameRules(HproseHelper.DefaultTZ) || tz.hasSameRules(HproseHelper.UTC))) {
@@ -307,17 +307,17 @@ public final class HproseWriter {
         stream.write(tz.hasSameRules(HproseHelper.UTC) ? HproseTags.TagUTC : HproseTags.TagSemicolon);
     }
 
-    public void writeDateWithRef(Calendar calendar) throws IOException {
+    public final void writeDateWithRef(Calendar calendar) throws IOException {
         if (!refer.write(calendar)) {
             writeDate(calendar);
         }
     }
 
-    public void writeTime(Time time) throws IOException {
+    public final void writeTime(Time time) throws IOException {
         writeDate(time);
     }
 
-    public void writeTimeWithRef(Time time) throws IOException {
+    public final void writeTimeWithRef(Time time) throws IOException {
         writeDateWithRef(time);
     }
 
@@ -359,7 +359,7 @@ public final class HproseWriter {
         }
     }
 
-    public void writeBytes(byte[] bytes) throws IOException {
+    public final void writeBytes(byte[] bytes) throws IOException {
         refer.set(bytes);
         stream.write(HproseTags.TagBytes);
         if (bytes.length > 0) {
@@ -370,13 +370,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagQuote);
     }
 
-    public void writeBytesWithRef(byte[] bytes) throws IOException {
+    public final void writeBytesWithRef(byte[] bytes) throws IOException {
         if (!refer.write(bytes)) {
             writeBytes(bytes);
         }
     }
 
-    public void writeUTF8Char(int c) throws IOException {
+    public final void writeUTF8Char(int c) throws IOException {
         stream.write(HproseTags.TagUTF8Char);
         if (c < 0x80) {
             stream.write(c);
@@ -392,13 +392,13 @@ public final class HproseWriter {
         }
     }
 
-    public void writeString(String s) throws IOException {
+    public final void writeString(String s) throws IOException {
         refer.set(s);
         stream.write(HproseTags.TagString);
         writeUTF8String(s, stream);
     }
 
-    public void writeStringWithRef(String s) throws IOException {
+    public final void writeStringWithRef(String s) throws IOException {
         if (!refer.write(s)) {
             writeString(s);
         }
@@ -447,37 +447,37 @@ public final class HproseWriter {
         stream.write(HproseTags.TagQuote);
     }
 
-    public void writeString(StringBuilder s) throws IOException {
+    public final void writeString(StringBuilder s) throws IOException {
         refer.set(s);
         stream.write(HproseTags.TagString);
         writeUTF8String(s.toString(), stream);
     }
 
-    public void writeStringWithRef(StringBuilder s) throws IOException {
+    public final void writeStringWithRef(StringBuilder s) throws IOException {
         if (!refer.write(s)) {
             writeString(s);
         }
     }
 
-    public void writeString(StringBuffer s) throws IOException {
+    public final void writeString(StringBuffer s) throws IOException {
         refer.set(s);
         stream.write(HproseTags.TagString);
         writeUTF8String(s.toString(), stream);
     }
 
-    public void writeStringWithRef(StringBuffer s) throws IOException {
+    public final void writeStringWithRef(StringBuffer s) throws IOException {
         if (!refer.write(s)) {
             writeString(s);
         }
     }
 
-    public void writeString(char[] s) throws IOException {
+    public final void writeString(char[] s) throws IOException {
         refer.set(s);
         stream.write(HproseTags.TagString);
         writeUTF8String(s);
     }
 
-    public void writeStringWithRef(char[] s) throws IOException {
+    public final void writeStringWithRef(char[] s) throws IOException {
         if (!refer.write(s)) {
             writeString(s);
         }
@@ -526,7 +526,7 @@ public final class HproseWriter {
         stream.write(HproseTags.TagQuote);
     }
 
-    public void writeUUID(UUID uuid) throws IOException {
+    public final void writeUUID(UUID uuid) throws IOException {
         refer.set(uuid);
         stream.write(HproseTags.TagGuid);
         stream.write(HproseTags.TagOpenbrace);
@@ -534,13 +534,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeUUIDWithRef(UUID uuid) throws IOException {
+    public final void writeUUIDWithRef(UUID uuid) throws IOException {
         if (!refer.write(uuid)) {
             writeUUID(uuid);
         }
     }
 
-    public void writeArray(short[] array) throws IOException {
+    public final void writeArray(short[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -554,13 +554,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(short[] array) throws IOException {
+    public final void writeArrayWithRef(short[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(int[] array) throws IOException {
+    public final void writeArray(int[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -574,13 +574,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(int[] array) throws IOException {
+    public final void writeArrayWithRef(int[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(long[] array) throws IOException {
+    public final void writeArray(long[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -594,13 +594,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(long[] array) throws IOException {
+    public final void writeArrayWithRef(long[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(float[] array) throws IOException {
+    public final void writeArray(float[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -614,13 +614,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(float[] array) throws IOException {
+    public final void writeArrayWithRef(float[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(double[] array) throws IOException {
+    public final void writeArray(double[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -634,13 +634,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(double[] array) throws IOException {
+    public final void writeArrayWithRef(double[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(boolean[] array) throws IOException {
+    public final void writeArray(boolean[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -654,13 +654,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(boolean[] array) throws IOException {
+    public final void writeArrayWithRef(boolean[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Date[] array) throws IOException {
+    public final void writeArray(Date[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -679,13 +679,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Date[] array) throws IOException {
+    public final void writeArrayWithRef(Date[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Time[] array) throws IOException {
+    public final void writeArray(Time[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -704,13 +704,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Time[] array) throws IOException {
+    public final void writeArrayWithRef(Time[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Timestamp[] array) throws IOException {
+    public final void writeArray(Timestamp[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -729,13 +729,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Timestamp[] array) throws IOException {
+    public final void writeArrayWithRef(Timestamp[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(java.util.Date[] array) throws IOException {
+    public final void writeArray(java.util.Date[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -754,13 +754,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(java.util.Date[] array) throws IOException {
+    public final void writeArrayWithRef(java.util.Date[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Calendar[] array) throws IOException {
+    public final void writeArray(Calendar[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -779,13 +779,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Calendar[] array) throws IOException {
+    public final void writeArrayWithRef(Calendar[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(String[] array) throws IOException {
+    public final void writeArray(String[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -804,13 +804,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(String[] array) throws IOException {
+    public final void writeArrayWithRef(String[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(StringBuilder[] array) throws IOException {
+    public final void writeArray(StringBuilder[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -829,13 +829,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(StringBuilder[] array) throws IOException {
+    public final void writeArrayWithRef(StringBuilder[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(StringBuffer[] array) throws IOException {
+    public final void writeArray(StringBuffer[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -854,13 +854,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(StringBuffer[] array) throws IOException {
+    public final void writeArrayWithRef(StringBuffer[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(UUID[] array) throws IOException {
+    public final void writeArray(UUID[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -879,13 +879,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(UUID[] array) throws IOException {
+    public final void writeArrayWithRef(UUID[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(char[][] array) throws IOException {
+    public final void writeArray(char[][] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -904,13 +904,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(char[][] array) throws IOException {
+    public final void writeArrayWithRef(char[][] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(byte[][] array) throws IOException {
+    public final void writeArray(byte[][] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -929,13 +929,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(byte[][] array) throws IOException {
+    public final void writeArrayWithRef(byte[][] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(BigInteger[] array) throws IOException {
+    public final void writeArray(BigInteger[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -954,13 +954,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(BigInteger[] array) throws IOException {
+    public final void writeArrayWithRef(BigInteger[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(BigDecimal[] array) throws IOException {
+    public final void writeArray(BigDecimal[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -979,13 +979,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(BigDecimal[] array) throws IOException {
+    public final void writeArrayWithRef(BigDecimal[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Object[] array) throws IOException {
+    public final void writeArray(Object[] array) throws IOException {
         refer.set(array);
         int length = array.length;
         stream.write(HproseTags.TagList);
@@ -999,13 +999,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Object[] array) throws IOException {
+    public final void writeArrayWithRef(Object[] array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(AtomicIntegerArray array) throws IOException {
+    public final void writeArray(AtomicIntegerArray array) throws IOException {
         refer.set(array);
         int length = array.length();
         stream.write(HproseTags.TagList);
@@ -1019,13 +1019,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(AtomicIntegerArray array) throws IOException {
+    public final void writeArrayWithRef(AtomicIntegerArray array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(AtomicLongArray array) throws IOException {
+    public final void writeArray(AtomicLongArray array) throws IOException {
         refer.set(array);
         int length = array.length();
         stream.write(HproseTags.TagList);
@@ -1039,13 +1039,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(AtomicLongArray array) throws IOException {
+    public final void writeArrayWithRef(AtomicLongArray array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(AtomicReferenceArray array) throws IOException {
+    public final void writeArray(AtomicReferenceArray array) throws IOException {
         refer.set(array);
         int length = array.length();
         stream.write(HproseTags.TagList);
@@ -1059,13 +1059,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(AtomicReferenceArray array) throws IOException {
+    public final void writeArrayWithRef(AtomicReferenceArray array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeArray(Object array) throws IOException {
+    public final void writeArray(Object array) throws IOException {
         refer.set(array);
         int length = Array.getLength(array);
         stream.write(HproseTags.TagList);
@@ -1079,13 +1079,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeArrayWithRef(Object array) throws IOException {
+    public final void writeArrayWithRef(Object array) throws IOException {
         if (!refer.write(array)) {
             writeArray(array);
         }
     }
 
-    public void writeCollection(Collection<?> collection) throws IOException {
+    public final void writeCollection(Collection<?> collection) throws IOException {
         refer.set(collection);
         int count = collection.size();
         stream.write(HproseTags.TagList);
@@ -1099,13 +1099,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeCollectionWithRef(Collection<?> collection) throws IOException {
+    public final void writeCollectionWithRef(Collection<?> collection) throws IOException {
         if (!refer.write(collection)) {
             writeCollection(collection);
         }
     }
 
-    public void writeList(List<?> list) throws IOException {
+    public final void writeList(List<?> list) throws IOException {
         refer.set(list);
         int count = list.size();
         stream.write(HproseTags.TagList);
@@ -1119,13 +1119,13 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeListWithRef(List<?> list) throws IOException {
+    public final void writeListWithRef(List<?> list) throws IOException {
         if (!refer.write(list)) {
             writeList(list);
         }
     }
 
-    public void writeMap(Map<?, ?> map) throws IOException {
+    public final void writeMap(Map<?, ?> map) throws IOException {
         refer.set(map);
         int count = map.size();
         stream.write(HproseTags.TagMap);
@@ -1140,14 +1140,14 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeMapWithRef(Map<?, ?> map) throws IOException {
+    public final void writeMapWithRef(Map<?, ?> map) throws IOException {
         if (!refer.write(map)) {
             writeMap(map);
         }
     }
 
     @SuppressWarnings({"unchecked"})
-    public void writeObject(Object object) throws IOException {
+    public final void writeObject(Object object) throws IOException {
         Class<?> type = object.getClass();
         int cr = classref.get(type);
         if (cr < 0) {
@@ -1177,7 +1177,7 @@ public final class HproseWriter {
         stream.write(HproseTags.TagClosebrace);
     }
 
-    public void writeObjectWithRef(Object object) throws IOException {
+    public final void writeObjectWithRef(Object object) throws IOException {
         if (!refer.write(object)) {
             writeObject(object);
         }
@@ -1281,13 +1281,13 @@ public final class HproseWriter {
         }
     }
 
-    public void reset() {
+    public final void reset() {
         refer.reset();
         classref.clear();
         lastclassref = 0;
     }
 
-    class SerializeCache {
+    final class SerializeCache {
         byte[] data;
         int refcount;
     }

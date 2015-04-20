@@ -12,7 +12,7 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -36,14 +36,14 @@ final class FieldAccessor extends MemberAccessor {
     }
 
     @Override
-    void set(Object obj, Object value) throws IllegalAccessException,
+    final void set(Object obj, Object value) throws IllegalAccessException,
                                               IllegalArgumentException,
                                               InvocationTargetException {
         accessor.set(obj, value);
     }
 
     @Override
-    Object get(Object obj) throws IllegalAccessException,
+    final Object get(Object obj) throws IllegalAccessException,
                                   IllegalArgumentException,
                                   InvocationTargetException {
         return accessor.get(obj);

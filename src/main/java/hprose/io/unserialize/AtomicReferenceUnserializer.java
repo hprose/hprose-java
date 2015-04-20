@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReference unserializer class for Java.           *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,7 +28,7 @@ final class AtomicReferenceUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicReferenceUnserializer();
 
-    public Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             return reader.readAtomicReference(((ParameterizedType)type).getActualTypeArguments()[0]);
         }

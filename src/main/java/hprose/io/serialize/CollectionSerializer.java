@@ -12,7 +12,7 @@
  *                                                        *
  * Collection serializer class for Java.                  *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class CollectionSerializer implements HproseSerializer<Collection> {
 
     public final static HproseSerializer instance = new CollectionSerializer();
 
-    public void write(HproseWriter writer, Collection obj) throws IOException {
+    public final void write(HproseWriter writer, Collection obj) throws IOException {
         writer.writeCollectionWithRef(obj);
     }
 }

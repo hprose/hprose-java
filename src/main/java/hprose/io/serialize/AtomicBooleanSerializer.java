@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicBoolean serializer class for Java.               *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class AtomicBooleanSerializer implements HproseSerializer<AtomicBoolean> {
 
     public final static HproseSerializer instance = new AtomicBooleanSerializer();
 
-    public void write(HproseWriter writer, AtomicBoolean obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicBoolean obj) throws IOException {
         writer.writeBoolean(obj.get());
     }
 }

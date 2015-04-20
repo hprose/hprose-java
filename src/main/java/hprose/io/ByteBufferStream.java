@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ByteBufferStream {
+final public class ByteBufferStream {
 
     @SuppressWarnings({"unchecked"})
     private static final ConcurrentLinkedQueue<ByteBuffer>[] byteBufferPool = new ConcurrentLinkedQueue[] {
@@ -56,11 +56,11 @@ public class ByteBufferStream {
         31, 27, 13, 23, 21, 19, 16,  7, 26, 12, 18,  6, 11,  5, 10,  9
     };
 
-    private static int log2(int x) {
+    private static final int log2(int x) {
         return debruijn[(x & -x) * 0x077CB531 >>> 27];
     }
 
-    private static int pow2roundup(int x) {
+    private static final int pow2roundup(int x) {
         --x;
         x |= x >> 1;
         x |= x >> 2;
@@ -70,7 +70,7 @@ public class ByteBufferStream {
         return x + 1;
     }
 
-    public static ByteBuffer allocate(int capacity) {
+    public static final ByteBuffer allocate(int capacity) {
         capacity = pow2roundup(capacity);
         if (capacity < 512) capacity = 512;
         int index = log2(capacity) - 9;
@@ -81,7 +81,7 @@ public class ByteBufferStream {
         return ByteBuffer.allocateDirect(capacity);
     }
 
-    public static void free(ByteBuffer buffer) {
+    public static final void free(ByteBuffer buffer) {
         if (buffer.isDirect()) {
             int capacity = buffer.capacity();
             if (capacity == pow2roundup(capacity)) {
@@ -106,36 +106,36 @@ public class ByteBufferStream {
         this.buffer = buffer;
     }
 
-    public static ByteBufferStream wrap(byte[] array, int offset, int length) {
+    public static final ByteBufferStream wrap(byte[] array, int offset, int length) {
         return new ByteBufferStream(ByteBuffer.wrap(array, offset, length));
     }
 
-    public static ByteBufferStream wrap(byte[] array) {
+    public static final ByteBufferStream wrap(byte[] array) {
         return new ByteBufferStream(ByteBuffer.wrap(array));
     }
 
-    public void close() {
+    public final void close() {
         if (buffer != null) {
             free(buffer);
             buffer = null;
         }
     }
 
-    public InputStream getInputStream() {
+    public final InputStream getInputStream() {
         if (istream == null) {
             istream =  new ByteBufferInputStream(this);
         }
         return istream;
     }
 
-    public OutputStream getOutputStream() {
+    public final OutputStream getOutputStream() {
         if (ostream == null) {
             ostream = new ByteBufferOutputStream(this);
         }
         return ostream;
     }
 
-    public int read() {
+    public final int read() {
         if (buffer.hasRemaining()) {
             return buffer.get() & 0xff;
         }
@@ -144,11 +144,11 @@ public class ByteBufferStream {
         }
     }
 
-    public int read(byte b[]) {
+    public final int read(byte b[]) {
         return read(b, 0, b.length);
     }
 
-    public int read(byte b[], int off, int len) {
+    public final int read(byte b[], int off, int len) {
         if (len <= 0) {
             return 0;
         }
@@ -164,7 +164,7 @@ public class ByteBufferStream {
         return len;
     }
 
-    public int read(ByteBuffer b) {
+    public final int read(ByteBuffer b) {
         int len = b.remaining();
         if (len <= 0) {
             return 0;
@@ -184,7 +184,7 @@ public class ByteBufferStream {
         return len;
     }
 
-    public long skip(long n) {
+    public final long skip(long n) {
         if (n <= 0) {
             return 0;
         }
@@ -200,23 +200,23 @@ public class ByteBufferStream {
         return n;
     }
 
-    public int available() {
+    public final int available() {
         return buffer.remaining();
     }
 
-    public boolean markSupported() {
+    public final boolean markSupported() {
         return true;
     }
 
-    public void mark(int readlimit) {
+    public final void mark(int readlimit) {
         buffer.mark();
     }
 
-    public void reset() {
+    public final void reset() {
         buffer.reset();
     }
 
-    private void grow(int n) {
+    private final void grow(int n) {
         if (buffer.remaining() < n) {
             int required = buffer.position() + n;
             int size = pow2roundup(required) << 1;
@@ -233,43 +233,43 @@ public class ByteBufferStream {
         }
     }
 
-    public void write(int b) {
+    public final void write(int b) {
         grow(1);
         buffer.put((byte) b);
     }
 
-    public void write(byte b[]) {
+    public final void write(byte b[]) {
         write(b, 0, b.length);
     }
 
-    public void write(byte b[], int off, int len) {
+    public final void write(byte b[], int off, int len) {
         grow(len);
         buffer.put(b, off, len);
     }
 
-    public void write(ByteBuffer b) {
+    public final void write(ByteBuffer b) {
         grow(b.remaining());
         buffer.put(b);
     }
 
-    public void flip() {
+    public final void flip() {
         if (buffer.position() != 0) {
             buffer.flip();
         }
     }
 
-    public void rewind() {
+    public final void rewind() {
         buffer.rewind();
     }
 
-    public byte[] toArray() {
+    public final byte[] toArray() {
         flip();
         byte[] data = new byte[buffer.limit()];
         buffer.get(data);
         return data;
     }
 
-    public void readFrom(InputStream istream) throws IOException {
+    public final void readFrom(InputStream istream) throws IOException {
         byte[] b = new byte[8192];
         for (;;) {
             int n = istream.read(b);
@@ -280,7 +280,7 @@ public class ByteBufferStream {
         }
     }
 
-    public void writeTo(OutputStream ostream) throws IOException {
+    public final void writeTo(OutputStream ostream) throws IOException {
         if (buffer.hasArray()) {
             ostream.write(buffer.array(), buffer.arrayOffset(), buffer.limit());
         }
@@ -296,7 +296,7 @@ public class ByteBufferStream {
         }
     }
 
-    public void readFrom(ByteChannel channel, int length) throws IOException {
+    public final void readFrom(ByteChannel channel, int length) throws IOException {
         int n = 0;
         grow(length);
         buffer.limit(buffer.position() + length);
@@ -312,7 +312,7 @@ public class ByteBufferStream {
         }
     }
 
-    public void writeTo(ByteChannel channel) throws IOException {
+    public final void writeTo(ByteChannel channel) throws IOException {
         while (buffer.hasRemaining()) {
             channel.write(buffer);
         }

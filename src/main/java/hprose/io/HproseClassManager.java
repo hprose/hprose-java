@@ -12,7 +12,7 @@
  *                                                        *
  * ClassManager for Java.                                 *
  *                                                        *
- * LastModified: Mar 7, 2014                              *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,20 +27,20 @@ public final class HproseClassManager {
     private HproseClassManager() {
     }
 
-    public static void register(Class<?> type, String alias) {
+    public final static void register(Class<?> type, String alias) {
         classCache1.put(type, alias);
         classCache2.put(alias, type);
     }
 
-    public static String getClassAlias(Class<?> type) {
+    public final static String getClassAlias(Class<?> type) {
         return classCache1.get(type);
     }
 
-    public static Class<?> getClass(String alias) {
+    public final static Class<?> getClass(String alias) {
         return classCache2.get(alias);
     }
 
-    public static boolean containsClass(String alias) {
+    public final static boolean containsClass(String alias) {
         return classCache2.containsKey(alias);
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * char array serializer class for Java.                  *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ final class CharArraySerializer implements HproseSerializer<char[]> {
 
     public final static HproseSerializer instance = new CharArraySerializer();
 
-    public void write(HproseWriter writer, char[] obj) throws IOException {
+    public final void write(HproseWriter writer, char[] obj) throws IOException {
         switch (obj.length) {
             case 0: writer.writeEmpty(); break;
             case 1: writer.writeUTF8Char(obj[0]); break;

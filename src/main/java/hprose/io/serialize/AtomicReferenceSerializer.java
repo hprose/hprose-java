@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReference serializer class for Java.             *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class AtomicReferenceSerializer implements HproseSerializer<AtomicReferenc
 
     public final static HproseSerializer instance = new AtomicReferenceSerializer();
 
-    public void write(HproseWriter writer, AtomicReference obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicReference obj) throws IOException {
         writer.serialize(obj.get());
     }
 }

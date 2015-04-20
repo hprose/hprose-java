@@ -12,7 +12,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Sep 12, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -105,7 +105,7 @@ public final class HproseHelper {
         newInstance = _newInstance;
     }
 
-    public static Class<?> toClass(Type type) {
+    public final static Class<?> toClass(Type type) {
         if (type == null) {
             return null;
         }
@@ -144,7 +144,7 @@ public final class HproseHelper {
         }
     }
 
-    public static String[] split(String s, char c, int limit) {
+    public final static String[] split(String s, char c, int limit) {
         if (s == null) {
             return null;
         }
@@ -198,7 +198,7 @@ public final class HproseHelper {
         return null;
     }
 
-    static Map<String, MemberAccessor> getProperties(Class<?> type) {
+    final static Map<String, MemberAccessor> getProperties(Class<?> type) {
         ConcurrentHashMap<String, MemberAccessor> properties = propertiesCache.get(type);
         if (properties == null) {
             properties = new ConcurrentHashMap<String, MemberAccessor>();
@@ -233,7 +233,7 @@ public final class HproseHelper {
         return properties;
     }
 
-    static Map<String, MemberAccessor> getFields(Class<?> type) {
+    final static Map<String, MemberAccessor> getFields(Class<?> type) {
         ConcurrentHashMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
             fields = new ConcurrentHashMap<String, MemberAccessor>();
@@ -252,7 +252,7 @@ public final class HproseHelper {
         return fields;
     }
 
-    static Map<String, MemberAccessor> getMembers(Class<?> type) {
+    final static Map<String, MemberAccessor> getMembers(Class<?> type) {
         ConcurrentHashMap<String, MemberAccessor> members = membersCache.get(type);
         if (members == null) {
             members = new ConcurrentHashMap<String, MemberAccessor>();
@@ -295,7 +295,7 @@ public final class HproseHelper {
         return members;
     }
 
-    static Map<String, MemberAccessor> getMembers(Class<?> type, HproseMode mode) {
+    final static Map<String, MemberAccessor> getMembers(Class<?> type, HproseMode mode) {
         return ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(type)) ?
                (mode == HproseMode.FieldMode) ?
                getFields(type) :
@@ -303,7 +303,7 @@ public final class HproseHelper {
                getMembers(type);
     }
 
-    public static String getClassName(Class<?> type) {
+    public final static String getClassName(Class<?> type) {
         String className = HproseClassManager.getClassAlias(type);
         if (className == null) {
             className = type.getName().replace('.', '_').replace('$', '_');
@@ -357,7 +357,7 @@ public final class HproseHelper {
         }
     }
 
-    public static Class<?> getClass(String className) {
+    public final static Class<?> getClass(String className) {
         Class<?> type = HproseClassManager.getClass(className);
         if (type == null) {
             StringBuilder cn = new StringBuilder(className);
@@ -449,7 +449,7 @@ public final class HproseHelper {
     }
 
     @SuppressWarnings({"unchecked"})
-    public static <T> T newInstance(Class<T> type) {
+    public final static <T> T newInstance(Class<T> type) {
         Constructor<?> ctor = ctorCache.get(type);
         if (ctor == null) {
             Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();
@@ -478,7 +478,7 @@ public final class HproseHelper {
         }
     }
 
-    public static String base64Encode(byte[] data) {
+    public final static String base64Encode(byte[] data) {
         StringBuilder sb = new StringBuilder();
         int r = data.length % 3;
         int len = data.length - r;
@@ -510,7 +510,7 @@ public final class HproseHelper {
         return sb.toString();
     }
 
-    public static byte[] base64Decode(String str) {
+    public final static byte[] base64Decode(String str) {
         byte[] data = str.getBytes();
         int len = data.length;
         ByteArrayOutputStream buf = new ByteArrayOutputStream(len);
@@ -565,7 +565,7 @@ public final class HproseHelper {
         return buf.toByteArray();
     }
 
-    public static String readWrongInfo(ByteBufferStream stream) {
+    public final static String readWrongInfo(ByteBufferStream stream) {
         byte[] bytes = stream.toArray();
         try {
             return new String(bytes, "UTF-8");
@@ -575,7 +575,7 @@ public final class HproseHelper {
         }
     }
 
-    public static void sendDataOverTcp(SocketChannel channel, ByteBufferStream stream) throws IOException {
+    public final static void sendDataOverTcp(SocketChannel channel, ByteBufferStream stream) throws IOException {
         int n = stream.available();
         int len = n > 1020 ? 2048 : n > 508 ? 1024 : 512;
         byte[] buf = new byte[len];
@@ -595,7 +595,7 @@ public final class HproseHelper {
         }
     }
 
-    public static ByteBufferStream receiveDataOverTcp(SocketChannel channel) throws IOException {
+    public final static ByteBufferStream receiveDataOverTcp(SocketChannel channel) throws IOException {
         ByteBufferStream buf = new ByteBufferStream();
         buf.readFrom(channel, 4);
         buf.rewind();

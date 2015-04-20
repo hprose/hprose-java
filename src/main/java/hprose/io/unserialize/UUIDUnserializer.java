@@ -12,7 +12,7 @@
  *                                                        *
  * UUID unserializer class for Java.                      *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ final class UUIDUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new UUIDUnserializer();
 
-    public Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
         return reader.readUUID();
     }
 

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Sep 15, 2014                             *
+ * LastModified: Apr 20, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -2132,56 +2132,47 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    public Collection readCollection(Class<?> cls, Type type) throws IOException {
+    public <T> Collection<T> readCollection(Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case HproseTags.TagNull: return null;
             case HproseTags.TagList: {
                 int count = readInt(HproseTags.TagOpenbrace);
-                Collection a = (Collection)HproseHelper.newInstance(cls);
+                Collection<T> a = (Collection<T>)HproseHelper.newInstance(cls);
                 refer.set(a);
-                Type componentType;
-                Class<?> componentClass;
-                if (type instanceof ParameterizedType) {
-                    componentType = ((ParameterizedType)type).getActualTypeArguments()[0];
-                    componentClass = HproseHelper.toClass(componentType);
-                }
-                else {
-                    componentType = Object.class;
-                    componentClass = Object.class;
-                }
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
-                    a.add(unserializer.read(this, componentClass, componentType));
+                    a.add((T)unserializer.read(this, componentClass, componentType));
                 }
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Collection)readRef();
+            case HproseTags.TagRef: return (Collection<T>)readRef();
             default: throw castError(tagToString(tag), cls);
         }
     }
 
     @SuppressWarnings({"unchecked"})
-    private Map readListAsMap(Class<?> cls, Type type) throws IOException {
+    public Collection readCollection(Class<?> cls, Type type) throws IOException {
+        Type componentType;
+        Class<?> componentClass;
+        if (type instanceof ParameterizedType) {
+            componentType = ((ParameterizedType)type).getActualTypeArguments()[0];
+            componentClass = HproseHelper.toClass(componentType);
+        }
+        else {
+            componentType = Object.class;
+            componentClass = Object.class;
+        }
+        return readCollection(cls, componentClass, componentType);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <K, V> Map<K, V> readListAsMap(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
         int count = readInt(HproseTags.TagOpenbrace);
-        Map m = (Map)HproseHelper.newInstance(cls);
+        Map<K, V> m = (Map<K, V>)HproseHelper.newInstance(cls);
         refer.set(m);
         if (count > 0) {
-            Type keyType, valueType;
-            Class<?> keyClass, valueClass;
-            if (type instanceof ParameterizedType) {
-                Type[] argsType = ((ParameterizedType)type).getActualTypeArguments();
-                keyType = argsType[0];
-                valueType = argsType[1];
-                keyClass = HproseHelper.toClass(keyType);
-                valueClass = HproseHelper.toClass(valueType);
-            }
-            else {
-                valueType = Object.class;
-                keyClass = Object.class;
-                valueClass = Object.class;
-            }
             if (keyClass.equals(int.class) &&
                 keyClass.equals(Integer.class) &&
                 keyClass.equals(String.class) &&
@@ -2190,8 +2181,8 @@ public final class HproseReader {
             }
             HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
-                Object key = (keyClass.equals(String.class) ? String.valueOf(i) : i);
-                Object value = valueUnserializer.read(this, valueClass, valueType);
+                K key = (K)(keyClass.equals(String.class) ? String.valueOf(i) : i);
+                V value = (V)valueUnserializer.read(this, valueClass, valueType);
                 m.put(key, value);
             }
         }
@@ -2200,10 +2191,37 @@ public final class HproseReader {
     }
 
     @SuppressWarnings({"unchecked"})
-    private Map readMapWithoutTag(Class<?> cls, Type type) throws IOException {
+    private <K, V> Map<K, V> readMapWithoutTag(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int count = readInt(HproseTags.TagOpenbrace);
         Map m = (Map)HproseHelper.newInstance(cls);
         refer.set(m);
+        HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
+        HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
+        for (int i = 0; i < count; ++i) {
+            K key = (K)keyUnserializer.read(this, keyClass, keyType);
+            V value = (V)valueUnserializer.read(this, valueClass, valueType);
+            m.put(key, value);
+        }
+        stream.read();
+        return m;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public <K, V> Map<K, V> readMap(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+        int tag = stream.read();
+        switch (tag) {
+            case HproseTags.TagNull: return null;
+            case HproseTags.TagList: return readListAsMap(cls, keyClass, valueClass, valueType);
+            case HproseTags.TagMap: return readMapWithoutTag(cls, keyClass, valueClass, keyType, valueType);
+            case HproseTags.TagClass: readClass(); return readMap(cls, keyClass, valueClass, keyType, valueType);
+            case HproseTags.TagObject: return (Map<K, V>)readObjectAsMap((Map<K, V>)HproseHelper.newInstance(cls));
+            case HproseTags.TagRef: return (Map<K, V>)readRef();
+            default: throw castError(tagToString(tag), cls);
+        }
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public Map readMap(Class<?> cls, Type type) throws IOException {
         Type keyType, valueType;
         Class<?> keyClass, valueClass;
         if (type instanceof ParameterizedType) {
@@ -2219,29 +2237,7 @@ public final class HproseReader {
             keyClass = Object.class;
             valueClass = Object.class;
         }
-        HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
-        HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
-        for (int i = 0; i < count; ++i) {
-            Object key = keyUnserializer.read(this, keyClass, keyType);
-            Object value = valueUnserializer.read(this, valueClass, valueType);
-            m.put(key, value);
-        }
-        stream.read();
-        return m;
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public Map readMap(Class<?> cls, Type type) throws IOException {
-        int tag = stream.read();
-        switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: return readListAsMap(cls, type);
-            case HproseTags.TagMap: return readMapWithoutTag(cls, type);
-            case HproseTags.TagClass: readClass(); return readMap(cls, type);
-            case HproseTags.TagObject: return readObjectAsMap((Map)HproseHelper.newInstance(cls));
-            case HproseTags.TagRef: return (Map)readRef();
-            default: throw castError(tagToString(tag), cls);
-        }
+        return readMap(cls, keyClass, valueClass, keyType, valueType);
     }
 
     public Object readObject(Class<?> type) throws IOException {

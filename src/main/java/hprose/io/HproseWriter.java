@@ -82,6 +82,21 @@ public final class HproseWriter {
             lastref = 0;
         }
     }
+
+    final static byte[] digits    = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+    final static byte[] DigitTens = { '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '1', '1', '1', '1',
+            '1', '1', '1', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '3', '3', '3', '3', '3', '3', '3',
+            '3', '3', '3', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '5', '5', '5', '5', '5', '5', '5', '5',
+            '5', '5', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '7', '7', '7', '7', '7', '7', '7', '7', '7',
+            '7', '8', '8', '8', '8', '8', '8', '8', '8', '8', '8', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9', };
+
+    final static byte[] DigitOnes = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5',
+            '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6',
+            '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8',
+            '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', };
+
     private static final EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>>(HproseMode.class);
     static {
         memberCache.put(HproseMode.FieldMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
@@ -1234,22 +1249,33 @@ public final class HproseWriter {
         }
         else {
             int off = 20;
-            int len = 0;
-            boolean neg = false;
+            int q, r;
+            byte sign = 0;
             if (i < 0) {
-                neg = true;
+                sign = '-';
                 i = -i;
             }
-            while (i != 0) {
-                 buf[--off] = (byte) (i % 10 + '0');
-                 ++len;
-                 i /= 10;
+
+            while (i >= 65536) {
+                q = i / 100;
+                r = i - (q * 100);
+                i = q;
+                buf[--off] = DigitOnes[r];
+                buf[--off] = DigitTens[r];
             }
-            if (neg) {
-                buf[--off] = '-';
-                ++len;
+
+            for (;;) {
+                q = (i * 52429) >>> (16 + 3);
+                r = i - (q * 10);
+                buf[--off] = digits[r];
+                i = q;
+                if (i == 0) break;
             }
-            stream.write(buf, off, len);
+            if (sign != 0) {
+                buf[--off] = sign;
+            }
+
+            stream.write(buf, off, 20 - off);
         }
     }
 
@@ -1261,23 +1287,45 @@ public final class HproseWriter {
             stream.write(minLongBuf);
         }
         else {
+            long q;
             int off = 20;
-            int len = 0;
-            boolean neg = false;
+            int q2, r;
+            byte sign = 0;
             if (i < 0) {
-                neg = true;
+                sign = '-';
                 i = -i;
             }
-            while (i != 0) {
-                 buf[--off] = (byte) (i % 10 + '0');
-                 ++len;
-                 i /= 10;
+
+            while (i >= 65536) {
+                q = i / 100;
+                r = (int)(i - (q * 100));
+                i = q;
+                buf[--off] = DigitOnes[r];
+                buf[--off] = DigitTens[r];
             }
-            if (neg) {
-                buf[--off] = '-';
-                ++len;
+            
+            int i2 = (int)i;
+
+            while (i2 >= 65536) {
+                q2 = i2 / 100;
+                r = i2 - (q2 * 100);
+                i2 = q2;
+                buf[--off] = DigitOnes[r];
+                buf[--off] = DigitTens[r];
             }
-            stream.write(buf, off, len);
+
+            for (;;) {
+                q2 = (i2 * 52429) >>> (16 + 3);
+                r = i2 - (q2 * 10);
+                buf[--off] = digits[r];
+                i2 = q2;
+                if (i2 == 0) break;
+            }
+            if (sign != 0) {
+                buf[--off] = sign;
+            }
+
+            stream.write(buf, off, 20 - off);
         }
     }
 

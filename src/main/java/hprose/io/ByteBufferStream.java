@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,42 +25,74 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
-final public class ByteBufferStream {
+public final class ByteBufferStream {
 
-    @SuppressWarnings({"unchecked"})
-    private static final ConcurrentLinkedQueue<ByteBuffer>[] byteBufferPool = new ConcurrentLinkedQueue[] {
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>(),
-        new ConcurrentLinkedQueue<ByteBuffer>()
+    static final class ByteBufferPool {
+        private final ByteBuffer[][] pool = new ByteBuffer[12][];
+        private final int[] position = new int[12];
+        private static final int[] debruijn = new int[] {
+            0,  1,  28,  2, 29, 14, 24,  3,
+            30, 22, 20, 15, 25, 17,  4,  8,
+            31, 27, 13, 23, 21, 19, 16,  7,
+            26, 12, 18,  6, 11,  5, 10,  9
+        };
+        private static int log2(int x) {
+            return debruijn[(x & -x) * 0x077CB531 >>> 27];
+        }
+        private ByteBufferPool() {
+            for (int i = 0; i < 12; ++i) {
+                pool[i] = new ByteBuffer[8];
+                position[i] = -1;
+            }
+        }
+        private ByteBuffer allocate(int capacity) {
+            capacity = pow2roundup(capacity);
+            if (capacity < 1024) {
+                return ByteBuffer.allocate(capacity);
+            }
+            int index = log2(capacity) - 10;
+            int pos = position[index];
+            assert(pos < 8);
+            if (index < 12 && pos >= 0) {
+                ByteBuffer byteBuffer = pool[index][pos];
+                pool[index][pos] = null;
+                position[index] = pos - 1;
+                if (byteBuffer != null) return byteBuffer;
+            }
+            return ByteBuffer.allocateDirect(capacity);
+        }
+
+        private void free(ByteBuffer buffer) {
+            if (buffer.isDirect()) {
+                int capacity = buffer.capacity();
+                if (capacity == pow2roundup(capacity)) {
+                    buffer.clear();
+                    int index = log2(capacity) - 10;
+                    if (index >= 0 && index < 12) {
+                        int pos = position[index];
+                        if (pos < 7) {
+                            pool[index][++pos] = buffer;
+                            position[index] = pos;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static final ThreadLocal<ByteBufferPool> byteBufferPool = new ThreadLocal<ByteBufferPool>() {
+        @Override
+        protected ByteBufferPool initialValue() {
+            return new ByteBufferPool();
+        }
     };
+
     public ByteBuffer buffer;
     InputStream istream;
     OutputStream ostream;
-    private static final int[] debruijn = new int[] {
-        0,  1, 28,  2, 29, 14, 24,  3, 30, 22, 20, 15, 25, 17,  4,  8,
-        31, 27, 13, 23, 21, 19, 16,  7, 26, 12, 18,  6, 11,  5, 10,  9
-    };
 
-    private static final int log2(int x) {
-        return debruijn[(x & -x) * 0x077CB531 >>> 27];
-    }
-
-    private static final int pow2roundup(int x) {
+    private static int pow2roundup(int x) {
         --x;
         x |= x >> 1;
         x |= x >> 2;
@@ -71,31 +103,15 @@ final public class ByteBufferStream {
     }
 
     public static final ByteBuffer allocate(int capacity) {
-        capacity = pow2roundup(capacity);
-        if (capacity < 512) capacity = 512;
-        int index = log2(capacity) - 9;
-        if (index < 16) {
-            ByteBuffer byteBuffer = byteBufferPool[index].poll();
-            if (byteBuffer != null) return byteBuffer;
-        }
-        return ByteBuffer.allocateDirect(capacity);
+        return byteBufferPool.get().allocate(capacity);
     }
 
     public static final void free(ByteBuffer buffer) {
-        if (buffer.isDirect()) {
-            int capacity = buffer.capacity();
-            if (capacity == pow2roundup(capacity)) {
-                buffer.clear();
-                int index = log2(capacity) - 9;
-                if (index >= 0 && index < 16) {
-                    byteBufferPool[index].offer(buffer);
-                }
-            }
-        }
+        byteBufferPool.get().free(buffer);
     }
 
     public ByteBufferStream() {
-        this(512);
+        this(1024);
     }
 
     public ByteBufferStream(int capacity) {
@@ -216,7 +232,7 @@ final public class ByteBufferStream {
         buffer.reset();
     }
 
-    private final void grow(int n) {
+    private void grow(int n) {
         if (buffer.remaining() < n) {
             int required = buffer.position() + n;
             int size = pow2roundup(required) << 1;

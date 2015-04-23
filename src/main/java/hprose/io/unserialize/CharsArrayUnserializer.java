@@ -12,23 +12,28 @@
  *                                                        *
  * chars array unserializer class for Java.               *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 22, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 
 final class CharsArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new CharsArrayUnserializer();
 
-    public final Object read(HproseReader reader, Class<?> cls, Type type) throws IOException {
-        return reader.readCharsArray();
+    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+        return reader.readCharsArray(buffer);
+    }
+
+    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+        return reader.readCharsArray(stream);
     }
 
 }

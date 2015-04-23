@@ -1171,7 +1171,7 @@ public final class HproseWriter {
                 writeNull();
             }
             else {
-                member.serializer.write(this, value);
+                member.serializer().write(this, value);
             }
         }
         stream.write(HproseTags.TagClosebrace);

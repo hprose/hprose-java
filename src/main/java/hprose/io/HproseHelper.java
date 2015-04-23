@@ -76,8 +76,8 @@ public final class HproseHelper {
 
     private static final Constructor<Object> nullCtor;
     private static final Method newInstance;
-    static final TimeZone UTC = TimeZone.getTimeZone("UTC");
-    static final TimeZone DefaultTZ = TimeZone.getDefault();
+    public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+    public static final TimeZone DefaultTZ = TimeZone.getDefault();
 
     private HproseHelper() {
     }
@@ -233,7 +233,7 @@ public final class HproseHelper {
         return properties;
     }
 
-    final static Map<String, MemberAccessor> getFields(Class<?> type) {
+    public final static Map<String, MemberAccessor> getFields(Class<?> type) {
         ConcurrentHashMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
             fields = new ConcurrentHashMap<String, MemberAccessor>();
@@ -252,7 +252,7 @@ public final class HproseHelper {
         return fields;
     }
 
-    final static Map<String, MemberAccessor> getMembers(Class<?> type) {
+    public final static Map<String, MemberAccessor> getMembers(Class<?> type) {
         ConcurrentHashMap<String, MemberAccessor> members = membersCache.get(type);
         if (members == null) {
             members = new ConcurrentHashMap<String, MemberAccessor>();
@@ -295,7 +295,7 @@ public final class HproseHelper {
         return members;
     }
 
-    final static Map<String, MemberAccessor> getMembers(Class<?> type, HproseMode mode) {
+    public final static Map<String, MemberAccessor> getMembers(Class<?> type, HproseMode mode) {
         return ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(type)) ?
                (mode == HproseMode.FieldMode) ?
                getFields(type) :

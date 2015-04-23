@@ -12,21 +12,28 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
+import hprose.io.serialize.HproseSerializer;
 import hprose.io.serialize.SerializerFactory;
+import hprose.io.unserialize.HproseUnserializer;
 import hprose.io.unserialize.UnserializerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
-final class PropertyAccessor extends MemberAccessor {
+final class PropertyAccessor implements MemberAccessor {
+    private static final Object[] nullArgs = new Object[0];
     private final Method getter;
     private final Method setter;
-    private static final Object[] nullArgs = new Object[0];
+    private final Class<?> cls;
+    private final Type type;
+    private final HproseSerializer serializer;
+    private final HproseUnserializer unserializer;
 
     public PropertyAccessor(Method getter, Method setter) {
         getter.setAccessible(true);
@@ -39,17 +46,32 @@ final class PropertyAccessor extends MemberAccessor {
         this.unserializer = UnserializerFactory.get(cls);
     }
 
-    @Override
-    final void set(Object obj, Object value) throws IllegalAccessException,
+    public final void set(Object obj, Object value) throws IllegalAccessException,
                                               IllegalArgumentException,
                                               InvocationTargetException {
         setter.invoke(obj, new Object[] { value });
     }
 
-    @Override
-    final Object get(Object obj) throws IllegalAccessException,
+    public final Object get(Object obj) throws IllegalAccessException,
                                   IllegalArgumentException,
                                   InvocationTargetException {
         return getter.invoke(obj, nullArgs);
     }
+
+    public final Class<?> cls() {
+        return cls;
+    }
+
+    public final Type type() {
+        return type;
+    }
+
+    public final HproseSerializer serializer() {
+        return serializer;
+    }
+
+    public final HproseUnserializer unserializer() {
+        return unserializer;
+    }
+
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer InputStream for Java.                       *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 21, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,8 +22,8 @@ package hprose.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-final class ByteBufferInputStream extends InputStream {
-    ByteBufferStream stream;
+public final class ByteBufferInputStream extends InputStream {
+    public final ByteBufferStream stream;
     ByteBufferInputStream(ByteBufferStream stream) {
         this.stream = stream;
     }

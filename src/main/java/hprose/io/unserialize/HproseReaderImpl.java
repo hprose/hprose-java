@@ -42,7 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class HproseReaderImpl {
+public class HproseReaderImpl implements HproseTags {
 
     interface ReaderRefer {
         void set(Object obj);
@@ -209,19 +209,19 @@ public class HproseReaderImpl {
     }
 
     public final int readIntWithoutTag() throws IOException {
-        return readInt(HproseTags.TagSemicolon);
+        return readInt(TagSemicolon);
     }
 
     public final BigInteger readBigIntegerWithoutTag() throws IOException {
-        return new BigInteger(readUntil(HproseTags.TagSemicolon).toString(), 10);
+        return new BigInteger(readUntil(TagSemicolon).toString(), 10);
     }
 
     public final long readLongWithoutTag() throws IOException {
-        return readLong(HproseTags.TagSemicolon);
+        return readLong(TagSemicolon);
     }
 
     public final double readDoubleWithoutTag() throws IOException {
-        return parseDouble(readUntil(HproseTags.TagSemicolon));
+        return parseDouble(readUntil(TagSemicolon));
     }
 
     public final double readInfinityWithoutTag() throws IOException {
@@ -746,7 +746,7 @@ public class HproseReaderImpl {
     private float readLongAsFloat(ByteBuffer buffer) throws IOException {
         float result = 0.0f;
         int i = buffer.get();
-        if (i == HproseTags.TagSemicolon) {
+        if (i == TagSemicolon) {
             return result;
         }
         boolean neg = false;
@@ -755,13 +755,13 @@ public class HproseReaderImpl {
             case '+': i = buffer.get(); break;
         }
         if (neg) {
-            while (i != HproseTags.TagSemicolon) {
+            while (i != TagSemicolon) {
                 result = result * 10 - (i - '0');
                 i = buffer.get();
             }
         }
         else {
-            while (i != HproseTags.TagSemicolon) {
+            while (i != TagSemicolon) {
                 result = result * 10 + (i - '0');
                 i = buffer.get();
             }
@@ -773,7 +773,7 @@ public class HproseReaderImpl {
     private float readLongAsFloat(InputStream stream) throws IOException {
         float result = 0.0f;
         int i = stream.read();
-        if (i == HproseTags.TagSemicolon) {
+        if (i == TagSemicolon) {
             return result;
         }
         boolean neg = false;
@@ -782,13 +782,13 @@ public class HproseReaderImpl {
             case '+': i = stream.read(); break;
         }
         if (neg) {
-            while ((i != HproseTags.TagSemicolon) && (i != -1)) {
+            while ((i != TagSemicolon) && (i != -1)) {
                 result = result * 10 - (i - '0');
                 i = stream.read();
             }
         }
         else {
-            while ((i != HproseTags.TagSemicolon) && (i != -1)) {
+            while ((i != TagSemicolon) && (i != -1)) {
                 result = result * 10 + (i - '0');
                 i = stream.read();
             }
@@ -800,7 +800,7 @@ public class HproseReaderImpl {
     private double readLongAsDouble(ByteBuffer buffer) throws IOException {
         double result = 0.0f;
         int i = buffer.get();
-        if (i == HproseTags.TagSemicolon) {
+        if (i == TagSemicolon) {
             return result;
         }
         boolean neg = false;
@@ -809,13 +809,13 @@ public class HproseReaderImpl {
             case '+': i = buffer.get(); break;
         }
         if (neg) {
-            while (i != HproseTags.TagSemicolon) {
+            while (i != TagSemicolon) {
                 result = result * 10 - (i - '0');
                 i = buffer.get();
             }
         }
         else {
-            while (i != HproseTags.TagSemicolon) {
+            while (i != TagSemicolon) {
                 result = result * 10 + (i - '0');
                 i = buffer.get();
             }
@@ -827,7 +827,7 @@ public class HproseReaderImpl {
     private double readLongAsDouble(InputStream stream) throws IOException {
         double result = 0.0;
         int i = stream.read();
-        if (i == HproseTags.TagSemicolon) {
+        if (i == TagSemicolon) {
             return result;
         }
         boolean neg = false;
@@ -836,13 +836,13 @@ public class HproseReaderImpl {
             case '+': i = stream.read(); break;
         }
         if (neg) {
-            while ((i != HproseTags.TagSemicolon) && (i != -1)) {
+            while ((i != TagSemicolon) && (i != -1)) {
                 result = result * 10 - (i - '0');
                 i = stream.read();
             }
         }
         else {
-            while ((i != HproseTags.TagSemicolon) && (i != -1)) {
+            while ((i != TagSemicolon) && (i != -1)) {
                 result = result * 10 + (i - '0');
                 i = stream.read();
             }
@@ -888,7 +888,7 @@ public class HproseReaderImpl {
         int day = buffer.get() - '0';
         day = day * 10 + buffer.get() - '0';
         int tag = buffer.get();
-        if (tag == HproseTags.TagTime) {
+        if (tag == TagTime) {
             hour = buffer.get() - '0';
             hour = hour * 10 + buffer.get() - '0';
             minute = buffer.get() - '0';
@@ -896,7 +896,7 @@ public class HproseReaderImpl {
             second = buffer.get() - '0';
             second = second * 10 + buffer.get() - '0';
             tag = buffer.get();
-            if (tag == HproseTags.TagPoint) {
+            if (tag == TagPoint) {
                 nanosecond = buffer.get() - '0';
                 nanosecond = nanosecond * 10 + buffer.get() - '0';
                 nanosecond = nanosecond * 10 + buffer.get() - '0';
@@ -916,7 +916,7 @@ public class HproseReaderImpl {
                 }
             }
         }
-        Calendar calendar = Calendar.getInstance(tag == HproseTags.TagUTC ?
+        Calendar calendar = Calendar.getInstance(tag == TagUTC ?
                 HproseHelper.UTC : HproseHelper.DefaultTZ);
         calendar.set(year, month - 1, day, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
@@ -942,7 +942,7 @@ public class HproseReaderImpl {
         int day = stream.read() - '0';
         day = day * 10 + stream.read() - '0';
         int tag = stream.read();
-        if (tag == HproseTags.TagTime) {
+        if (tag == TagTime) {
             hour = stream.read() - '0';
             hour = hour * 10 + stream.read() - '0';
             minute = stream.read() - '0';
@@ -950,7 +950,7 @@ public class HproseReaderImpl {
             second = stream.read() - '0';
             second = second * 10 + stream.read() - '0';
             tag = stream.read();
-            if (tag == HproseTags.TagPoint) {
+            if (tag == TagPoint) {
                 nanosecond = stream.read() - '0';
                 nanosecond = nanosecond * 10 + stream.read() - '0';
                 nanosecond = nanosecond * 10 + stream.read() - '0';
@@ -970,7 +970,7 @@ public class HproseReaderImpl {
                 }
             }
         }
-        Calendar calendar = Calendar.getInstance(tag == HproseTags.TagUTC ?
+        Calendar calendar = Calendar.getInstance(tag == TagUTC ?
                 HproseHelper.UTC : HproseHelper.DefaultTZ);
         calendar.set(year, month - 1, day, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
@@ -994,7 +994,7 @@ public class HproseReaderImpl {
         second = second * 10 + buffer.get() - '0';
         int nanosecond = 0;
         int tag = buffer.get();
-        if (tag == HproseTags.TagPoint) {
+        if (tag == TagPoint) {
             nanosecond = buffer.get() - '0';
             nanosecond = nanosecond * 10 + buffer.get() - '0';
             nanosecond = nanosecond * 10 + buffer.get() - '0';
@@ -1013,7 +1013,7 @@ public class HproseReaderImpl {
                 }
             }
         }
-        Calendar calendar = Calendar.getInstance(tag == HproseTags.TagUTC ?
+        Calendar calendar = Calendar.getInstance(tag == TagUTC ?
                 HproseHelper.UTC : HproseHelper.DefaultTZ);
         calendar.set(1970, 0, 1, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
@@ -1037,7 +1037,7 @@ public class HproseReaderImpl {
         second = second * 10 + stream.read() - '0';
         int nanosecond = 0;
         int tag = stream.read();
-        if (tag == HproseTags.TagPoint) {
+        if (tag == TagPoint) {
             nanosecond = stream.read() - '0';
             nanosecond = nanosecond * 10 + stream.read() - '0';
             nanosecond = nanosecond * 10 + stream.read() - '0';
@@ -1056,7 +1056,7 @@ public class HproseReaderImpl {
                 }
             }
         }
-        Calendar calendar = Calendar.getInstance(tag == HproseTags.TagUTC ?
+        Calendar calendar = Calendar.getInstance(tag == TagUTC ?
                 HproseHelper.UTC : HproseHelper.DefaultTZ);
         calendar.set(1970, 0, 1, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
@@ -1156,7 +1156,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"fallthrough"})
     private char[] readChars(ByteBuffer buffer) throws IOException {
-        int count = readInt(buffer, HproseTags.TagQuote);
+        int count = readInt(buffer, TagQuote);
         char[] buf = new char[count];
         for (int i = 0; i < count; ++i) {
             int b1 = buffer.get();
@@ -1215,7 +1215,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"fallthrough"})
     private char[] readChars(InputStream stream) throws IOException {
-        int count = readInt(stream, HproseTags.TagQuote);
+        int count = readInt(stream, TagQuote);
         char[] buf = new char[count];
         for (int i = 0; i < count; ++i) {
             int b1 = stream.read();
@@ -1282,7 +1282,7 @@ public class HproseReaderImpl {
 
 //    @SuppressWarnings({"fallthrough"})
 //    private char[] readChars() throws IOException {
-//        int count = readInt(HproseTags.TagQuote);
+//        int count = readInt(TagQuote);
 //        char[] buf = new char[count];
 //        byte[] b = new byte[count];
 //        stream.read(b, 0, count);
@@ -1416,7 +1416,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private Map readObjectAsMap(ByteBuffer buffer, Map map) throws IOException {
-        Object c = classref.get(readInt(buffer, HproseTags.TagOpenbrace));
+        Object c = classref.get(readInt(buffer, TagOpenbrace));
         String[] memberNames = membersref.get(c);
         refer.set(map);
         int count = memberNames.length;
@@ -1429,7 +1429,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private Map readObjectAsMap(InputStream stream, Map map) throws IOException {
-        Object c = classref.get(readInt(stream, HproseTags.TagOpenbrace));
+        Object c = classref.get(readInt(stream, TagOpenbrace));
         String[] memberNames = membersref.get(c);
         refer.set(map);
         int count = memberNames.length;
@@ -1452,7 +1452,7 @@ public class HproseReaderImpl {
         }
         refer.set(obj);
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(buffer));
             if (member != null) {
@@ -1480,7 +1480,7 @@ public class HproseReaderImpl {
         }
         refer.set(obj);
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(stream));
             if (member != null) {
@@ -1507,7 +1507,7 @@ public class HproseReaderImpl {
 
     private void readClass(ByteBuffer buffer) throws IOException {
         String className = readCharsAsString(buffer);
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         String[] memberNames = new String[count];
         for (int i = 0; i < count; ++i) {
             memberNames[i] = readString(buffer);
@@ -1521,7 +1521,7 @@ public class HproseReaderImpl {
 
     private void readClass(InputStream stream) throws IOException {
         String className = readCharsAsString(stream);
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         String[] memberNames = new String[count];
         for (int i = 0; i < count; ++i) {
             memberNames[i] = readString(stream);
@@ -1569,44 +1569,44 @@ public class HproseReaderImpl {
     }
 
     private int readIntWithoutTag(ByteBuffer buffer) throws IOException {
-        return readInt(buffer, HproseTags.TagSemicolon);
+        return readInt(buffer, TagSemicolon);
     }
 
     private int readIntWithoutTag(InputStream stream) throws IOException {
-        return readInt(stream, HproseTags.TagSemicolon);
+        return readInt(stream, TagSemicolon);
     }
 
     private BigInteger readBigIntegerWithoutTag(ByteBuffer buffer) throws IOException {
-        return new BigInteger(readUntil(buffer, HproseTags.TagSemicolon).toString(), 10);
+        return new BigInteger(readUntil(buffer, TagSemicolon).toString(), 10);
     }
 
     private BigInteger readBigIntegerWithoutTag(InputStream stream) throws IOException {
-        return new BigInteger(readUntil(stream, HproseTags.TagSemicolon).toString(), 10);
+        return new BigInteger(readUntil(stream, TagSemicolon).toString(), 10);
     }
 
     private long readLongWithoutTag(ByteBuffer buffer) throws IOException {
-        return readLong(buffer, HproseTags.TagSemicolon);
+        return readLong(buffer, TagSemicolon);
     }
 
     private long readLongWithoutTag(InputStream stream) throws IOException {
-        return readLong(stream, HproseTags.TagSemicolon);
+        return readLong(stream, TagSemicolon);
     }
 
     private double readDoubleWithoutTag(ByteBuffer buffer) throws IOException {
-        return parseDouble(readUntil(buffer, HproseTags.TagSemicolon));
+        return parseDouble(readUntil(buffer, TagSemicolon));
     }
 
     private double readDoubleWithoutTag(InputStream stream) throws IOException {
-        return parseDouble(readUntil(stream, HproseTags.TagSemicolon));
+        return parseDouble(readUntil(stream, TagSemicolon));
     }
 
     private double readInfinityWithoutTag(ByteBuffer buffer) throws IOException {
-        return ((buffer.get() == HproseTags.TagNeg) ?
+        return ((buffer.get() == TagNeg) ?
             Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
     }
 
     private double readInfinityWithoutTag(InputStream stream) throws IOException {
-        return ((stream.read() == HproseTags.TagNeg) ?
+        return ((stream.read() == TagNeg) ?
             Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
     }
 
@@ -1627,7 +1627,7 @@ public class HproseReaderImpl {
     }
 
     private byte[] readBytesWithoutTag(ByteBuffer buffer) throws IOException {
-        int len = readInt(buffer, HproseTags.TagQuote);
+        int len = readInt(buffer, TagQuote);
         byte[] b = new byte[len];
         buffer.get(b, 0, len);
         buffer.get();
@@ -1636,7 +1636,7 @@ public class HproseReaderImpl {
     }
 
     private byte[] readBytesWithoutTag(InputStream stream) throws IOException {
-        int len = readInt(stream, HproseTags.TagQuote);
+        int len = readInt(stream, TagQuote);
         int off = 0;
         byte[] b = new byte[len];
         while (len > 0) {
@@ -1707,7 +1707,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private ArrayList readListWithoutTag(ByteBuffer buffer) throws IOException {
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         ArrayList a = new ArrayList(count);
         refer.set(a);
         for (int i = 0; i < count; ++i) {
@@ -1719,7 +1719,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private ArrayList readListWithoutTag(InputStream stream) throws IOException {
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         ArrayList a = new ArrayList(count);
         refer.set(a);
         for (int i = 0; i < count; ++i) {
@@ -1731,7 +1731,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     final HashMap readMapWithoutTag(ByteBuffer buffer) throws IOException {
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         HashMap map = new HashMap(count);
         refer.set(map);
         for (int i = 0; i < count; ++i) {
@@ -1745,7 +1745,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     final HashMap readMapWithoutTag(InputStream stream) throws IOException {
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         HashMap map = new HashMap(count);
         refer.set(map);
         for (int i = 0; i < count; ++i) {
@@ -1758,7 +1758,7 @@ public class HproseReaderImpl {
     }
 
     private Object readObjectWithoutTag(ByteBuffer buffer, Class<?> type) throws IOException {
-        Object c = classref.get(readInt(buffer, HproseTags.TagOpenbrace));
+        Object c = classref.get(readInt(buffer, TagOpenbrace));
         String[] memberNames = membersref.get(c);
         int count = memberNames.length;
         if (Class.class.equals(c.getClass())) {
@@ -1801,7 +1801,7 @@ public class HproseReaderImpl {
     }
 
     private Object readObjectWithoutTag(InputStream stream, Class<?> type) throws IOException {
-        Object c = classref.get(readInt(stream, HproseTags.TagOpenbrace));
+        Object c = classref.get(readInt(stream, TagOpenbrace));
         String[] memberNames = membersref.get(c);
         int count = memberNames.length;
         if (Class.class.equals(c.getClass())) {
@@ -1855,27 +1855,27 @@ public class HproseReaderImpl {
             case '7': return 7;
             case '8': return 8;
             case '9': return 9;
-            case HproseTags.TagInteger: return readIntWithoutTag(buffer);
-            case HproseTags.TagLong: return readBigIntegerWithoutTag(buffer);
-            case HproseTags.TagDouble: return readDoubleWithoutTag(buffer);
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagEmpty: return "";
-            case HproseTags.TagTrue: return true;
-            case HproseTags.TagFalse: return false;
-            case HproseTags.TagNaN: return Double.NaN;
-            case HproseTags.TagInfinity: return readInfinityWithoutTag(buffer);
-            case HproseTags.TagDate: return readDateWithoutTag(buffer);
-            case HproseTags.TagTime: return readTimeWithoutTag(buffer);
-            case HproseTags.TagBytes: return readBytesWithoutTag(buffer);
-            case HproseTags.TagUTF8Char: return readUTF8CharWithoutTag(buffer);
-            case HproseTags.TagString: return readStringWithoutTag(buffer);
-            case HproseTags.TagGuid: return readUUIDWithoutTag(buffer);
-            case HproseTags.TagList: return readListWithoutTag(buffer);
-            case HproseTags.TagMap: return readMapWithoutTag(buffer);
-            case HproseTags.TagClass: readClass(buffer); return readObject(buffer, null);
-            case HproseTags.TagObject: return readObjectWithoutTag(buffer, null);
-            case HproseTags.TagRef: return readRef(buffer);
-            case HproseTags.TagError: throw new HproseException(readString(buffer));
+            case TagInteger: return readIntWithoutTag(buffer);
+            case TagLong: return readBigIntegerWithoutTag(buffer);
+            case TagDouble: return readDoubleWithoutTag(buffer);
+            case TagNull: return null;
+            case TagEmpty: return "";
+            case TagTrue: return true;
+            case TagFalse: return false;
+            case TagNaN: return Double.NaN;
+            case TagInfinity: return readInfinityWithoutTag(buffer);
+            case TagDate: return readDateWithoutTag(buffer);
+            case TagTime: return readTimeWithoutTag(buffer);
+            case TagBytes: return readBytesWithoutTag(buffer);
+            case TagUTF8Char: return readUTF8CharWithoutTag(buffer);
+            case TagString: return readStringWithoutTag(buffer);
+            case TagGuid: return readUUIDWithoutTag(buffer);
+            case TagList: return readListWithoutTag(buffer);
+            case TagMap: return readMapWithoutTag(buffer);
+            case TagClass: readClass(buffer); return readObject(buffer, null);
+            case TagObject: return readObjectWithoutTag(buffer, null);
+            case TagRef: return readRef(buffer);
+            case TagError: throw new HproseException(readString(buffer));
             default: throw unexpectedTag(tag);
         }
     }
@@ -1892,27 +1892,27 @@ public class HproseReaderImpl {
             case '7': return 7;
             case '8': return 8;
             case '9': return 9;
-            case HproseTags.TagInteger: return readIntWithoutTag(stream);
-            case HproseTags.TagLong: return readBigIntegerWithoutTag(stream);
-            case HproseTags.TagDouble: return readDoubleWithoutTag(stream);
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagEmpty: return "";
-            case HproseTags.TagTrue: return true;
-            case HproseTags.TagFalse: return false;
-            case HproseTags.TagNaN: return Double.NaN;
-            case HproseTags.TagInfinity: return readInfinityWithoutTag(stream);
-            case HproseTags.TagDate: return readDateWithoutTag(stream);
-            case HproseTags.TagTime: return readTimeWithoutTag(stream);
-            case HproseTags.TagBytes: return readBytesWithoutTag(stream);
-            case HproseTags.TagUTF8Char: return readUTF8CharWithoutTag(stream);
-            case HproseTags.TagString: return readStringWithoutTag(stream);
-            case HproseTags.TagGuid: return readUUIDWithoutTag(stream);
-            case HproseTags.TagList: return readListWithoutTag(stream);
-            case HproseTags.TagMap: return readMapWithoutTag(stream);
-            case HproseTags.TagClass: readClass(stream); return readObject(stream, null);
-            case HproseTags.TagObject: return readObjectWithoutTag(stream, null);
-            case HproseTags.TagRef: return readRef(stream);
-            case HproseTags.TagError: throw new HproseException(readString(stream));
+            case TagInteger: return readIntWithoutTag(stream);
+            case TagLong: return readBigIntegerWithoutTag(stream);
+            case TagDouble: return readDoubleWithoutTag(stream);
+            case TagNull: return null;
+            case TagEmpty: return "";
+            case TagTrue: return true;
+            case TagFalse: return false;
+            case TagNaN: return Double.NaN;
+            case TagInfinity: return readInfinityWithoutTag(stream);
+            case TagDate: return readDateWithoutTag(stream);
+            case TagTime: return readTimeWithoutTag(stream);
+            case TagBytes: return readBytesWithoutTag(stream);
+            case TagUTF8Char: return readUTF8CharWithoutTag(stream);
+            case TagString: return readStringWithoutTag(stream);
+            case TagGuid: return readUUIDWithoutTag(stream);
+            case TagList: return readListWithoutTag(stream);
+            case TagMap: return readMapWithoutTag(stream);
+            case TagClass: readClass(stream); return readObject(stream, null);
+            case TagObject: return readObjectWithoutTag(stream, null);
+            case TagRef: return readRef(stream);
+            case TagError: throw new HproseException(readString(stream));
             default: throw unexpectedTag(tag);
         }
     }
@@ -1937,27 +1937,27 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9':
-            case HproseTags.TagInteger: return "Integer";
-            case HproseTags.TagLong: return "BigInteger";
-            case HproseTags.TagDouble: return "Double";
-            case HproseTags.TagNull: return "Null";
-            case HproseTags.TagEmpty: return "Empty String";
-            case HproseTags.TagTrue: return "Boolean True";
-            case HproseTags.TagFalse: return "Boolean False";
-            case HproseTags.TagNaN: return "NaN";
-            case HproseTags.TagInfinity: return "Infinity";
-            case HproseTags.TagDate: return "DateTime";
-            case HproseTags.TagTime: return "DateTime";
-            case HproseTags.TagBytes: return "Byte[]";
-            case HproseTags.TagUTF8Char: return "Char";
-            case HproseTags.TagString: return "String";
-            case HproseTags.TagGuid: return "Guid";
-            case HproseTags.TagList: return "IList";
-            case HproseTags.TagMap: return "IDictionary";
-            case HproseTags.TagClass: return "Class";
-            case HproseTags.TagObject: return "Object";
-            case HproseTags.TagRef: return "Object Reference";
-            case HproseTags.TagError: throw new HproseException(readString());
+            case TagInteger: return "Integer";
+            case TagLong: return "BigInteger";
+            case TagDouble: return "Double";
+            case TagNull: return "Null";
+            case TagEmpty: return "Empty String";
+            case TagTrue: return "Boolean True";
+            case TagFalse: return "Boolean False";
+            case TagNaN: return "NaN";
+            case TagInfinity: return "Infinity";
+            case TagDate: return "DateTime";
+            case TagTime: return "DateTime";
+            case TagBytes: return "Byte[]";
+            case TagUTF8Char: return "Char";
+            case TagString: return "String";
+            case TagGuid: return "Guid";
+            case TagList: return "IList";
+            case TagMap: return "IDictionary";
+            case TagClass: return "Class";
+            case TagObject: return "Object";
+            case TagRef: return "Object Reference";
+            case TagError: throw new HproseException(readString());
             default: throw unexpectedTag(tag);
         }
     }
@@ -1974,15 +1974,15 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9': return true;
-            case HproseTags.TagInteger: return readIntWithoutTag(buffer) != 0;
-            case HproseTags.TagLong: return !(BigInteger.ZERO.equals(readBigIntegerWithoutTag(buffer)));
-            case HproseTags.TagDouble: return readDoubleWithoutTag(buffer) != 0.0;
-            case HproseTags.TagEmpty: return false;
-            case HproseTags.TagNaN: return true;
-            case HproseTags.TagInfinity: buffer.get(); return true;
-            case HproseTags.TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar(buffer)) == -1;
-            case HproseTags.TagString: return Boolean.parseBoolean(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Boolean.parseBoolean(readRef(buffer, String.class));
+            case TagInteger: return readIntWithoutTag(buffer) != 0;
+            case TagLong: return !(BigInteger.ZERO.equals(readBigIntegerWithoutTag(buffer)));
+            case TagDouble: return readDoubleWithoutTag(buffer) != 0.0;
+            case TagEmpty: return false;
+            case TagNaN: return true;
+            case TagInfinity: buffer.get(); return true;
+            case TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar(buffer)) == -1;
+            case TagString: return Boolean.parseBoolean(readStringWithoutTag(buffer));
+            case TagRef: return Boolean.parseBoolean(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), boolean.class);
         }
     }
@@ -1999,48 +1999,48 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9': return true;
-            case HproseTags.TagInteger: return readIntWithoutTag(stream) != 0;
-            case HproseTags.TagLong: return !(BigInteger.ZERO.equals(readBigIntegerWithoutTag(stream)));
-            case HproseTags.TagDouble: return readDoubleWithoutTag(stream) != 0.0;
-            case HproseTags.TagEmpty: return false;
-            case HproseTags.TagNaN: return true;
-            case HproseTags.TagInfinity: stream.read(); return true;
-            case HproseTags.TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar(stream)) == -1;
-            case HproseTags.TagString: return Boolean.parseBoolean(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Boolean.parseBoolean(readRef(stream, String.class));
+            case TagInteger: return readIntWithoutTag(stream) != 0;
+            case TagLong: return !(BigInteger.ZERO.equals(readBigIntegerWithoutTag(stream)));
+            case TagDouble: return readDoubleWithoutTag(stream) != 0.0;
+            case TagEmpty: return false;
+            case TagNaN: return true;
+            case TagInfinity: stream.read(); return true;
+            case TagUTF8Char: return "\00".indexOf(readUTF8CharAsChar(stream)) == -1;
+            case TagString: return Boolean.parseBoolean(readStringWithoutTag(stream));
+            case TagRef: return Boolean.parseBoolean(readRef(stream, String.class));
             default: throw castError(tagToString(tag), boolean.class);
         }
     }
 
     final boolean readBoolean(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagTrue) return true;
-        if (tag == HproseTags.TagFalse) return false;
-        if (tag == HproseTags.TagNull) return false;
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return false;
         return readBooleanWithTag(buffer, tag);
     }
 
     final boolean readBoolean(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagTrue) return true;
-        if (tag == HproseTags.TagFalse) return false;
-        if (tag == HproseTags.TagNull) return false;
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return false;
         return readBooleanWithTag(stream, tag);
     }
 
     final Boolean readBooleanObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagTrue) return true;
-        if (tag == HproseTags.TagFalse) return false;
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return null;
         return readBooleanWithTag(buffer, tag);
     }
 
     final Boolean readBooleanObject(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagTrue) return true;
-        if (tag == HproseTags.TagFalse) return false;
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return null;
         return readBooleanWithTag(stream, tag);
     }
 
@@ -2056,11 +2056,11 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9': return (char)tag;
-            case HproseTags.TagInteger: return (char)readIntWithoutTag(buffer);
-            case HproseTags.TagLong: return (char)readLongWithoutTag(buffer);
-            case HproseTags.TagDouble: return (char)Double.valueOf(readDoubleWithoutTag(buffer)).intValue();
-            case HproseTags.TagString: return readStringWithoutTag(buffer).charAt(0);
-            case HproseTags.TagRef: return readRef(buffer, String.class).charAt(0);
+            case TagInteger: return (char)readIntWithoutTag(buffer);
+            case TagLong: return (char)readLongWithoutTag(buffer);
+            case TagDouble: return (char)Double.valueOf(readDoubleWithoutTag(buffer)).intValue();
+            case TagString: return readStringWithoutTag(buffer).charAt(0);
+            case TagRef: return readRef(buffer, String.class).charAt(0);
             default: throw castError(tagToString(tag), char.class);
         }
     }
@@ -2077,68 +2077,68 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9': return (char)tag;
-            case HproseTags.TagInteger: return (char)readIntWithoutTag(stream);
-            case HproseTags.TagLong: return (char)readLongWithoutTag(stream);
-            case HproseTags.TagDouble: return (char)Double.valueOf(readDoubleWithoutTag(stream)).intValue();
-            case HproseTags.TagUTF8Char: return readUTF8CharAsChar(stream);
-            case HproseTags.TagString: return readStringWithoutTag(stream).charAt(0);
-            case HproseTags.TagRef: return readRef(stream, String.class).charAt(0);
+            case TagInteger: return (char)readIntWithoutTag(stream);
+            case TagLong: return (char)readLongWithoutTag(stream);
+            case TagDouble: return (char)Double.valueOf(readDoubleWithoutTag(stream)).intValue();
+            case TagUTF8Char: return readUTF8CharAsChar(stream);
+            case TagString: return readStringWithoutTag(stream).charAt(0);
+            case TagRef: return readRef(stream, String.class).charAt(0);
             default: throw castError(tagToString(tag), char.class);
         }
     }
 
     final char readChar(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharAsChar(buffer);
-        if (tag == HproseTags.TagNull) return (char)0;
+        if (tag == TagUTF8Char) return readUTF8CharAsChar(buffer);
+        if (tag == TagNull) return (char)0;
         return readCharWithTag(buffer, tag);
     }
 
     final char readChar(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharAsChar(stream);
-        if (tag == HproseTags.TagNull) return (char)0;
+        if (tag == TagUTF8Char) return readUTF8CharAsChar(stream);
+        if (tag == TagNull) return (char)0;
         return readCharWithTag(stream, tag);
     }
 
     final Character readCharObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharAsChar(buffer);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagUTF8Char) return readUTF8CharAsChar(buffer);
+        if (tag == TagNull) return null;
         return readCharWithTag(buffer, tag);
     }
 
     final Character readCharObject(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharAsChar(stream);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagUTF8Char) return readUTF8CharAsChar(stream);
+        if (tag == TagNull) return null;
         return readCharWithTag(stream, tag);
     }
 
     private byte readByteWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return (byte)readLong(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).byteValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Byte.parseByte(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Byte.parseByte(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Byte.parseByte(readRef(buffer, String.class));
+            case TagLong: return (byte)readLong(buffer, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).byteValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Byte.parseByte(readUTF8CharWithoutTag(buffer));
+            case TagString: return Byte.parseByte(readStringWithoutTag(buffer));
+            case TagRef: return Byte.parseByte(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), byte.class);
         }
     }
 
     private byte readByteWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return (byte)readLong(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).byteValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Byte.parseByte(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Byte.parseByte(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Byte.parseByte(readRef(stream, String.class));
+            case TagLong: return (byte)readLong(stream, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).byteValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Byte.parseByte(readUTF8CharWithoutTag(stream));
+            case TagString: return Byte.parseByte(readStringWithoutTag(stream));
+            case TagRef: return Byte.parseByte(readRef(stream, String.class));
             default: throw castError(tagToString(tag), byte.class);
         }
     }
@@ -2146,59 +2146,59 @@ public class HproseReaderImpl {
     final byte readByte(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (byte)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return (byte)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readByteWithTag(buffer, tag);
     }
 
     final byte readByte(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (byte)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return (byte)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readByteWithTag(stream, tag);
     }
 
     final Byte readByteObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (byte)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (byte)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readByteWithTag(buffer, tag);
     }
 
     final Byte readByteObject(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (byte)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (byte)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readByteWithTag(stream, tag);
     }
 
     private short readShortWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return (short)readLong(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).shortValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Short.parseShort(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Short.parseShort(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Short.parseShort(readRef(buffer, String.class));
+            case TagLong: return (short)readLong(buffer, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).shortValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Short.parseShort(readUTF8CharWithoutTag(buffer));
+            case TagString: return Short.parseShort(readStringWithoutTag(buffer));
+            case TagRef: return Short.parseShort(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), short.class);
         }
     }
 
     private short readShortWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return (short)readLong(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).shortValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Short.parseShort(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Short.parseShort(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Short.parseShort(readRef(stream, String.class));
+            case TagLong: return (short)readLong(stream, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).shortValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Short.parseShort(readUTF8CharWithoutTag(stream));
+            case TagString: return Short.parseShort(readStringWithoutTag(stream));
+            case TagRef: return Short.parseShort(readRef(stream, String.class));
             default: throw castError(tagToString(tag), short.class);
         }
     }
@@ -2206,59 +2206,59 @@ public class HproseReaderImpl {
     final short readShort(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (short)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return (short)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readShortWithTag(buffer, tag);
     }
 
     final short readShort(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (short)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return (short)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readShortWithTag(stream, tag);
     }
 
     final Short readShortObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (short)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (short)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readShortWithTag(buffer, tag);
     }
 
     final Short readShortObject(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (short)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (short)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readShortWithTag(stream, tag);
     }
 
     private int readIntWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readInt(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).intValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Integer.parseInt(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Integer.parseInt(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Integer.parseInt(readRef(buffer, String.class));
+            case TagLong: return readInt(buffer, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).intValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Integer.parseInt(readUTF8CharWithoutTag(buffer));
+            case TagString: return Integer.parseInt(readStringWithoutTag(buffer));
+            case TagRef: return Integer.parseInt(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), int.class);
         }
     }
 
     private int readIntWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readInt(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).intValue();
-            case HproseTags.TagEmpty: return 0;
-            case HproseTags.TagTrue: return 1;
-            case HproseTags.TagFalse: return 0;
-            case HproseTags.TagUTF8Char: return Integer.parseInt(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Integer.parseInt(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Integer.parseInt(readRef(stream, String.class));
+            case TagLong: return readInt(stream, TagSemicolon);
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).intValue();
+            case TagEmpty: return 0;
+            case TagTrue: return 1;
+            case TagFalse: return 0;
+            case TagUTF8Char: return Integer.parseInt(readUTF8CharWithoutTag(stream));
+            case TagString: return Integer.parseInt(readStringWithoutTag(stream));
+            case TagRef: return Integer.parseInt(readRef(stream, String.class));
             default: throw castError(tagToString(tag), int.class);
         }
     }
@@ -2266,61 +2266,61 @@ public class HproseReaderImpl {
     final int readInt(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (tag - '0');
-        if (tag == HproseTags.TagInteger) return readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readIntWithTag(buffer, tag);
     }
 
     final int readInt(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (tag - '0');
-        if (tag == HproseTags.TagInteger) return readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger) return readInt(stream, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readIntWithTag(stream, tag);
     }
 
     final Integer readIntObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (tag - '0');
-        if (tag == HproseTags.TagInteger) return readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readIntWithTag(buffer, tag);
     }
 
     final Integer readIntObject(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (tag - '0');
-        if (tag == HproseTags.TagInteger) return readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return readInt(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readIntWithTag(stream, tag);
     }
 
     private long readLongWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).longValue();
-            case HproseTags.TagEmpty: return 0l;
-            case HproseTags.TagTrue: return 1l;
-            case HproseTags.TagFalse: return 0l;
-            case HproseTags.TagDate: return readDateWithoutTag(buffer).getTimeInMillis();
-            case HproseTags.TagTime: return readTimeWithoutTag(buffer).getTimeInMillis();
-            case HproseTags.TagUTF8Char: return Long.parseLong(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Long.parseLong(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Long.parseLong(readRef(buffer, String.class));
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(buffer)).longValue();
+            case TagEmpty: return 0l;
+            case TagTrue: return 1l;
+            case TagFalse: return 0l;
+            case TagDate: return readDateWithoutTag(buffer).getTimeInMillis();
+            case TagTime: return readTimeWithoutTag(buffer).getTimeInMillis();
+            case TagUTF8Char: return Long.parseLong(readUTF8CharWithoutTag(buffer));
+            case TagString: return Long.parseLong(readStringWithoutTag(buffer));
+            case TagRef: return Long.parseLong(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), long.class);
         }
     }
 
     private long readLongWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).longValue();
-            case HproseTags.TagEmpty: return 0l;
-            case HproseTags.TagTrue: return 1l;
-            case HproseTags.TagFalse: return 0l;
-            case HproseTags.TagDate: return readDateWithoutTag(stream).getTimeInMillis();
-            case HproseTags.TagTime: return readTimeWithoutTag(stream).getTimeInMillis();
-            case HproseTags.TagUTF8Char: return Long.parseLong(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Long.parseLong(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Long.parseLong(readRef(stream, String.class));
+            case TagDouble: return Double.valueOf(readDoubleWithoutTag(stream)).longValue();
+            case TagEmpty: return 0l;
+            case TagTrue: return 1l;
+            case TagFalse: return 0l;
+            case TagDate: return readDateWithoutTag(stream).getTimeInMillis();
+            case TagTime: return readTimeWithoutTag(stream).getTimeInMillis();
+            case TagUTF8Char: return Long.parseLong(readUTF8CharWithoutTag(stream));
+            case TagString: return Long.parseLong(readStringWithoutTag(stream));
+            case TagRef: return Long.parseLong(readRef(stream, String.class));
             default: throw castError(tagToString(tag), long.class);
         }
     }
@@ -2328,172 +2328,172 @@ public class HproseReaderImpl {
     final long readLong(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (tag - '0');
-        if (tag == HproseTags.TagInteger ||
-            tag == HproseTags.TagLong) return (long)readLong(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger ||
+            tag == TagLong) return (long)readLong(buffer, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readLongWithTag(buffer, tag);
     }
 
     final long readLong(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
-        if (tag == HproseTags.TagInteger ||
-            tag == HproseTags.TagLong) return readLong(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0;
+        if (tag == TagInteger ||
+            tag == TagLong) return readLong(stream, TagSemicolon);
+        if (tag == TagNull) return 0;
         return readLongWithTag(stream, tag);
     }
 
     final Long readLongObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
-        if (tag == HproseTags.TagInteger ||
-            tag == HproseTags.TagLong) return readLong(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger ||
+            tag == TagLong) return readLong(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readLongWithTag(buffer, tag);
     }
 
     final Long readLongObject(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
-        if (tag == HproseTags.TagInteger ||
-            tag == HproseTags.TagLong) return readLong(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger ||
+            tag == TagLong) return readLong(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readLongWithTag(stream, tag);
     }
 
     private float readFloatWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readLongAsFloat(buffer);
-            case HproseTags.TagEmpty: return 0.0f;
-            case HproseTags.TagTrue: return 1.0f;
-            case HproseTags.TagFalse: return 0.0f;
-            case HproseTags.TagNaN: return Float.NaN;
-            case HproseTags.TagInfinity: return (buffer.get() == HproseTags.TagPos) ?
+            case TagLong: return readLongAsFloat(buffer);
+            case TagEmpty: return 0.0f;
+            case TagTrue: return 1.0f;
+            case TagFalse: return 0.0f;
+            case TagNaN: return Float.NaN;
+            case TagInfinity: return (buffer.get() == TagPos) ?
                                                  Float.POSITIVE_INFINITY :
                                                  Float.NEGATIVE_INFINITY;
-            case HproseTags.TagUTF8Char: return Float.parseFloat(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Float.parseFloat(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Float.parseFloat(readRef(buffer, String.class));
+            case TagUTF8Char: return Float.parseFloat(readUTF8CharWithoutTag(buffer));
+            case TagString: return Float.parseFloat(readStringWithoutTag(buffer));
+            case TagRef: return Float.parseFloat(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), float.class);
         }
     }
 
     private float readFloatWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readLongAsFloat(stream);
-            case HproseTags.TagEmpty: return 0.0f;
-            case HproseTags.TagTrue: return 1.0f;
-            case HproseTags.TagFalse: return 0.0f;
-            case HproseTags.TagNaN: return Float.NaN;
-            case HproseTags.TagInfinity: return (stream.read() == HproseTags.TagPos) ?
+            case TagLong: return readLongAsFloat(stream);
+            case TagEmpty: return 0.0f;
+            case TagTrue: return 1.0f;
+            case TagFalse: return 0.0f;
+            case TagNaN: return Float.NaN;
+            case TagInfinity: return (stream.read() == TagPos) ?
                                                  Float.POSITIVE_INFINITY :
                                                  Float.NEGATIVE_INFINITY;
-            case HproseTags.TagUTF8Char: return Float.parseFloat(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Float.parseFloat(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Float.parseFloat(readRef(stream, String.class));
+            case TagUTF8Char: return Float.parseFloat(readUTF8CharWithoutTag(stream));
+            case TagString: return Float.parseFloat(readStringWithoutTag(stream));
+            case TagRef: return Float.parseFloat(readRef(stream, String.class));
             default: throw castError(tagToString(tag), float.class);
         }
     }
 
     final float readFloat(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDouble) return parseFloat(readUntil(buffer, HproseTags.TagSemicolon));
+        if (tag == TagDouble) return parseFloat(readUntil(buffer, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (float)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0.0f;
+        if (tag == TagInteger) return (float)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return 0.0f;
         return readFloatWithTag(buffer, tag);
     }
 
     final float readFloat(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDouble) return parseFloat(readUntil(stream, HproseTags.TagSemicolon));
+        if (tag == TagDouble) return parseFloat(readUntil(stream, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (float)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0.0f;
+        if (tag == TagInteger) return (float)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return 0.0f;
         return readFloatWithTag(stream, tag);
     }
 
     final Float readFloatObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDouble) return parseFloat(readUntil(buffer, HproseTags.TagSemicolon));
+        if (tag == TagDouble) return parseFloat(readUntil(buffer, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (float)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (float)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readFloatWithTag(buffer, tag);
     }
 
     final Float readFloatObject(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDouble) return parseFloat(readUntil(stream, HproseTags.TagSemicolon));
+        if (tag == TagDouble) return parseFloat(readUntil(stream, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (float)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (float)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readFloatWithTag(stream, tag);
     }
 
     private double readDoubleWithTag(ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readLongAsDouble(buffer);
-            case HproseTags.TagEmpty: return 0.0;
-            case HproseTags.TagTrue: return 1.0;
-            case HproseTags.TagFalse: return 0.0;
-            case HproseTags.TagNaN: return Double.NaN;
-            case HproseTags.TagInfinity: return readInfinityWithoutTag(buffer);
-            case HproseTags.TagUTF8Char: return Double.parseDouble(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return Double.parseDouble(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return Double.parseDouble(readRef(buffer, String.class));
+            case TagLong: return readLongAsDouble(buffer);
+            case TagEmpty: return 0.0;
+            case TagTrue: return 1.0;
+            case TagFalse: return 0.0;
+            case TagNaN: return Double.NaN;
+            case TagInfinity: return readInfinityWithoutTag(buffer);
+            case TagUTF8Char: return Double.parseDouble(readUTF8CharWithoutTag(buffer));
+            case TagString: return Double.parseDouble(readStringWithoutTag(buffer));
+            case TagRef: return Double.parseDouble(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), double.class);
         }
     }
 
     private double readDoubleWithTag(InputStream stream, int tag) throws IOException {
         switch (tag) {
-            case HproseTags.TagLong: return readLongAsDouble(stream);
-            case HproseTags.TagEmpty: return 0.0;
-            case HproseTags.TagTrue: return 1.0;
-            case HproseTags.TagFalse: return 0.0;
-            case HproseTags.TagNaN: return Double.NaN;
-            case HproseTags.TagInfinity: return readInfinityWithoutTag(stream);
-            case HproseTags.TagUTF8Char: return Double.parseDouble(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return Double.parseDouble(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return Double.parseDouble(readRef(stream, String.class));
+            case TagLong: return readLongAsDouble(stream);
+            case TagEmpty: return 0.0;
+            case TagTrue: return 1.0;
+            case TagFalse: return 0.0;
+            case TagNaN: return Double.NaN;
+            case TagInfinity: return readInfinityWithoutTag(stream);
+            case TagUTF8Char: return Double.parseDouble(readUTF8CharWithoutTag(stream));
+            case TagString: return Double.parseDouble(readStringWithoutTag(stream));
+            case TagRef: return Double.parseDouble(readRef(stream, String.class));
             default: throw castError(tagToString(tag), double.class);
         }
     }
 
     final double readDouble(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDouble) return readDoubleWithoutTag(buffer);
+        if (tag == TagDouble) return readDoubleWithoutTag(buffer);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (double)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0.0;
+        if (tag == TagInteger) return (double)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return 0.0;
         return readDoubleWithTag(buffer, tag);
     }
 
     final double readDouble(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDouble) return readDoubleWithoutTag(stream);
+        if (tag == TagDouble) return readDoubleWithoutTag(stream);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (double)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return 0.0;
+        if (tag == TagInteger) return (double)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return 0.0;
         return readDoubleWithTag(stream, tag);
     }
 
     final Double readDoubleObject(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDouble) return readDoubleWithoutTag(buffer);
+        if (tag == TagDouble) return readDoubleWithoutTag(buffer);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (double)readInt(buffer, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (double)readInt(buffer, TagSemicolon);
+        if (tag == TagNull) return null;
         return readDoubleWithTag(buffer, tag);
     }
 
     final Double readDoubleObject(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDouble) return readDoubleWithoutTag(stream);
+        if (tag == TagDouble) return readDoubleWithoutTag(stream);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
-        if (tag == HproseTags.TagInteger) return (double)readInt(stream, HproseTags.TagSemicolon);
-        if (tag == HproseTags.TagNull) return null;
+        if (tag == TagInteger) return (double)readInt(stream, TagSemicolon);
+        if (tag == TagNull) return null;
         return readDoubleWithTag(stream, tag);
     }
 
@@ -2517,11 +2517,11 @@ public class HproseReaderImpl {
 
     final String readString(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagEmpty) return "";
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return readStringWithoutTag(buffer);
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharWithoutTag(buffer);
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return "";
+        if (tag == TagNull) return null;
+        if (tag == TagString) return readStringWithoutTag(buffer);
+        if (tag == TagUTF8Char) return readUTF8CharWithoutTag(buffer);
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof char[]) {
                 return new String((char[])obj);
@@ -2539,32 +2539,32 @@ public class HproseReaderImpl {
             case '7': return "7";
             case '8': return "8";
             case '9': return "9";
-            case HproseTags.TagInteger: return readUntil(buffer, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagLong: return readUntil(buffer, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagDouble: return readUntil(buffer, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagTrue: return "true";
-            case HproseTags.TagFalse: return "false";
-            case HproseTags.TagNaN: return "NaN";
-            case HproseTags.TagInfinity: return (buffer.get() == HproseTags.TagPos) ?
+            case TagInteger: return readUntil(buffer, TagSemicolon).toString();
+            case TagLong: return readUntil(buffer, TagSemicolon).toString();
+            case TagDouble: return readUntil(buffer, TagSemicolon).toString();
+            case TagTrue: return "true";
+            case TagFalse: return "false";
+            case TagNaN: return "NaN";
+            case TagInfinity: return (buffer.get() == TagPos) ?
                                                  "Infinity" : "-Infinity";
-            case HproseTags.TagDate: return readDateWithoutTag(buffer).toString();
-            case HproseTags.TagTime: return readTimeWithoutTag(buffer).toString();
-            case HproseTags.TagGuid: return readUUIDWithoutTag(buffer).toString();
-            case HproseTags.TagList: return readListWithoutTag(buffer).toString();
-            case HproseTags.TagMap: return readMapWithoutTag(buffer).toString();
-            case HproseTags.TagClass: readClass(buffer); return readObject(buffer, null).toString();
-            case HproseTags.TagObject: return readObjectWithoutTag(buffer, null).toString();
+            case TagDate: return readDateWithoutTag(buffer).toString();
+            case TagTime: return readTimeWithoutTag(buffer).toString();
+            case TagGuid: return readUUIDWithoutTag(buffer).toString();
+            case TagList: return readListWithoutTag(buffer).toString();
+            case TagMap: return readMapWithoutTag(buffer).toString();
+            case TagClass: readClass(buffer); return readObject(buffer, null).toString();
+            case TagObject: return readObjectWithoutTag(buffer, null).toString();
             default: throw castError(tagToString(tag), String.class);
         }
     }
 
     final String readString(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagEmpty) return "";
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return readStringWithoutTag(stream);
-        if (tag == HproseTags.TagUTF8Char) return readUTF8CharWithoutTag(stream);
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return "";
+        if (tag == TagNull) return null;
+        if (tag == TagString) return readStringWithoutTag(stream);
+        if (tag == TagUTF8Char) return readUTF8CharWithoutTag(stream);
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof char[]) {
                 return new String((char[])obj);
@@ -2582,72 +2582,72 @@ public class HproseReaderImpl {
             case '7': return "7";
             case '8': return "8";
             case '9': return "9";
-            case HproseTags.TagInteger: return readUntil(stream, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagLong: return readUntil(stream, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagDouble: return readUntil(stream, HproseTags.TagSemicolon).toString();
-            case HproseTags.TagTrue: return "true";
-            case HproseTags.TagFalse: return "false";
-            case HproseTags.TagNaN: return "NaN";
-            case HproseTags.TagInfinity: return (stream.read() == HproseTags.TagPos) ?
+            case TagInteger: return readUntil(stream, TagSemicolon).toString();
+            case TagLong: return readUntil(stream, TagSemicolon).toString();
+            case TagDouble: return readUntil(stream, TagSemicolon).toString();
+            case TagTrue: return "true";
+            case TagFalse: return "false";
+            case TagNaN: return "NaN";
+            case TagInfinity: return (stream.read() == TagPos) ?
                                                  "Infinity" : "-Infinity";
-            case HproseTags.TagDate: return readDateWithoutTag(stream).toString();
-            case HproseTags.TagTime: return readTimeWithoutTag(stream).toString();
-            case HproseTags.TagGuid: return readUUIDWithoutTag(stream).toString();
-            case HproseTags.TagList: return readListWithoutTag(stream).toString();
-            case HproseTags.TagMap: return readMapWithoutTag(stream).toString();
-            case HproseTags.TagClass: readClass(stream); return readObject(stream, null).toString();
-            case HproseTags.TagObject: return readObjectWithoutTag(stream, null).toString();
+            case TagDate: return readDateWithoutTag(stream).toString();
+            case TagTime: return readTimeWithoutTag(stream).toString();
+            case TagGuid: return readUUIDWithoutTag(stream).toString();
+            case TagList: return readListWithoutTag(stream).toString();
+            case TagMap: return readMapWithoutTag(stream).toString();
+            case TagClass: readClass(stream); return readObject(stream, null).toString();
+            case TagObject: return readObjectWithoutTag(stream, null).toString();
             default: throw castError(tagToString(tag), String.class);
         }
     }
 
     final BigInteger readBigInteger(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagLong) readBigIntegerWithoutTag(buffer);
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagInteger) return BigInteger.valueOf(readIntWithoutTag(buffer));
+        if (tag == TagLong) readBigIntegerWithoutTag(buffer);
+        if (tag == TagNull) return null;
+        if (tag == TagInteger) return BigInteger.valueOf(readIntWithoutTag(buffer));
         if (tag >= '0' && tag <= '9') return BigInteger.valueOf(tag - '0');
         switch (tag) {
-            case HproseTags.TagDouble: return BigInteger.valueOf(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
-            case HproseTags.TagEmpty: return BigInteger.ZERO;
-            case HproseTags.TagTrue: return BigInteger.ONE;
-            case HproseTags.TagFalse: return BigInteger.ZERO;
-            case HproseTags.TagDate: return BigInteger.valueOf(readDateWithoutTag(buffer).getTimeInMillis());
-            case HproseTags.TagTime: return BigInteger.valueOf(readTimeWithoutTag(buffer).getTimeInMillis());
-            case HproseTags.TagUTF8Char: return new BigInteger(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return new BigInteger(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return new BigInteger(readRef(buffer, String.class));
+            case TagDouble: return BigInteger.valueOf(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
+            case TagEmpty: return BigInteger.ZERO;
+            case TagTrue: return BigInteger.ONE;
+            case TagFalse: return BigInteger.ZERO;
+            case TagDate: return BigInteger.valueOf(readDateWithoutTag(buffer).getTimeInMillis());
+            case TagTime: return BigInteger.valueOf(readTimeWithoutTag(buffer).getTimeInMillis());
+            case TagUTF8Char: return new BigInteger(readUTF8CharWithoutTag(buffer));
+            case TagString: return new BigInteger(readStringWithoutTag(buffer));
+            case TagRef: return new BigInteger(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), BigInteger.class);
         }
     }
 
     final BigInteger readBigInteger(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagLong) readBigIntegerWithoutTag(stream);
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagInteger) return BigInteger.valueOf(readIntWithoutTag(stream));
+        if (tag == TagLong) readBigIntegerWithoutTag(stream);
+        if (tag == TagNull) return null;
+        if (tag == TagInteger) return BigInteger.valueOf(readIntWithoutTag(stream));
         if (tag >= '0' && tag <= '9') return BigInteger.valueOf(tag - '0');
         switch (tag) {
-            case HproseTags.TagDouble: return BigInteger.valueOf(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
-            case HproseTags.TagEmpty: return BigInteger.ZERO;
-            case HproseTags.TagTrue: return BigInteger.ONE;
-            case HproseTags.TagFalse: return BigInteger.ZERO;
-            case HproseTags.TagDate: return BigInteger.valueOf(readDateWithoutTag(stream).getTimeInMillis());
-            case HproseTags.TagTime: return BigInteger.valueOf(readTimeWithoutTag(stream).getTimeInMillis());
-            case HproseTags.TagUTF8Char: return new BigInteger(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return new BigInteger(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return new BigInteger(readRef(stream, String.class));
+            case TagDouble: return BigInteger.valueOf(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
+            case TagEmpty: return BigInteger.ZERO;
+            case TagTrue: return BigInteger.ONE;
+            case TagFalse: return BigInteger.ZERO;
+            case TagDate: return BigInteger.valueOf(readDateWithoutTag(stream).getTimeInMillis());
+            case TagTime: return BigInteger.valueOf(readTimeWithoutTag(stream).getTimeInMillis());
+            case TagUTF8Char: return new BigInteger(readUTF8CharWithoutTag(stream));
+            case TagString: return new BigInteger(readStringWithoutTag(stream));
+            case TagRef: return new BigInteger(readRef(stream, String.class));
             default: throw castError(tagToString(tag), BigInteger.class);
         }
     }
 
     final Date readDate(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDate) return new Date(readDateWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagTime) return new Date(readTimeWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return new Date(readDateWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagTime) return new Date(readTimeWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof Calendar) {
                 return new Date(((Calendar)obj).getTimeInMillis());
@@ -2668,20 +2668,20 @@ public class HproseReaderImpl {
             case '7': return new Date(7l);
             case '8': return new Date(8l);
             case '9': return new Date(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Date(readLongWithoutTag(buffer));
-            case HproseTags.TagDouble: return new Date(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
+            case TagInteger:
+            case TagLong: return new Date(readLongWithoutTag(buffer));
+            case TagDouble: return new Date(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
             default: throw castError(tagToString(tag), Date.class);
         }
     }
 
     final Date readDate(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDate) return new Date(readDateWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagTime) return new Date(readTimeWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return new Date(readDateWithoutTag(stream).getTimeInMillis());
+        if (tag == TagTime) return new Date(readTimeWithoutTag(stream).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof Calendar) {
                 return new Date(((Calendar)obj).getTimeInMillis());
@@ -2702,20 +2702,20 @@ public class HproseReaderImpl {
             case '7': return new Date(7l);
             case '8': return new Date(8l);
             case '9': return new Date(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Date(readLongWithoutTag(stream));
-            case HproseTags.TagDouble: return new Date(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
+            case TagInteger:
+            case TagLong: return new Date(readLongWithoutTag(stream));
+            case TagDouble: return new Date(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
             default: throw castError(tagToString(tag), Date.class);
         }
     }
 
     final Time readTime(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagTime) return new Time(readTimeWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagDate) return new Time(readDateWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagTime) return new Time(readTimeWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagDate) return new Time(readDateWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof Calendar) {
                 return new Time(((Calendar)obj).getTimeInMillis());
@@ -2736,20 +2736,20 @@ public class HproseReaderImpl {
             case '7': return new Time(7l);
             case '8': return new Time(8l);
             case '9': return new Time(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Time(readLongWithoutTag(buffer));
-            case HproseTags.TagDouble: return new Time(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
+            case TagInteger:
+            case TagLong: return new Time(readLongWithoutTag(buffer));
+            case TagDouble: return new Time(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
             default: throw castError(tagToString(tag), Time.class);
         }
     }
 
     final Time readTime(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagTime) return new Time(readTimeWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagDate) return new Time(readDateWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagTime) return new Time(readTimeWithoutTag(stream).getTimeInMillis());
+        if (tag == TagDate) return new Time(readDateWithoutTag(stream).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof Calendar) {
                 return new Time(((Calendar)obj).getTimeInMillis());
@@ -2770,20 +2770,20 @@ public class HproseReaderImpl {
             case '7': return new Time(7l);
             case '8': return new Time(8l);
             case '9': return new Time(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Time(readLongWithoutTag(stream));
-            case HproseTags.TagDouble: return new Time(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
+            case TagInteger:
+            case TagLong: return new Time(readLongWithoutTag(stream));
+            case TagDouble: return new Time(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
             default: throw castError(tagToString(tag), Time.class);
         }
     }
 
     final java.util.Date readDateTime(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDate) return new java.util.Date(readDateWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagTime) return new java.util.Date(readTimeWithoutTag(buffer).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return new java.util.Date(readDateWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagTime) return new java.util.Date(readTimeWithoutTag(buffer).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof Calendar) {
                 return new java.util.Date(((Calendar)obj).getTimeInMillis());
@@ -2804,20 +2804,20 @@ public class HproseReaderImpl {
             case '7': return new java.util.Date(7l);
             case '8': return new java.util.Date(8l);
             case '9': return new java.util.Date(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new java.util.Date(readLongWithoutTag(buffer));
-            case HproseTags.TagDouble: return new java.util.Date(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
+            case TagInteger:
+            case TagLong: return new java.util.Date(readLongWithoutTag(buffer));
+            case TagDouble: return new java.util.Date(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
             default: throw castError(tagToString(tag), java.util.Date.class);
         }
     }
 
     final java.util.Date readDateTime(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDate) return new java.util.Date(readDateWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagTime) return new java.util.Date(readTimeWithoutTag(stream).getTimeInMillis());
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return new java.util.Date(readDateWithoutTag(stream).getTimeInMillis());
+        if (tag == TagTime) return new java.util.Date(readTimeWithoutTag(stream).getTimeInMillis());
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof Calendar) {
                 return new java.util.Date(((Calendar)obj).getTimeInMillis());
@@ -2838,20 +2838,20 @@ public class HproseReaderImpl {
             case '7': return new java.util.Date(7l);
             case '8': return new java.util.Date(8l);
             case '9': return new java.util.Date(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new java.util.Date(readLongWithoutTag(stream));
-            case HproseTags.TagDouble: return new java.util.Date(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
+            case TagInteger:
+            case TagLong: return new java.util.Date(readLongWithoutTag(stream));
+            case TagDouble: return new java.util.Date(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
             default: throw castError(tagToString(tag), java.util.Date.class);
         }
     }
 
     final Timestamp readTimestamp(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDate) return readDateAs(buffer, Timestamp.class);
-        if (tag == HproseTags.TagTime) return readTimeAs(buffer, Timestamp.class);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return readDateAs(buffer, Timestamp.class);
+        if (tag == TagTime) return readTimeAs(buffer, Timestamp.class);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof Calendar) {
                 return new Timestamp(((Calendar)obj).getTimeInMillis());
@@ -2872,20 +2872,20 @@ public class HproseReaderImpl {
             case '7': return new Timestamp(7l);
             case '8': return new Timestamp(8l);
             case '9': return new Timestamp(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Timestamp(readLongWithoutTag(buffer));
-            case HproseTags.TagDouble: return new Timestamp(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
+            case TagInteger:
+            case TagLong: return new Timestamp(readLongWithoutTag(buffer));
+            case TagDouble: return new Timestamp(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
             default: throw castError(tagToString(tag), Timestamp.class);
         }
     }
 
     final Timestamp readTimestamp(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDate) return readDateAs(stream, Timestamp.class);
-        if (tag == HproseTags.TagTime) return readTimeAs(stream, Timestamp.class);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return readDateAs(stream, Timestamp.class);
+        if (tag == TagTime) return readTimeAs(stream, Timestamp.class);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof Calendar) {
                 return new Timestamp(((Calendar)obj).getTimeInMillis());
@@ -2906,20 +2906,20 @@ public class HproseReaderImpl {
             case '7': return new Timestamp(7l);
             case '8': return new Timestamp(8l);
             case '9': return new Timestamp(9l);
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: return new Timestamp(readLongWithoutTag(stream));
-            case HproseTags.TagDouble: return new Timestamp(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
+            case TagInteger:
+            case TagLong: return new Timestamp(readLongWithoutTag(stream));
+            case TagDouble: return new Timestamp(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
             default: throw castError(tagToString(tag), Timestamp.class);
         }
     }
 
     final Calendar readCalendar(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDate) return readDateWithoutTag(buffer);
-        if (tag == HproseTags.TagTime) return readTimeWithoutTag(buffer);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return readDateWithoutTag(buffer);
+        if (tag == TagTime) return readTimeWithoutTag(buffer);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof Calendar) {
                 return (Calendar)obj;
@@ -2937,13 +2937,13 @@ public class HproseReaderImpl {
             return calendar;
         }
         switch (tag) {
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: {
+            case TagInteger:
+            case TagLong: {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(readLongWithoutTag(buffer));
                 return calendar;
             }
-            case HproseTags.TagDouble: {
+            case TagDouble: {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(Double.valueOf(readDoubleWithoutTag(buffer)).longValue());
                 return calendar;
@@ -2954,11 +2954,11 @@ public class HproseReaderImpl {
 
     final Calendar readCalendar(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDate) return readDateWithoutTag(stream);
-        if (tag == HproseTags.TagTime) return readTimeWithoutTag(stream);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagDate) return readDateWithoutTag(stream);
+        if (tag == TagTime) return readTimeWithoutTag(stream);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof Calendar) {
                 return (Calendar)obj;
@@ -2976,13 +2976,13 @@ public class HproseReaderImpl {
             return calendar;
         }
         switch (tag) {
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong: {
+            case TagInteger:
+            case TagLong: {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(readLongWithoutTag(stream));
                 return calendar;
             }
-            case HproseTags.TagDouble: {
+            case TagDouble: {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(Double.valueOf(readDoubleWithoutTag(stream)).longValue());
                 return calendar;
@@ -2993,36 +2993,36 @@ public class HproseReaderImpl {
 
     final BigDecimal readBigDecimal(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagDouble) return new BigDecimal(readUntil(buffer, HproseTags.TagSemicolon).toString());
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagLong) return new BigDecimal(readLongWithoutTag(buffer));
-        if (tag == HproseTags.TagInteger) return new BigDecimal(readIntWithoutTag(buffer));
+        if (tag == TagDouble) return new BigDecimal(readUntil(buffer, TagSemicolon).toString());
+        if (tag == TagNull) return null;
+        if (tag == TagLong) return new BigDecimal(readLongWithoutTag(buffer));
+        if (tag == TagInteger) return new BigDecimal(readIntWithoutTag(buffer));
         if (tag >= '0' && tag <= '9') return BigDecimal.valueOf(tag - '0');
         switch (tag) {
-            case HproseTags.TagEmpty: return BigDecimal.ZERO;
-            case HproseTags.TagTrue: return BigDecimal.ONE;
-            case HproseTags.TagFalse: return BigDecimal.ZERO;
-            case HproseTags.TagUTF8Char: return new BigDecimal(readUTF8CharWithoutTag(buffer));
-            case HproseTags.TagString: return new BigDecimal(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: return new BigDecimal(readRef(buffer, String.class));
+            case TagEmpty: return BigDecimal.ZERO;
+            case TagTrue: return BigDecimal.ONE;
+            case TagFalse: return BigDecimal.ZERO;
+            case TagUTF8Char: return new BigDecimal(readUTF8CharWithoutTag(buffer));
+            case TagString: return new BigDecimal(readStringWithoutTag(buffer));
+            case TagRef: return new BigDecimal(readRef(buffer, String.class));
             default: throw castError(tagToString(tag), BigDecimal.class);
         }
     }
 
     final BigDecimal readBigDecimal(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagDouble) return new BigDecimal(readUntil(stream, HproseTags.TagSemicolon).toString());
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagLong) return new BigDecimal(readLongWithoutTag(stream));
-        if (tag == HproseTags.TagInteger) return new BigDecimal(readIntWithoutTag(stream));
+        if (tag == TagDouble) return new BigDecimal(readUntil(stream, TagSemicolon).toString());
+        if (tag == TagNull) return null;
+        if (tag == TagLong) return new BigDecimal(readLongWithoutTag(stream));
+        if (tag == TagInteger) return new BigDecimal(readIntWithoutTag(stream));
         if (tag >= '0' && tag <= '9') return BigDecimal.valueOf(tag - '0');
         switch (tag) {
-            case HproseTags.TagEmpty: return BigDecimal.ZERO;
-            case HproseTags.TagTrue: return BigDecimal.ONE;
-            case HproseTags.TagFalse: return BigDecimal.ZERO;
-            case HproseTags.TagUTF8Char: return new BigDecimal(readUTF8CharWithoutTag(stream));
-            case HproseTags.TagString: return new BigDecimal(readStringWithoutTag(stream));
-            case HproseTags.TagRef: return new BigDecimal(readRef(stream, String.class));
+            case TagEmpty: return BigDecimal.ZERO;
+            case TagTrue: return BigDecimal.ONE;
+            case TagFalse: return BigDecimal.ZERO;
+            case TagUTF8Char: return new BigDecimal(readUTF8CharWithoutTag(stream));
+            case TagString: return new BigDecimal(readStringWithoutTag(stream));
+            case TagRef: return new BigDecimal(readRef(stream, String.class));
             default: throw castError(tagToString(tag), BigDecimal.class);
         }
     }
@@ -3037,11 +3037,11 @@ public class HproseReaderImpl {
 
     final StringBuilder readStringBuilder(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagEmpty) return new StringBuilder();
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return getStringBuilder(readCharsWithoutTag(buffer));
-        if (tag == HproseTags.TagUTF8Char) return getStringBuilder(readUTF8CharAsChar(buffer));
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return new StringBuilder();
+        if (tag == TagNull) return null;
+        if (tag == TagString) return getStringBuilder(readCharsWithoutTag(buffer));
+        if (tag == TagUTF8Char) return getStringBuilder(readUTF8CharAsChar(buffer));
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof char[]) {
                 return getStringBuilder((char[])obj);
@@ -3050,29 +3050,29 @@ public class HproseReaderImpl {
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {
-            case HproseTags.TagInteger: return readUntil(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagLong: return readUntil(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return readUntil(buffer, HproseTags.TagSemicolon);
-            case HproseTags.TagTrue: return new StringBuilder("true");
-            case HproseTags.TagFalse: return new StringBuilder("false");
-            case HproseTags.TagNaN: return new StringBuilder("NaN");
-            case HproseTags.TagInfinity: return new StringBuilder(
-                                                (buffer.get() == HproseTags.TagPos) ?
+            case TagInteger: return readUntil(buffer, TagSemicolon);
+            case TagLong: return readUntil(buffer, TagSemicolon);
+            case TagDouble: return readUntil(buffer, TagSemicolon);
+            case TagTrue: return new StringBuilder("true");
+            case TagFalse: return new StringBuilder("false");
+            case TagNaN: return new StringBuilder("NaN");
+            case TagInfinity: return new StringBuilder(
+                                                (buffer.get() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case HproseTags.TagDate: return new StringBuilder(readDateWithoutTag(buffer).toString());
-            case HproseTags.TagTime: return new StringBuilder(readTimeWithoutTag(buffer).toString());
-            case HproseTags.TagGuid: return new StringBuilder(readUUIDWithoutTag(buffer).toString());
+            case TagDate: return new StringBuilder(readDateWithoutTag(buffer).toString());
+            case TagTime: return new StringBuilder(readTimeWithoutTag(buffer).toString());
+            case TagGuid: return new StringBuilder(readUUIDWithoutTag(buffer).toString());
             default: throw castError(tagToString(tag), StringBuilder.class);
         }
     }
 
     final StringBuilder readStringBuilder(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagEmpty) return new StringBuilder();
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return getStringBuilder(readCharsWithoutTag(stream));
-        if (tag == HproseTags.TagUTF8Char) return getStringBuilder(readUTF8CharAsChar(stream));
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return new StringBuilder();
+        if (tag == TagNull) return null;
+        if (tag == TagString) return getStringBuilder(readCharsWithoutTag(stream));
+        if (tag == TagUTF8Char) return getStringBuilder(readUTF8CharAsChar(stream));
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof char[]) {
                 return getStringBuilder((char[])obj);
@@ -3081,18 +3081,18 @@ public class HproseReaderImpl {
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {
-            case HproseTags.TagInteger: return readUntil(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagLong: return readUntil(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagDouble: return readUntil(stream, HproseTags.TagSemicolon);
-            case HproseTags.TagTrue: return new StringBuilder("true");
-            case HproseTags.TagFalse: return new StringBuilder("false");
-            case HproseTags.TagNaN: return new StringBuilder("NaN");
-            case HproseTags.TagInfinity: return new StringBuilder(
-                                                (stream.read() == HproseTags.TagPos) ?
+            case TagInteger: return readUntil(stream, TagSemicolon);
+            case TagLong: return readUntil(stream, TagSemicolon);
+            case TagDouble: return readUntil(stream, TagSemicolon);
+            case TagTrue: return new StringBuilder("true");
+            case TagFalse: return new StringBuilder("false");
+            case TagNaN: return new StringBuilder("NaN");
+            case TagInfinity: return new StringBuilder(
+                                                (stream.read() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case HproseTags.TagDate: return new StringBuilder(readDateWithoutTag(stream).toString());
-            case HproseTags.TagTime: return new StringBuilder(readTimeWithoutTag(stream).toString());
-            case HproseTags.TagGuid: return new StringBuilder(readUUIDWithoutTag(stream).toString());
+            case TagDate: return new StringBuilder(readDateWithoutTag(stream).toString());
+            case TagTime: return new StringBuilder(readTimeWithoutTag(stream).toString());
+            case TagGuid: return new StringBuilder(readUUIDWithoutTag(stream).toString());
             default: throw castError(tagToString(tag), StringBuilder.class);
         }
     }
@@ -3107,11 +3107,11 @@ public class HproseReaderImpl {
 
     final StringBuffer readStringBuffer(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagEmpty) return new StringBuffer();
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return getStringBuffer(readCharsWithoutTag(buffer));
-        if (tag == HproseTags.TagUTF8Char) return getStringBuffer(readUTF8CharAsChar(buffer));
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return new StringBuffer();
+        if (tag == TagNull) return null;
+        if (tag == TagString) return getStringBuffer(readCharsWithoutTag(buffer));
+        if (tag == TagUTF8Char) return getStringBuffer(readUTF8CharAsChar(buffer));
+        if (tag == TagRef) {
             Object obj = readRef(buffer);
             if (obj instanceof char[]) {
                 return getStringBuffer((char[])obj);
@@ -3120,29 +3120,29 @@ public class HproseReaderImpl {
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {
-            case HproseTags.TagInteger: return new StringBuffer(readUntil(buffer, HproseTags.TagSemicolon));
-            case HproseTags.TagLong: return new StringBuffer(readUntil(buffer, HproseTags.TagSemicolon));
-            case HproseTags.TagDouble: return new StringBuffer(readUntil(buffer, HproseTags.TagSemicolon));
-            case HproseTags.TagTrue: return new StringBuffer("true");
-            case HproseTags.TagFalse: return new StringBuffer("false");
-            case HproseTags.TagNaN: return new StringBuffer("NaN");
-            case HproseTags.TagInfinity: return new StringBuffer(
-                                                (buffer.get() == HproseTags.TagPos) ?
+            case TagInteger: return new StringBuffer(readUntil(buffer, TagSemicolon));
+            case TagLong: return new StringBuffer(readUntil(buffer, TagSemicolon));
+            case TagDouble: return new StringBuffer(readUntil(buffer, TagSemicolon));
+            case TagTrue: return new StringBuffer("true");
+            case TagFalse: return new StringBuffer("false");
+            case TagNaN: return new StringBuffer("NaN");
+            case TagInfinity: return new StringBuffer(
+                                                (buffer.get() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case HproseTags.TagDate: return new StringBuffer(readDateWithoutTag(buffer).toString());
-            case HproseTags.TagTime: return new StringBuffer(readTimeWithoutTag(buffer).toString());
-            case HproseTags.TagGuid: return new StringBuffer(readUUIDWithoutTag(buffer).toString());
+            case TagDate: return new StringBuffer(readDateWithoutTag(buffer).toString());
+            case TagTime: return new StringBuffer(readTimeWithoutTag(buffer).toString());
+            case TagGuid: return new StringBuffer(readUUIDWithoutTag(buffer).toString());
             default: throw castError(tagToString(tag), StringBuffer.class);
         }
     }
 
     final StringBuffer readStringBuffer(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagEmpty) return new StringBuffer();
-        if (tag == HproseTags.TagNull) return null;
-        if (tag == HproseTags.TagString) return getStringBuffer(readCharsWithoutTag(stream));
-        if (tag == HproseTags.TagUTF8Char) return getStringBuffer(readUTF8CharAsChar(stream));
-        if (tag == HproseTags.TagRef) {
+        if (tag == TagEmpty) return new StringBuffer();
+        if (tag == TagNull) return null;
+        if (tag == TagString) return getStringBuffer(readCharsWithoutTag(stream));
+        if (tag == TagUTF8Char) return getStringBuffer(readUTF8CharAsChar(stream));
+        if (tag == TagRef) {
             Object obj = readRef(stream);
             if (obj instanceof char[]) {
                 return getStringBuffer((char[])obj);
@@ -3151,31 +3151,31 @@ public class HproseReaderImpl {
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {
-            case HproseTags.TagInteger: return new StringBuffer(readUntil(stream, HproseTags.TagSemicolon));
-            case HproseTags.TagLong: return new StringBuffer(readUntil(stream, HproseTags.TagSemicolon));
-            case HproseTags.TagDouble: return new StringBuffer(readUntil(stream, HproseTags.TagSemicolon));
-            case HproseTags.TagTrue: return new StringBuffer("true");
-            case HproseTags.TagFalse: return new StringBuffer("false");
-            case HproseTags.TagNaN: return new StringBuffer("NaN");
-            case HproseTags.TagInfinity: return new StringBuffer(
-                                                (stream.read() == HproseTags.TagPos) ?
+            case TagInteger: return new StringBuffer(readUntil(stream, TagSemicolon));
+            case TagLong: return new StringBuffer(readUntil(stream, TagSemicolon));
+            case TagDouble: return new StringBuffer(readUntil(stream, TagSemicolon));
+            case TagTrue: return new StringBuffer("true");
+            case TagFalse: return new StringBuffer("false");
+            case TagNaN: return new StringBuffer("NaN");
+            case TagInfinity: return new StringBuffer(
+                                                (stream.read() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case HproseTags.TagDate: return new StringBuffer(readDateWithoutTag(stream).toString());
-            case HproseTags.TagTime: return new StringBuffer(readTimeWithoutTag(stream).toString());
-            case HproseTags.TagGuid: return new StringBuffer(readUUIDWithoutTag(stream).toString());
+            case TagDate: return new StringBuffer(readDateWithoutTag(stream).toString());
+            case TagTime: return new StringBuffer(readTimeWithoutTag(stream).toString());
+            case TagGuid: return new StringBuffer(readUUIDWithoutTag(stream).toString());
             default: throw castError(tagToString(tag), StringBuffer.class);
         }
     }
 
     final UUID readUUID(ByteBuffer buffer) throws IOException  {
         int tag = buffer.get();
-        if (tag == HproseTags.TagGuid) return readUUIDWithoutTag(buffer);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
+        if (tag == TagGuid) return readUUIDWithoutTag(buffer);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
         switch (tag) {
-            case HproseTags.TagBytes: return UUID.nameUUIDFromBytes(readBytesWithoutTag(buffer));
-            case HproseTags.TagString: return UUID.fromString(readStringWithoutTag(buffer));
-            case HproseTags.TagRef: {
+            case TagBytes: return UUID.nameUUIDFromBytes(readBytesWithoutTag(buffer));
+            case TagString: return UUID.fromString(readStringWithoutTag(buffer));
+            case TagRef: {
                 Object obj = readRef(buffer);
                 if (obj instanceof UUID) {
                     return (UUID)obj;
@@ -3197,13 +3197,13 @@ public class HproseReaderImpl {
 
     final UUID readUUID(InputStream stream) throws IOException  {
         int tag = stream.read();
-        if (tag == HproseTags.TagGuid) return readUUIDWithoutTag(stream);
-        if (tag == HproseTags.TagNull ||
-            tag == HproseTags.TagEmpty) return null;
+        if (tag == TagGuid) return readUUIDWithoutTag(stream);
+        if (tag == TagNull ||
+            tag == TagEmpty) return null;
         switch (tag) {
-            case HproseTags.TagBytes: return UUID.nameUUIDFromBytes(readBytesWithoutTag(stream));
-            case HproseTags.TagString: return UUID.fromString(readStringWithoutTag(stream));
-            case HproseTags.TagRef: {
+            case TagBytes: return UUID.nameUUIDFromBytes(readBytesWithoutTag(stream));
+            case TagString: return UUID.fromString(readStringWithoutTag(stream));
+            case TagRef: {
                 Object obj = readRef(stream);
                 if (obj instanceof UUID) {
                     return (UUID)obj;
@@ -3262,9 +3262,9 @@ public class HproseReaderImpl {
     final Object[] readObjectArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: return readArray(buffer, readInt(buffer, HproseTags.TagOpenbrace));
-            case HproseTags.TagRef: return (Object[])readRef(buffer);
+            case TagNull: return null;
+            case TagList: return readArray(buffer, readInt(buffer, TagOpenbrace));
+            case TagRef: return (Object[])readRef(buffer);
             default: throw castError(tagToString(tag), Object[].class);
         }
     }
@@ -3272,9 +3272,9 @@ public class HproseReaderImpl {
     final Object[] readObjectArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: return readArray(stream, readInt(stream, HproseTags.TagOpenbrace));
-            case HproseTags.TagRef: return (Object[])readRef(stream);
+            case TagNull: return null;
+            case TagList: return readArray(stream, readInt(stream, TagOpenbrace));
+            case TagRef: return (Object[])readRef(stream);
             default: throw castError(tagToString(tag), Object[].class);
         }
     }
@@ -3282,9 +3282,9 @@ public class HproseReaderImpl {
     final boolean[] readBooleanArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 boolean[] a = new boolean[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3293,7 +3293,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (boolean[])readRef(buffer);
+            case TagRef: return (boolean[])readRef(buffer);
             default: throw castError(tagToString(tag), boolean[].class);
         }
     }
@@ -3301,9 +3301,9 @@ public class HproseReaderImpl {
     final boolean[] readBooleanArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 boolean[] a = new boolean[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3312,7 +3312,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (boolean[])readRef(stream);
+            case TagRef: return (boolean[])readRef(stream);
             default: throw castError(tagToString(tag), boolean[].class);
         }
     }
@@ -3320,11 +3320,11 @@ public class HproseReaderImpl {
     final char[] readCharArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagUTF8Char: return new char[] { readUTF8CharAsChar(buffer) };
-            case HproseTags.TagString: return readCharsWithoutTag(buffer);
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagUTF8Char: return new char[] { readUTF8CharAsChar(buffer) };
+            case TagString: return readCharsWithoutTag(buffer);
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 char[] a = new char[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3333,7 +3333,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: {
+            case TagRef: {
                 Object obj = readRef(buffer);
                 if (obj instanceof char[]) {
                     return (char[])obj;
@@ -3350,11 +3350,11 @@ public class HproseReaderImpl {
     final char[] readCharArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagUTF8Char: return new char[] { readUTF8CharAsChar(stream) };
-            case HproseTags.TagString: return readCharsWithoutTag(stream);
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagUTF8Char: return new char[] { readUTF8CharAsChar(stream) };
+            case TagString: return readCharsWithoutTag(stream);
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 char[] a = new char[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3363,7 +3363,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: {
+            case TagRef: {
                 Object obj = readRef(stream);
                 if (obj instanceof char[]) {
                     return (char[])obj;
@@ -3379,14 +3379,14 @@ public class HproseReaderImpl {
 
     final byte[] readByteArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == HproseTags.TagBytes) return readBytesWithoutTag(buffer);
+        if (tag == TagBytes) return readBytesWithoutTag(buffer);
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagEmpty: return new byte[0];
-            case HproseTags.TagUTF8Char: return readUTF8CharWithoutTag(buffer).getBytes("UTF-8");
-            case HproseTags.TagString: return readStringWithoutTag(buffer).getBytes("UTF-8");
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagEmpty: return new byte[0];
+            case TagUTF8Char: return readUTF8CharWithoutTag(buffer).getBytes("UTF-8");
+            case TagString: return readStringWithoutTag(buffer).getBytes("UTF-8");
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 byte[] a = new byte[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3395,7 +3395,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: {
+            case TagRef: {
                 Object obj = readRef(buffer);
                 if (obj instanceof byte[]) {
                     return (byte[])obj;
@@ -3411,14 +3411,14 @@ public class HproseReaderImpl {
 
     final byte[] readByteArray(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == HproseTags.TagBytes) return readBytesWithoutTag(stream);
+        if (tag == TagBytes) return readBytesWithoutTag(stream);
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagEmpty: return new byte[0];
-            case HproseTags.TagUTF8Char: return readUTF8CharWithoutTag(stream).getBytes("UTF-8");
-            case HproseTags.TagString: return readStringWithoutTag(stream).getBytes("UTF-8");
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagEmpty: return new byte[0];
+            case TagUTF8Char: return readUTF8CharWithoutTag(stream).getBytes("UTF-8");
+            case TagString: return readStringWithoutTag(stream).getBytes("UTF-8");
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 byte[] a = new byte[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3427,7 +3427,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: {
+            case TagRef: {
                 Object obj = readRef(stream);
                 if (obj instanceof byte[]) {
                     return (byte[])obj;
@@ -3444,9 +3444,9 @@ public class HproseReaderImpl {
     final short[] readShortArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 short[] a = new short[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3455,7 +3455,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (short[])readRef(buffer);
+            case TagRef: return (short[])readRef(buffer);
             default: throw castError(tagToString(tag), short[].class);
         }
     }
@@ -3463,9 +3463,9 @@ public class HproseReaderImpl {
     final short[] readShortArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 short[] a = new short[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3474,7 +3474,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (short[])readRef(stream);
+            case TagRef: return (short[])readRef(stream);
             default: throw castError(tagToString(tag), short[].class);
         }
     }
@@ -3482,9 +3482,9 @@ public class HproseReaderImpl {
     final int[] readIntArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 int[] a = new int[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3493,7 +3493,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (int[])readRef(buffer);
+            case TagRef: return (int[])readRef(buffer);
             default: throw castError(tagToString(tag), int[].class);
         }
     }
@@ -3501,9 +3501,9 @@ public class HproseReaderImpl {
     final int[] readIntArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 int[] a = new int[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3512,7 +3512,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (int[])readRef(stream);
+            case TagRef: return (int[])readRef(stream);
             default: throw castError(tagToString(tag), int[].class);
         }
     }
@@ -3520,9 +3520,9 @@ public class HproseReaderImpl {
     final long[] readLongArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 long[] a = new long[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3531,7 +3531,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (long[])readRef(buffer);
+            case TagRef: return (long[])readRef(buffer);
             default: throw castError(tagToString(tag), long[].class);
         }
     }
@@ -3540,9 +3540,9 @@ public class HproseReaderImpl {
     final long[] readLongArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 long[] a = new long[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3551,7 +3551,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (long[])readRef(stream);
+            case TagRef: return (long[])readRef(stream);
             default: throw castError(tagToString(tag), long[].class);
         }
     }
@@ -3559,9 +3559,9 @@ public class HproseReaderImpl {
     final float[] readFloatArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 float[] a = new float[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3570,7 +3570,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (float[])readRef(buffer);
+            case TagRef: return (float[])readRef(buffer);
             default: throw castError(tagToString(tag), float[].class);
         }
     }
@@ -3578,9 +3578,9 @@ public class HproseReaderImpl {
     final float[] readFloatArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 float[] a = new float[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3589,7 +3589,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (float[])readRef(stream);
+            case TagRef: return (float[])readRef(stream);
             default: throw castError(tagToString(tag), float[].class);
         }
     }
@@ -3597,9 +3597,9 @@ public class HproseReaderImpl {
     final double[] readDoubleArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 double[] a = new double[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3608,7 +3608,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (double[])readRef(buffer);
+            case TagRef: return (double[])readRef(buffer);
             default: throw castError(tagToString(tag), double[].class);
         }
     }
@@ -3616,9 +3616,9 @@ public class HproseReaderImpl {
     final double[] readDoubleArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 double[] a = new double[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3627,7 +3627,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (double[])readRef(stream);
+            case TagRef: return (double[])readRef(stream);
             default: throw castError(tagToString(tag), double[].class);
         }
     }
@@ -3635,9 +3635,9 @@ public class HproseReaderImpl {
     final String[] readStringArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 String[] a = new String[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3646,7 +3646,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (String[])readRef(buffer);
+            case TagRef: return (String[])readRef(buffer);
             default: throw castError(tagToString(tag), String[].class);
         }
     }
@@ -3654,9 +3654,9 @@ public class HproseReaderImpl {
     final String[] readStringArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 String[] a = new String[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3665,7 +3665,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (String[])readRef(stream);
+            case TagRef: return (String[])readRef(stream);
             default: throw castError(tagToString(tag), String[].class);
         }
     }
@@ -3673,9 +3673,9 @@ public class HproseReaderImpl {
     final BigInteger[] readBigIntegerArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 BigInteger[] a = new BigInteger[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3684,7 +3684,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (BigInteger[])readRef(buffer);
+            case TagRef: return (BigInteger[])readRef(buffer);
             default: throw castError(tagToString(tag), BigInteger[].class);
         }
     }
@@ -3692,9 +3692,9 @@ public class HproseReaderImpl {
     final BigInteger[] readBigIntegerArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 BigInteger[] a = new BigInteger[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3703,7 +3703,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (BigInteger[])readRef(stream);
+            case TagRef: return (BigInteger[])readRef(stream);
             default: throw castError(tagToString(tag), BigInteger[].class);
         }
     }
@@ -3711,9 +3711,9 @@ public class HproseReaderImpl {
     final Date[] readDateArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 Date[] a = new Date[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3722,7 +3722,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (Date[])readRef(buffer);
+            case TagRef: return (Date[])readRef(buffer);
             default: throw castError(tagToString(tag), Date[].class);
         }
     }
@@ -3730,9 +3730,9 @@ public class HproseReaderImpl {
     final Date[] readDateArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 Date[] a = new Date[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3741,7 +3741,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Date[])readRef(stream);
+            case TagRef: return (Date[])readRef(stream);
             default: throw castError(tagToString(tag), Date[].class);
         }
     }
@@ -3749,9 +3749,9 @@ public class HproseReaderImpl {
     final Time[] readTimeArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 Time[] a = new Time[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3760,7 +3760,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (Time[])readRef(buffer);
+            case TagRef: return (Time[])readRef(buffer);
             default: throw castError(tagToString(tag), Time[].class);
         }
     }
@@ -3768,9 +3768,9 @@ public class HproseReaderImpl {
     final Time[] readTimeArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 Time[] a = new Time[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3779,7 +3779,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Time[])readRef(stream);
+            case TagRef: return (Time[])readRef(stream);
             default: throw castError(tagToString(tag), Time[].class);
         }
     }
@@ -3787,9 +3787,9 @@ public class HproseReaderImpl {
     final Timestamp[] readTimestampArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 Timestamp[] a = new Timestamp[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3798,7 +3798,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (Timestamp[])readRef(buffer);
+            case TagRef: return (Timestamp[])readRef(buffer);
             default: throw castError(tagToString(tag), Timestamp[].class);
         }
     }
@@ -3806,9 +3806,9 @@ public class HproseReaderImpl {
     final Timestamp[] readTimestampArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 Timestamp[] a = new Timestamp[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3817,7 +3817,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Timestamp[])readRef(stream);
+            case TagRef: return (Timestamp[])readRef(stream);
             default: throw castError(tagToString(tag), Timestamp[].class);
         }
     }
@@ -3825,9 +3825,9 @@ public class HproseReaderImpl {
     final java.util.Date[] readDateTimeArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 java.util.Date[] a = new java.util.Date[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3836,7 +3836,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (java.util.Date[])readRef(buffer);
+            case TagRef: return (java.util.Date[])readRef(buffer);
             default: throw castError(tagToString(tag), java.util.Date[].class);
         }
     }
@@ -3844,9 +3844,9 @@ public class HproseReaderImpl {
     final java.util.Date[] readDateTimeArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 java.util.Date[] a = new java.util.Date[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3855,7 +3855,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (java.util.Date[])readRef(stream);
+            case TagRef: return (java.util.Date[])readRef(stream);
             default: throw castError(tagToString(tag), java.util.Date[].class);
         }
     }
@@ -3863,9 +3863,9 @@ public class HproseReaderImpl {
     final Calendar[] readCalendarArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 Calendar[] a = new Calendar[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3874,7 +3874,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (Calendar[])readRef(buffer);
+            case TagRef: return (Calendar[])readRef(buffer);
             default: throw castError(tagToString(tag), Calendar[].class);
         }
     }
@@ -3882,9 +3882,9 @@ public class HproseReaderImpl {
     final Calendar[] readCalendarArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 Calendar[] a = new Calendar[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3893,7 +3893,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Calendar[])readRef(stream);
+            case TagRef: return (Calendar[])readRef(stream);
             default: throw castError(tagToString(tag), Calendar[].class);
         }
     }
@@ -3901,9 +3901,9 @@ public class HproseReaderImpl {
     final BigDecimal[] readBigDecimalArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 BigDecimal[] a = new BigDecimal[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3912,7 +3912,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (BigDecimal[])readRef(buffer);
+            case TagRef: return (BigDecimal[])readRef(buffer);
             default: throw castError(tagToString(tag), BigDecimal[].class);
         }
     }
@@ -3920,9 +3920,9 @@ public class HproseReaderImpl {
     final BigDecimal[] readBigDecimalArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 BigDecimal[] a = new BigDecimal[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3931,7 +3931,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (BigDecimal[])readRef(stream);
+            case TagRef: return (BigDecimal[])readRef(stream);
             default: throw castError(tagToString(tag), BigDecimal[].class);
         }
     }
@@ -3939,9 +3939,9 @@ public class HproseReaderImpl {
     final StringBuilder[] readStringBuilderArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 StringBuilder[] a = new StringBuilder[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3950,7 +3950,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (StringBuilder[])readRef(buffer);
+            case TagRef: return (StringBuilder[])readRef(buffer);
             default: throw castError(tagToString(tag), StringBuilder[].class);
         }
     }
@@ -3958,9 +3958,9 @@ public class HproseReaderImpl {
     final StringBuilder[] readStringBuilderArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 StringBuilder[] a = new StringBuilder[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3969,7 +3969,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (StringBuilder[])readRef(stream);
+            case TagRef: return (StringBuilder[])readRef(stream);
             default: throw castError(tagToString(tag), StringBuilder[].class);
         }
     }
@@ -3977,9 +3977,9 @@ public class HproseReaderImpl {
     final StringBuffer[] readStringBufferArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 StringBuffer[] a = new StringBuffer[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -3988,7 +3988,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (StringBuffer[])readRef(buffer);
+            case TagRef: return (StringBuffer[])readRef(buffer);
             default: throw castError(tagToString(tag), StringBuffer[].class);
         }
     }
@@ -3996,9 +3996,9 @@ public class HproseReaderImpl {
     final StringBuffer[] readStringBufferArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 StringBuffer[] a = new StringBuffer[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4007,7 +4007,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (StringBuffer[])readRef(stream);
+            case TagRef: return (StringBuffer[])readRef(stream);
             default: throw castError(tagToString(tag), StringBuffer[].class);
         }
     }
@@ -4015,9 +4015,9 @@ public class HproseReaderImpl {
     final UUID[] readUUIDArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 UUID[] a = new UUID[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4026,7 +4026,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (UUID[])readRef(buffer);
+            case TagRef: return (UUID[])readRef(buffer);
             default: throw castError(tagToString(tag), UUID[].class);
         }
     }
@@ -4034,9 +4034,9 @@ public class HproseReaderImpl {
     final UUID[] readUUIDArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 UUID[] a = new UUID[count];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4045,7 +4045,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (UUID[])readRef(stream);
+            case TagRef: return (UUID[])readRef(stream);
             default: throw castError(tagToString(tag), UUID[].class);
         }
     }
@@ -4053,9 +4053,9 @@ public class HproseReaderImpl {
     final char[][] readCharsArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 char[][] a = new char[count][];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4064,7 +4064,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (char[][])readRef(buffer);
+            case TagRef: return (char[][])readRef(buffer);
             default: throw castError(tagToString(tag), char[][].class);
         }
     }
@@ -4072,9 +4072,9 @@ public class HproseReaderImpl {
     final char[][] readCharsArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 char[][] a = new char[count][];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4083,7 +4083,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (char[][])readRef(stream);
+            case TagRef: return (char[][])readRef(stream);
             default: throw castError(tagToString(tag), char[][].class);
         }
     }
@@ -4091,9 +4091,9 @@ public class HproseReaderImpl {
     final byte[][] readBytesArray(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 byte[][] a = new byte[count][];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4102,7 +4102,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (byte[][])readRef(buffer);
+            case TagRef: return (byte[][])readRef(buffer);
             default: throw castError(tagToString(tag), byte[][].class);
         }
     }
@@ -4110,9 +4110,9 @@ public class HproseReaderImpl {
     final byte[][] readBytesArray(InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 byte[][] a = new byte[count][];
                 refer.set(a);
                 for (int i = 0; i < count; ++i) {
@@ -4121,7 +4121,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (byte[][])readRef(stream);
+            case TagRef: return (byte[][])readRef(stream);
             default: throw castError(tagToString(tag), byte[][].class);
         }
     }
@@ -4130,9 +4130,9 @@ public class HproseReaderImpl {
     final <T> T[] readOtherTypeArray(ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
@@ -4142,7 +4142,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (T[])readRef(buffer);
+            case TagRef: return (T[])readRef(buffer);
             default: throw castError(tagToString(tag), Array.newInstance(componentClass, 0).getClass());
         }
     }
@@ -4151,9 +4151,9 @@ public class HproseReaderImpl {
     final <T> T[] readOtherTypeArray(InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
@@ -4163,7 +4163,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (T[])readRef(stream);
+            case TagRef: return (T[])readRef(stream);
             default: throw castError(tagToString(tag), Array.newInstance(componentClass, 0).getClass());
         }
     }
@@ -4192,9 +4192,9 @@ public class HproseReaderImpl {
     private <T> Collection<T> readCollection(ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(buffer, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(buffer, TagOpenbrace);
                 Collection<T> a = (Collection<T>)HproseHelper.newInstance(cls);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
@@ -4204,7 +4204,7 @@ public class HproseReaderImpl {
                 buffer.get();
                 return a;
             }
-            case HproseTags.TagRef: return (Collection<T>)readRef(buffer);
+            case TagRef: return (Collection<T>)readRef(buffer);
             default: throw castError(tagToString(tag), cls);
         }
     }
@@ -4213,9 +4213,9 @@ public class HproseReaderImpl {
     private <T> Collection<T> readCollection(InputStream stream, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: {
-                int count = readInt(stream, HproseTags.TagOpenbrace);
+            case TagNull: return null;
+            case TagList: {
+                int count = readInt(stream, TagOpenbrace);
                 Collection<T> a = (Collection<T>)HproseHelper.newInstance(cls);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
@@ -4225,7 +4225,7 @@ public class HproseReaderImpl {
                 stream.read();
                 return a;
             }
-            case HproseTags.TagRef: return (Collection<T>)readRef(stream);
+            case TagRef: return (Collection<T>)readRef(stream);
             default: throw castError(tagToString(tag), cls);
         }
     }
@@ -4260,7 +4260,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readListAsMap(ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         Map<K, V> m = (Map<K, V>)HproseHelper.newInstance(cls);
         refer.set(m);
         if (count > 0) {
@@ -4268,7 +4268,7 @@ public class HproseReaderImpl {
                 keyClass.equals(Integer.class) &&
                 keyClass.equals(String.class) &&
                 keyClass.equals(Object.class)) {
-                throw castError(tagToString(HproseTags.TagList), cls);
+                throw castError(tagToString(TagList), cls);
             }
             HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
@@ -4283,7 +4283,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readListAsMap(InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         Map<K, V> m = (Map<K, V>)HproseHelper.newInstance(cls);
         refer.set(m);
         if (count > 0) {
@@ -4291,7 +4291,7 @@ public class HproseReaderImpl {
                 keyClass.equals(Integer.class) &&
                 keyClass.equals(String.class) &&
                 keyClass.equals(Object.class)) {
-                throw castError(tagToString(HproseTags.TagList), cls);
+                throw castError(tagToString(TagList), cls);
             }
             HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
@@ -4306,7 +4306,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readMapWithoutTag(ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
-        int count = readInt(buffer, HproseTags.TagOpenbrace);
+        int count = readInt(buffer, TagOpenbrace);
         Map m = (Map)HproseHelper.newInstance(cls);
         refer.set(m);
         HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
@@ -4322,7 +4322,7 @@ public class HproseReaderImpl {
 
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readMapWithoutTag(InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
-        int count = readInt(stream, HproseTags.TagOpenbrace);
+        int count = readInt(stream, TagOpenbrace);
         Map m = (Map)HproseHelper.newInstance(cls);
         refer.set(m);
         HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
@@ -4380,12 +4380,12 @@ public class HproseReaderImpl {
     private <K, V> Map<K, V> readMap(ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: return readListAsMap(buffer, cls, keyClass, valueClass, valueType);
-            case HproseTags.TagMap: return readMapWithoutTag(buffer, cls, keyClass, valueClass, keyType, valueType);
-            case HproseTags.TagClass: readClass(buffer); return readMap(buffer, cls, keyClass, valueClass, keyType, valueType);
-            case HproseTags.TagObject: return (Map<K, V>)readObjectAsMap(buffer, (Map<K, V>)HproseHelper.newInstance(cls));
-            case HproseTags.TagRef: return (Map<K, V>)readRef(buffer);
+            case TagNull: return null;
+            case TagList: return readListAsMap(buffer, cls, keyClass, valueClass, valueType);
+            case TagMap: return readMapWithoutTag(buffer, cls, keyClass, valueClass, keyType, valueType);
+            case TagClass: readClass(buffer); return readMap(buffer, cls, keyClass, valueClass, keyType, valueType);
+            case TagObject: return (Map<K, V>)readObjectAsMap(buffer, (Map<K, V>)HproseHelper.newInstance(cls));
+            case TagRef: return (Map<K, V>)readRef(buffer);
             default: throw castError(tagToString(tag), cls);
         }
     }
@@ -4394,12 +4394,12 @@ public class HproseReaderImpl {
     private <K, V> Map<K, V> readMap(InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagList: return readListAsMap(stream, cls, keyClass, valueClass, valueType);
-            case HproseTags.TagMap: return readMapWithoutTag(stream, cls, keyClass, valueClass, keyType, valueType);
-            case HproseTags.TagClass: readClass(stream); return readMap(stream, cls, keyClass, valueClass, keyType, valueType);
-            case HproseTags.TagObject: return (Map<K, V>)readObjectAsMap(stream, (Map<K, V>)HproseHelper.newInstance(cls));
-            case HproseTags.TagRef: return (Map<K, V>)readRef(stream);
+            case TagNull: return null;
+            case TagList: return readListAsMap(stream, cls, keyClass, valueClass, valueType);
+            case TagMap: return readMapWithoutTag(stream, cls, keyClass, valueClass, keyType, valueType);
+            case TagClass: readClass(stream); return readMap(stream, cls, keyClass, valueClass, keyType, valueType);
+            case TagObject: return (Map<K, V>)readObjectAsMap(stream, (Map<K, V>)HproseHelper.newInstance(cls));
+            case TagRef: return (Map<K, V>)readRef(stream);
             default: throw castError(tagToString(tag), cls);
         }
     }
@@ -4407,11 +4407,11 @@ public class HproseReaderImpl {
     final Object readObject(ByteBuffer buffer, Class<?> type) throws IOException {
         int tag = buffer.get();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagMap: return readMapAsObject(buffer, type);
-            case HproseTags.TagClass: readClass(buffer); return readObject(buffer, type);
-            case HproseTags.TagObject: return readObjectWithoutTag(buffer, type);
-            case HproseTags.TagRef: return readRef(buffer, type);
+            case TagNull: return null;
+            case TagMap: return readMapAsObject(buffer, type);
+            case TagClass: readClass(buffer); return readObject(buffer, type);
+            case TagObject: return readObjectWithoutTag(buffer, type);
+            case TagRef: return readRef(buffer, type);
             default: throw castError(tagToString(tag), type);
         }
     }
@@ -4419,11 +4419,11 @@ public class HproseReaderImpl {
     final Object readObject(InputStream stream, Class<?> type) throws IOException {
         int tag = stream.read();
         switch (tag) {
-            case HproseTags.TagNull: return null;
-            case HproseTags.TagMap: return readMapAsObject(stream, type);
-            case HproseTags.TagClass: readClass(stream); return readObject(stream, type);
-            case HproseTags.TagObject: return readObjectWithoutTag(stream, type);
-            case HproseTags.TagRef: return readRef(stream, type);
+            case TagNull: return null;
+            case TagMap: return readMapAsObject(stream, type);
+            case TagClass: readClass(stream); return readObject(stream, type);
+            case TagObject: return readObjectWithoutTag(stream, type);
+            case TagRef: return readRef(stream, type);
             default: throw castError(tagToString(tag), type);
         }
     }
@@ -4499,47 +4499,47 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9':
-            case HproseTags.TagNull:
-            case HproseTags.TagEmpty:
-            case HproseTags.TagTrue:
-            case HproseTags.TagFalse:
-            case HproseTags.TagNaN:
+            case TagNull:
+            case TagEmpty:
+            case TagTrue:
+            case TagFalse:
+            case TagNaN:
                 break;
-            case HproseTags.TagInfinity:
+            case TagInfinity:
                 ostream.write(buffer.get());
                 break;
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong:
-            case HproseTags.TagDouble:
-            case HproseTags.TagRef:
+            case TagInteger:
+            case TagLong:
+            case TagDouble:
+            case TagRef:
                 readNumberRaw(buffer, ostream);
                 break;
-            case HproseTags.TagDate:
-            case HproseTags.TagTime:
+            case TagDate:
+            case TagTime:
                 readDateTimeRaw(buffer, ostream);
                 break;
-            case HproseTags.TagUTF8Char:
+            case TagUTF8Char:
                 readUTF8CharRaw(buffer, ostream);
                 break;
-            case HproseTags.TagBytes:
+            case TagBytes:
                 readBytesRaw(buffer, ostream);
                 break;
-            case HproseTags.TagString:
+            case TagString:
                 readStringRaw(buffer, ostream);
                 break;
-            case HproseTags.TagGuid:
+            case TagGuid:
                 readGuidRaw(buffer, ostream);
                 break;
-            case HproseTags.TagList:
-            case HproseTags.TagMap:
-            case HproseTags.TagObject:
+            case TagList:
+            case TagMap:
+            case TagObject:
                 readComplexRaw(buffer, ostream);
                 break;
-            case HproseTags.TagClass:
+            case TagClass:
                 readComplexRaw(buffer, ostream);
                 readRaw(buffer, ostream);
                 break;
-            case HproseTags.TagError:
+            case TagError:
                 readRaw(buffer, ostream);
                 break;
             case -1:
@@ -4563,47 +4563,47 @@ public class HproseReaderImpl {
             case '7':
             case '8':
             case '9':
-            case HproseTags.TagNull:
-            case HproseTags.TagEmpty:
-            case HproseTags.TagTrue:
-            case HproseTags.TagFalse:
-            case HproseTags.TagNaN:
+            case TagNull:
+            case TagEmpty:
+            case TagTrue:
+            case TagFalse:
+            case TagNaN:
                 break;
-            case HproseTags.TagInfinity:
+            case TagInfinity:
                 ostream.write(stream.read());
                 break;
-            case HproseTags.TagInteger:
-            case HproseTags.TagLong:
-            case HproseTags.TagDouble:
-            case HproseTags.TagRef:
+            case TagInteger:
+            case TagLong:
+            case TagDouble:
+            case TagRef:
                 readNumberRaw(stream, ostream);
                 break;
-            case HproseTags.TagDate:
-            case HproseTags.TagTime:
+            case TagDate:
+            case TagTime:
                 readDateTimeRaw(stream, ostream);
                 break;
-            case HproseTags.TagUTF8Char:
+            case TagUTF8Char:
                 readUTF8CharRaw(stream, ostream);
                 break;
-            case HproseTags.TagBytes:
+            case TagBytes:
                 readBytesRaw(stream, ostream);
                 break;
-            case HproseTags.TagString:
+            case TagString:
                 readStringRaw(stream, ostream);
                 break;
-            case HproseTags.TagGuid:
+            case TagGuid:
                 readGuidRaw(stream, ostream);
                 break;
-            case HproseTags.TagList:
-            case HproseTags.TagMap:
-            case HproseTags.TagObject:
+            case TagList:
+            case TagMap:
+            case TagObject:
                 readComplexRaw(stream, ostream);
                 break;
-            case HproseTags.TagClass:
+            case TagClass:
                 readComplexRaw(stream, ostream);
                 readRaw(stream, ostream);
                 break;
-            case HproseTags.TagError:
+            case TagError:
                 readRaw(stream, ostream);
                 break;
             case -1:
@@ -4619,7 +4619,7 @@ public class HproseReaderImpl {
         do {
             tag = buffer.get();
             ostream.write(tag);
-        } while (tag != HproseTags.TagSemicolon);
+        } while (tag != TagSemicolon);
     }
 
     private void readNumberRaw(InputStream stream, OutputStream ostream) throws IOException {
@@ -4627,7 +4627,7 @@ public class HproseReaderImpl {
         do {
             tag = stream.read();
             ostream.write(tag);
-        } while (tag != HproseTags.TagSemicolon);
+        } while (tag != TagSemicolon);
     }
 
     private void readDateTimeRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
@@ -4635,8 +4635,8 @@ public class HproseReaderImpl {
         do {
             tag = buffer.get();
             ostream.write(tag);
-        } while (tag != HproseTags.TagSemicolon &&
-                 tag != HproseTags.TagUTC);
+        } while (tag != TagSemicolon &&
+                 tag != TagUTC);
     }
 
     private void readDateTimeRaw(InputStream stream, OutputStream ostream) throws IOException {
@@ -4644,8 +4644,8 @@ public class HproseReaderImpl {
         do {
             tag = stream.read();
             ostream.write(tag);
-        } while (tag != HproseTags.TagSemicolon &&
-                 tag != HproseTags.TagUTC);
+        } while (tag != TagSemicolon &&
+                 tag != TagUTC);
     }
 
     private void readUTF8CharRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
@@ -4723,7 +4723,7 @@ public class HproseReaderImpl {
             len = len * 10 + (tag - '0');
             tag = buffer.get();
             ostream.write(tag);
-        } while (tag != HproseTags.TagQuote);
+        } while (tag != TagQuote);
         byte[] b = new byte[len];
         buffer.get(b, 0, len);
         ostream.write(b);
@@ -4737,7 +4737,7 @@ public class HproseReaderImpl {
             len = len * 10 + (tag - '0');
             tag = stream.read();
             ostream.write(tag);
-        } while (tag != HproseTags.TagQuote);
+        } while (tag != TagQuote);
         int off = 0;
         byte[] b = new byte[len];
         while (off < len) {
@@ -4755,7 +4755,7 @@ public class HproseReaderImpl {
             count = count * 10 + (tag - '0');
             tag = buffer.get();
             ostream.write(tag);
-        } while (tag != HproseTags.TagQuote);
+        } while (tag != TagQuote);
         for (int i = 0; i < count; ++i) {
             tag = buffer.get();
             switch ((tag & 0xff) >>> 4) {
@@ -4812,7 +4812,7 @@ public class HproseReaderImpl {
             count = count * 10 + (tag - '0');
             tag = stream.read();
             ostream.write(tag);
-        } while (tag != HproseTags.TagQuote);
+        } while (tag != TagQuote);
         for (int i = 0; i < count; ++i) {
             tag = stream.read();
             switch (tag >>> 4) {
@@ -4883,8 +4883,8 @@ public class HproseReaderImpl {
         do {
             tag = buffer.get();
             ostream.write(tag);
-        } while (tag != HproseTags.TagOpenbrace);
-        while ((tag = buffer.get()) != HproseTags.TagClosebrace) {
+        } while (tag != TagOpenbrace);
+        while ((tag = buffer.get()) != TagClosebrace) {
             readRaw(buffer, ostream, tag);
         }
         ostream.write(tag);
@@ -4895,8 +4895,8 @@ public class HproseReaderImpl {
         do {
             tag = stream.read();
             ostream.write(tag);
-        } while (tag != HproseTags.TagOpenbrace);
-        while ((tag = stream.read()) != HproseTags.TagClosebrace) {
+        } while (tag != TagOpenbrace);
+        while ((tag = stream.read()) != TagClosebrace) {
             readRaw(stream, ostream, tag);
         }
         ostream.write(tag);

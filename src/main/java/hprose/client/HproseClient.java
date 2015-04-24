@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -48,7 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public abstract class HproseClient implements HproseInvoker {
+public abstract class HproseClient implements HproseInvoker, HproseTags {
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private static final Object[] nullArgs = new Object[0];
@@ -545,7 +545,7 @@ public abstract class HproseClient implements HproseInvoker {
     private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple, HproseContext context) throws IOException {
         ByteBufferStream stream = new ByteBufferStream();
         HproseWriter hproseWriter = new HproseWriter(stream.getOutputStream(), mode, simple);
-        stream.write(HproseTags.TagCall);
+        stream.write(TagCall);
         hproseWriter.writeString(functionName);
         if ((arguments != null) && (arguments.length > 0 || byRef)) {
             hproseWriter.reset();
@@ -554,7 +554,7 @@ public abstract class HproseClient implements HproseInvoker {
                 hproseWriter.writeBoolean(true);
             }
         }
-        stream.write(HproseTags.TagEnd);
+        stream.write(TagEnd);
         stream.flip();
         for (int i = 0, n = filters.size(); i < n; ++i) {
             stream.buffer = filters.get(i).outputFilter(stream.buffer, context);
@@ -589,7 +589,7 @@ public abstract class HproseClient implements HproseInvoker {
             stream.flip();
         }
         int tag = stream.buffer.get(stream.buffer.limit() - 1);
-        if (tag != HproseTags.TagEnd) {
+        if (tag != TagEnd) {
             throw new HproseException("Wrong Response: \r\n" + HproseHelper.readWrongInfo(stream));
         }
         if (resultMode == HproseResultMode.Raw) {
@@ -601,9 +601,9 @@ public abstract class HproseClient implements HproseInvoker {
         }
         Object result = null;
         HproseReader hproseReader = new HproseReader(stream.getInputStream(), mode);
-        while ((tag = stream.read()) != HproseTags.TagEnd) {
+        while ((tag = stream.read()) != TagEnd) {
             switch (tag) {
-                case HproseTags.TagResult:
+                case TagResult:
                     if (resultMode == HproseResultMode.Normal) {
                         hproseReader.reset();
                         result = hproseReader.unserialize(returnType);
@@ -612,7 +612,7 @@ public abstract class HproseClient implements HproseInvoker {
                         result = ByteBufferStreamToType(hproseReader.readRaw(), returnType);
                     }
                     break;
-                case HproseTags.TagArgument:
+                case TagArgument:
                     hproseReader.reset();
                     Object[] args = hproseReader.readObjectArray();
                     int length = arguments.length;
@@ -621,7 +621,7 @@ public abstract class HproseClient implements HproseInvoker {
                     }
                     System.arraycopy(args, 0, arguments, 0, length);
                     break;
-                case HproseTags.TagError:
+                case TagError:
                     hproseReader.reset();
                     result = new HproseException(hproseReader.readString());
                     break;

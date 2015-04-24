@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-public abstract class HproseService {
+public abstract class HproseService implements HproseTags {
 
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode = HproseMode.MemberMode;
@@ -517,9 +517,9 @@ public abstract class HproseService {
         }
         ByteBufferStream data = new ByteBufferStream();
         HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, true);
-        data.write(HproseTags.TagError);
+        data.write(TagError);
         writer.writeString(getErrorMessage(e));
-        data.write(HproseTags.TagEnd);
+        data.write(TagEnd);
         return responseEnd(data, context);
     }
 
@@ -534,12 +534,12 @@ public abstract class HproseService {
             HproseMethod remoteMethod = null;
             Object[] args, arguments;
             boolean byRef = false;
-            tag = reader.checkTags((char) HproseTags.TagList + "" +
-                                   (char) HproseTags.TagEnd + "" +
-                                   (char) HproseTags.TagCall);
-            if (tag == HproseTags.TagList) {
+            tag = reader.checkTags((char) TagList + "" +
+                                   (char) TagEnd + "" +
+                                   (char) TagCall);
+            if (tag == TagList) {
                 reader.reset();
-                int count = reader.readInt(HproseTags.TagOpenbrace);
+                int count = reader.readInt(TagOpenbrace);
                 if (methods != null) {
                     remoteMethod = methods.get(aliasname, count);
                 }
@@ -553,13 +553,13 @@ public abstract class HproseService {
                     arguments = new Object[count];
                     reader.readArray(remoteMethod.paramTypes, arguments, count);
                 }
-                tag = reader.checkTags((char) HproseTags.TagTrue + "" +
-                                       (char) HproseTags.TagEnd + "" +
-                                       (char) HproseTags.TagCall);
-                if (tag == HproseTags.TagTrue) {
+                tag = reader.checkTags((char) TagTrue + "" +
+                                       (char) TagEnd + "" +
+                                       (char) TagCall);
+                if (tag == TagTrue) {
                     byRef = true;
-                    tag = reader.checkTags((char) HproseTags.TagEnd + "" +
-                                           (char) HproseTags.TagCall);
+                    tag = reader.checkTags((char) TagEnd + "" +
+                                           (char) TagCall);
                 }
             }
             else {
@@ -626,7 +626,7 @@ public abstract class HproseService {
                 data.write((byte[])result);
             }
             else {
-                data.write(HproseTags.TagResult);
+                data.write(TagResult);
                 boolean simple = remoteMethod.simple;
                 HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, simple);
                 if (remoteMethod.mode == HproseResultMode.Serialized) {
@@ -636,13 +636,13 @@ public abstract class HproseService {
                     writer.serialize(result);
                 }
                 if (byRef) {
-                    data.write(HproseTags.TagArgument);
+                    data.write(TagArgument);
                     writer.reset();
                     writer.writeArray(arguments);
                 }
             }
-        } while (tag == HproseTags.TagCall);
-        data.write(HproseTags.TagEnd);
+        } while (tag == TagCall);
+        data.write(TagEnd);
         return responseEnd(data, context);
     }
 
@@ -654,9 +654,9 @@ public abstract class HproseService {
         }
         ByteBufferStream data = new ByteBufferStream();
         HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, true);
-        data.write(HproseTags.TagFunctions);
+        data.write(TagFunctions);
         writer.writeList(names);
-        data.write(HproseTags.TagEnd);
+        data.write(TagEnd);
         return responseEnd(data, context);
     }
 
@@ -680,9 +680,9 @@ public abstract class HproseService {
             }
             int tag = stream.read();
             switch (tag) {
-                case HproseTags.TagCall:
+                case TagCall:
                     return doInvoke(stream, methods, context);
-                case HproseTags.TagEnd:
+                case TagEnd:
                     return doFunctionList(methods, context);
                 default:
                     return sendError(new HproseException("Wrong Request: \r\n" + HproseHelper.readWrongInfo(stream)), context);

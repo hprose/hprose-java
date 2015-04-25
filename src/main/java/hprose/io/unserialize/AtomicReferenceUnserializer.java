@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReference unserializer class for Java.           *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Apr 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicReference;
 
 final class AtomicReferenceUnserializer implements HproseUnserializer {
 
@@ -31,19 +32,19 @@ final class AtomicReferenceUnserializer implements HproseUnserializer {
 
     public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
-            return reader.readAtomicReference(buffer, ((ParameterizedType)type).getActualTypeArguments()[0]);
+            return new AtomicReference(reader.unserialize(buffer, ((ParameterizedType)type).getActualTypeArguments()[0]));
         }
         else {
-            return reader.readAtomicReference(buffer, Object.class);
+            return new AtomicReference(reader.unserialize(buffer, Object.class));
         }
     }
 
     public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
-            return reader.readAtomicReference(stream, ((ParameterizedType)type).getActualTypeArguments()[0]);
+            return new AtomicReference(reader.unserialize(stream, ((ParameterizedType)type).getActualTypeArguments()[0]));
         }
         else {
-            return reader.readAtomicReference(stream, Object.class);
+            return new AtomicReference(reader.unserialize(stream, Object.class));
         }
     }
 

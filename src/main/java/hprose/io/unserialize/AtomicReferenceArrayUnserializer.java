@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReferenceArray unserializer class for Java.      *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,19 +25,30 @@ import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicReferenceArrayUnserializer();
 
+    @SuppressWarnings({"unchecked"})
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReaderImpl reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
+        return new AtomicReferenceArray<T>(reader.readOtherTypeArray(buffer, componentClass, componentType));
+    }
+
+    @SuppressWarnings({"unchecked"})
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReaderImpl reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
+        return new AtomicReferenceArray<T>(reader.readOtherTypeArray(stream, componentClass, componentType));
+    }
+
     public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = HproseHelper.toClass(type);
-            return reader.readAtomicReferenceArray(buffer, cls, type);
+            return readAtomicReferenceArray(reader, buffer, cls, type);
         }
         else {
-            return reader.readAtomicReferenceArray(buffer, Object.class, Object.class);
+            return readAtomicReferenceArray(reader, buffer, Object.class, Object.class);
         }
     }
 
@@ -45,10 +56,10 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = HproseHelper.toClass(type);
-            return reader.readAtomicReferenceArray(stream, cls, type);
+            return readAtomicReferenceArray(reader, stream, cls, type);
         }
         else {
-            return reader.readAtomicReferenceArray(stream, Object.class, Object.class);
+            return readAtomicReferenceArray(reader, stream, Object.class, Object.class);
         }
     }
 

@@ -592,12 +592,12 @@ public class HproseReaderImpl implements HproseTags {
                                  unserialize(stream, type));
     }
 
-    private final HproseException castError(String srctype, Type desttype) {
+    private HproseException castError(String srctype, Type desttype) {
         return new HproseException(srctype + " can't change to " +
                                    desttype.toString());
     }
 
-    private final HproseException castError(Object obj, Type type) {
+    private HproseException castError(Object obj, Type type) {
         return new HproseException(obj.getClass().toString() +
                                    " can't change to " +
                                    type.toString());
@@ -4169,26 +4169,6 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final AtomicReference<?> readAtomicReference(ByteBuffer buffer, Type type) throws IOException {
-        return new AtomicReference(unserialize(buffer, type));
-    }
-    
-    @SuppressWarnings({"unchecked"})
-    final AtomicReference<?> readAtomicReference(InputStream stream, Type type) throws IOException {
-        return new AtomicReference(unserialize(stream, type));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    final <T> AtomicReferenceArray<T> readAtomicReferenceArray(ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
-        return new AtomicReferenceArray<T>(readOtherTypeArray(buffer, componentClass, componentType));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    final <T> AtomicReferenceArray<T> readAtomicReferenceArray(InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
-        return new AtomicReferenceArray<T>(readOtherTypeArray(stream, componentClass, componentType));
-    }
-
-    @SuppressWarnings({"unchecked"})
     private <T> Collection<T> readCollection(ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
@@ -4428,7 +4408,7 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private Object unserialize(ByteBuffer buffer, Type type) throws IOException {
+    final Object unserialize(ByteBuffer buffer, Type type) throws IOException {
         if (type == null) {
             return unserialize(buffer);
         }
@@ -4436,7 +4416,7 @@ public class HproseReaderImpl implements HproseTags {
         return unserialize(buffer, cls, type);
     }
 
-    private Object unserialize(InputStream stream, Type type) throws IOException {
+    final Object unserialize(InputStream stream, Type type) throws IOException {
         if (type == null) {
             return unserialize(stream);
         }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Apr 24, 2015                             *
+ * LastModified: Apr 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -426,39 +426,44 @@ public final class HproseWriter implements HproseTags {
         }
         stream.write(TagQuote);
         stream.write(s.getBytes("UTF-8"));
-//        for (int i = 0; i < length; ++i) {
-//            int c = 0xffff & s.charAt(i);
-//            if (c < 0x80) {
-//                stream.write(c);
-//            }
-//            else if (c < 0x800) {
-//                stream.write(0xc0 | (c >>> 6));
-//                stream.write(0x80 | (c & 0x3f));
-//            }
-//            else if (c < 0xd800 || c > 0xdfff) {
-//                stream.write(0xe0 | (c >>> 12));
-//                stream.write(0x80 | ((c >>> 6) & 0x3f));
-//                stream.write(0x80 | (c & 0x3f));
-//            }
-//            else {
-//                if (++i < length) {
-//                    int c2 = 0xffff & s.charAt(i);
-//                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
-//                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
-//                        stream.write(0xf0 | (c >>> 18));
-//                        stream.write(0x80 | ((c >>> 12) & 0x3f));
-//                        stream.write(0x80 | ((c >>> 6) & 0x3f));
-//                        stream.write(0x80 | (c & 0x3f));
-//                    }
-//                    else {
-//                        throw new HproseException("wrong unicode string");
-//                    }
-//                }
-//                else {
-//                    throw new HproseException("wrong unicode string");
-//                }
-//            }
-//        }
+/*
+        byte[] b = new byte[length * 3];
+        int n = 0;
+        for (int i = 0; i < length; ++i) {
+            int c = 0xffff & s.charAt(i);
+            if (c < 0x80) {
+                b[n++] = (byte)c;
+            }
+            else if (c < 0x800) {
+                b[n++] = (byte)(0xc0 | (c >>> 6));
+                b[n++] = (byte)(0x80 | (c & 0x3f));
+            }
+            else if (c < 0xd800 || c > 0xdfff) {
+                b[n++] = (byte)(0xe0 | (c >>> 12));
+                b[n++] = (byte)(0x80 | ((c >>> 6) & 0x3f));
+                b[n++] = (byte)(0x80 | (c & 0x3f));
+            }
+            else {
+                if (++i < length) {
+                    int c2 = 0xffff & s.charAt(i);
+                    if (c < 0xdc00 && 0xdc00 <= c2 && c2 <= 0xdfff) {
+                        c = ((c & 0x03ff) << 10 | (c2 & 0x03ff)) + 0x010000;
+                        b[n++] = (byte)(0xf0 | (c >>> 18));
+                        b[n++] = (byte)(0x80 | ((c >>> 12) & 0x3f));
+                        b[n++] = (byte)(0x80 | ((c >>> 6) & 0x3f));
+                        b[n++] = (byte)(0x80 | (c & 0x3f));
+                    }
+                    else {
+                        throw new HproseException("wrong unicode string");
+                    }
+                }
+                else {
+                    throw new HproseException("wrong unicode string");
+                }
+            }
+        }
+        stream.write(b, 0, n);
+*/
         stream.write(TagQuote);
     }
 
@@ -1161,18 +1166,8 @@ public final class HproseWriter implements HproseTags {
         }
     }
 
-    @SuppressWarnings({"unchecked"})
-    public final void writeObject(Object object) throws IOException {
-        Class<?> type = object.getClass();
-        int cr = classref.get(type);
-        if (cr < 0) {
-            cr = writeClass(type);
-        }
-        refer.set(object);
+    private void writeObject(Object object, Class<?> type) throws IOException {
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
-        stream.write(TagObject);
-        writeInt(cr);
-        stream.write(TagOpenbrace);
         for (Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
             Object value;
@@ -1189,6 +1184,20 @@ public final class HproseWriter implements HproseTags {
                 member.serializer().write(this, value);
             }
         }
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public final void writeObject(Object object) throws IOException {
+        Class<?> type = object.getClass();
+        int cr = classref.get(type);
+        if (cr < 0) {
+            cr = writeClass(type);
+        }
+        refer.set(object);
+        stream.write(TagObject);
+        writeInt(cr);
+        stream.write(TagOpenbrace);
+        writeObject(object, type);
         stream.write(TagClosebrace);
     }
 

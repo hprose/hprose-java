@@ -12,16 +12,20 @@
  *                                                        *
  * hprose formatter class for Java.                       *
  *                                                        *
- * LastModified: Apr 23, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
+import hprose.io.serialize.HproseWriterImpl;
+import hprose.io.serialize.ValueWriter;
 import hprose.io.unserialize.HproseReaderImpl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 public final class HproseFormatter {
@@ -30,50 +34,56 @@ public final class HproseFormatter {
     }
 
     public final static OutputStream serialize(byte b, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeInteger(b);
+        ValueWriter.write(stream, b);
         return stream;
     }
 
     public final static OutputStream serialize(short s, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeInteger(s);
+        ValueWriter.write(stream, s);
         return stream;
     }
 
     public final static OutputStream serialize(int i, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeInteger(i);
+        ValueWriter.write(stream, i);
         return stream;
     }
 
     public final static OutputStream serialize(long l, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeLong(l);
+        ValueWriter.write(stream, l);
         return stream;
+
     }
 
     public final static OutputStream serialize(float f, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeDouble(f);
+        ValueWriter.write(stream, f);
         return stream;
+
     }
 
     public final static OutputStream serialize(double d, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeDouble(d);
+        ValueWriter.write(stream, d);
         return stream;
+
     }
 
     public final static OutputStream serialize(boolean b, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeBoolean(b);
+        ValueWriter.write(stream, b);
         return stream;
+
     }
 
     public final static OutputStream serialize(char c, OutputStream stream) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, true);
-        writer.writeUTF8Char(c);
+        ValueWriter.write(stream, c);
+        return stream;
+    }
+
+    public final static OutputStream serialize(BigInteger bi, OutputStream stream) throws IOException {
+        ValueWriter.write(stream, bi);
+        return stream;
+    }
+    
+    public final static OutputStream serialize(BigDecimal bd, OutputStream stream) throws IOException {
+        ValueWriter.write(stream, bd);
         return stream;
     }
 
@@ -90,7 +100,7 @@ public final class HproseFormatter {
     }
 
     public final static OutputStream serialize(Object obj, OutputStream stream, HproseMode mode, boolean simple) throws IOException {
-        HproseWriter writer = new HproseWriter(stream, mode, simple);
+        HproseWriterImpl writer = new HproseWriterImpl(stream, mode, simple);
         writer.serialize(obj);
         return stream;
     }

@@ -8,29 +8,42 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * StringBufferSerializer.java                            *
+ * WriterRefer.java                                       *
  *                                                        *
- * StringBuffer serializer class for Java.                *
+ * writer refer class for Java.                           *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-
 package hprose.io.serialize;
 
-import hprose.io.HproseWriter;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagSemicolon;
+import hprose.io.ObjectIntMap;
 import java.io.IOException;
+import java.io.OutputStream;
 
-final class StringBufferSerializer implements HproseSerializer<StringBuffer> {
-
-    public final static HproseSerializer instance = new StringBufferSerializer();
-
-    public final void write(HproseWriter writer, StringBuffer obj) throws IOException {
-        switch (obj.length()) {
-            case 0: writer.writeEmpty(); break;
-            case 1: writer.writeUTF8Char(obj.charAt(0)); break;
-            default: writer.writeStringWithRef(obj); break;
+final class WriterRefer {
+    private final ObjectIntMap ref = new ObjectIntMap();
+    private int lastref = 0;
+    public final void addCount(int count) {
+        lastref += count;
+    }
+    public final void set(Object obj) {
+        ref.put(obj, lastref++);
+    }
+    public final boolean write(OutputStream stream, Object obj) throws IOException {
+        if (ref.containsKey(obj)) {
+            stream.write(TagRef);
+            ValueWriter.writeInt(stream, ref.get(obj));
+            stream.write(TagSemicolon);
+            return true;
         }
+        return false;
+    }
+    public final void reset() {
+        ref.clear();
+        lastref = 0;
     }
 }

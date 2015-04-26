@@ -12,22 +12,51 @@
  *                                                        *
  * Date array serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseWriter;
+import static hprose.io.HproseTags.TagClosebrace;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Date;
 
 final class DateArraySerializer implements HproseSerializer<Date[]> {
 
-    public final static HproseSerializer instance = new DateArraySerializer();
+    public final static DateArraySerializer instance = new DateArraySerializer();
 
-    public final void write(HproseWriter writer, Date[] obj) throws IOException {
-        writer.writeArrayWithRef(obj);
+    public final static void write(OutputStream stream, WriterRefer refer, Date[] array) throws IOException {
+        if (refer != null) refer.set(array);
+        int length = array.length;
+        stream.write(TagList);
+        if (length > 0) {
+            ValueWriter.writeInt(stream, length);
+        }
+        stream.write(TagOpenbrace);
+        for (int i = 0; i < length; ++i) {
+            Date e = array[i];
+            if (e == null) {
+                stream.write(TagNull);
+            }
+            else if (refer == null || !refer.write(stream, e)) {
+                DateSerializer.write(stream, refer, e);
+            }
+        }
+        stream.write(TagClosebrace);
     }
+
+    public final void write(HproseWriterImpl writer, Date[] obj) throws IOException {
+        OutputStream stream = writer.stream;
+        WriterRefer refer = writer.refer;
+        if (refer == null || !refer.write(stream, obj)) {
+            write(stream, refer, obj);
+        }
+    }
+
 }

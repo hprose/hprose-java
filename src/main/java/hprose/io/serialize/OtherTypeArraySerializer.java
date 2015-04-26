@@ -12,21 +12,43 @@
  *                                                        *
  * other type array serializer class for Java.            *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseWriter;
+import static hprose.io.HproseTags.TagClosebrace;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Array;
 
 final class OtherTypeArraySerializer implements HproseSerializer {
 
-    public final static HproseSerializer instance = new OtherTypeArraySerializer();
+    public final static OtherTypeArraySerializer instance = new OtherTypeArraySerializer();
 
-    public final void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeArrayWithRef(obj);
+    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, Object array) throws IOException {
+        if (refer != null) refer.set(array);
+        int length = Array.getLength(array);
+        stream.write(TagList);
+        if (length > 0) {
+            ValueWriter.writeInt(stream, length);
+        }
+        stream.write(TagOpenbrace);
+        for (int i = 0; i < length; ++i) {
+            writer.serialize(Array.get(array, i));
+        }
+        stream.write(TagClosebrace);
+    }
+
+    public final void write(HproseWriterImpl writer, Object obj) throws IOException {
+        OutputStream stream = writer.stream;
+        WriterRefer refer = writer.refer;
+        if (refer == null || !refer.write(stream, obj)) {
+            write(writer, stream, refer, obj);
+        }
     }
 }

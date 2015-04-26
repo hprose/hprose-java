@@ -12,22 +12,37 @@
  *                                                        *
  * UUID serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseWriter;
+import static hprose.io.HproseTags.TagClosebrace;
+import static hprose.io.HproseTags.TagGuid;
+import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.UUID;
 
 final class UUIDSerializer implements HproseSerializer<UUID> {
 
-    public final static HproseSerializer instance = new UUIDSerializer();
+    public final static UUIDSerializer instance = new UUIDSerializer();
 
-    public final void write(HproseWriter writer, UUID obj) throws IOException {
-        writer.writeUUIDWithRef(obj);
+    public final static void write(OutputStream stream, WriterRefer refer, UUID uuid) throws IOException {
+        if (refer != null) refer.set(uuid);
+        stream.write(TagGuid);
+        stream.write(TagOpenbrace);
+        stream.write(ValueWriter.getAscii(uuid.toString()));
+        stream.write(TagClosebrace);
+    }
+
+    public final void write(HproseWriterImpl writer, UUID obj) throws IOException {
+        OutputStream stream = writer.stream;
+        WriterRefer refer = writer.refer;
+        if (refer == null || !refer.write(stream, obj)) {
+            write(stream, refer, obj);
+        }
     }
 }

@@ -12,21 +12,21 @@
  *                                                        *
  * null serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseWriter;
+import static hprose.io.HproseTags.TagNull;
 import java.io.IOException;
 
 final class NullSerializer implements HproseSerializer {
 
-    public final static HproseSerializer instance = new NullSerializer();
+    public final static NullSerializer instance = new NullSerializer();
 
-    public final void write(HproseWriter writer, Object obj) throws IOException {
-        writer.writeNull();
+    public void write(HproseWriterImpl writer, Object obj) throws IOException {
+        writer.stream.write(TagNull);
     }
 }

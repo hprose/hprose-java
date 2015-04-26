@@ -12,7 +12,7 @@
  *                                                        *
  * Object serializer class for Java.                      *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,14 +20,13 @@
 package hprose.io.serialize;
 
 import hprose.common.HproseException;
-import hprose.io.HproseWriter;
 import java.io.IOException;
 
 final class ObjectSerializer implements HproseSerializer {
 
-    public final static HproseSerializer instance = new ObjectSerializer();
+    public final static ObjectSerializer instance = new ObjectSerializer();
 
-    public final void write(HproseWriter writer, Object obj) throws IOException {
+    public final void write(HproseWriterImpl writer, Object obj) throws IOException {
         if (obj != null) {
             Class<?> cls = obj.getClass();
             if (Object.class.equals(cls)) {

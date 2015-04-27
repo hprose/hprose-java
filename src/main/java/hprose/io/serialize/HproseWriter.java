@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,8 +21,9 @@ package hprose.io.serialize;
 import hprose.io.HproseHelper;
 import hprose.io.HproseTags;
 import hprose.io.HproseMode;
-import hprose.io.ObjectIntMap;
+import hprose.utils.ObjectIntMap;
 import hprose.io.accessor.MemberAccessor;
+import hprose.utils.IdentityMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,18 +39,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class HproseWriter implements HproseTags {
 
-    private static final EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>>(HproseMode.class);
+    private static final EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>>(HproseMode.class);
     static {
-        memberCache.put(HproseMode.FieldMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.PropertyMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.MemberMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.FieldMode, new IdentityMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.PropertyMode, new IdentityMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.MemberMode, new IdentityMap<Class<?>, SerializeCache>());
     }
     public final OutputStream stream;
     final WriterRefer refer;

@@ -16,7 +16,7 @@
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.io;
+package hprose.utils;
 
 public final class ObjectIntMap {
 

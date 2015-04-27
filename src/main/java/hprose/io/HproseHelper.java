@@ -21,6 +21,7 @@ package hprose.io;
 import hprose.io.accessor.FieldAccessor;
 import hprose.io.accessor.MemberAccessor;
 import hprose.io.accessor.PropertyAccessor;
+import hprose.utils.IdentityMap;
 import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
@@ -39,16 +40,17 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HproseHelper {
-    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> fieldsCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
-    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> propertiesCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
-    private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>> membersCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, MemberAccessor>>();
-    private static final ConcurrentHashMap<Class<?>, Constructor<?>> ctorCache = new ConcurrentHashMap<Class<?>, Constructor<?>>();
-    private static final ConcurrentHashMap<Constructor<?>, Object[]> argsCache = new ConcurrentHashMap<Constructor<?>, Object[]>();
+    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private static final IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
+    private static final IdentityMap<Constructor<?>, Object[]> argsCache = new IdentityMap<Constructor<?>, Object[]>();
     private static final Object[] nullArgs = new Object[0];
     private static final Byte byteZero = (byte) 0;
     private static final Short shortZero = (short) 0;
@@ -193,9 +195,9 @@ public final class HproseHelper {
     }
 
     final static Map<String, MemberAccessor> getProperties(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> properties = propertiesCache.get(type);
+        HashMap<String, MemberAccessor> properties = propertiesCache.get(type);
         if (properties == null) {
-            properties = new ConcurrentHashMap<String, MemberAccessor>();
+            properties = new HashMap<String, MemberAccessor>();
             Method[] methods = type.getMethods();
             for (Method setter : methods) {
                 if (Modifier.isStatic(setter.getModifiers())) {
@@ -228,9 +230,9 @@ public final class HproseHelper {
     }
 
     public final static Map<String, MemberAccessor> getFields(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> fields = fieldsCache.get(type);
+        HashMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
-            fields = new ConcurrentHashMap<String, MemberAccessor>();
+            fields = new HashMap<String, MemberAccessor>();
             for (Class<?> clazz = type; clazz != null; clazz = clazz.getSuperclass()) {
                 Field[] fs = clazz.getDeclaredFields();
                 for (Field field : fs) {
@@ -247,9 +249,9 @@ public final class HproseHelper {
     }
 
     public final static Map<String, MemberAccessor> getMembers(Class<?> type) {
-        ConcurrentHashMap<String, MemberAccessor> members = membersCache.get(type);
+        HashMap<String, MemberAccessor> members = membersCache.get(type);
         if (members == null) {
-            members = new ConcurrentHashMap<String, MemberAccessor>();
+            members = new HashMap<String, MemberAccessor>();
             Method[] methods = type.getMethods();
             for (Method setter : methods) {
                 if (Modifier.isStatic(setter.getModifiers())) {

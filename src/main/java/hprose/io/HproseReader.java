@@ -12,17 +12,17 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Apr 23, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
-import hprose.io.unserialize.HproseReaderImpl;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-public final class HproseReader extends HproseReaderImpl {
+@Deprecated
+public final class HproseReader extends hprose.io.unserialize.HproseReader {
 
     public HproseReader(InputStream stream) {
         super(stream);

@@ -26,7 +26,7 @@ final class NullSerializer implements HproseSerializer {
 
     public final static NullSerializer instance = new NullSerializer();
 
-    public void write(HproseWriterImpl writer, Object obj) throws IOException {
+    public void write(HproseWriter writer, Object obj) throws IOException {
         writer.stream.write(TagNull);
     }
 }

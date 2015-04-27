@@ -50,7 +50,7 @@ final class BytesArraySerializer implements HproseSerializer<byte[][]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, byte[][] obj) throws IOException {
+    public final void write(HproseWriter writer, byte[][] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

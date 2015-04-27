@@ -26,7 +26,7 @@ final class AtomicReferenceSerializer implements HproseSerializer<AtomicReferenc
 
     public final static AtomicReferenceSerializer instance = new AtomicReferenceSerializer();
 
-    public final void write(HproseWriterImpl writer, AtomicReference obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicReference obj) throws IOException {
         writer.serialize(obj.get());
     }
 }

@@ -25,7 +25,7 @@ final class ByteSerializer implements HproseSerializer<Byte> {
 
     public final static ByteSerializer instance = new ByteSerializer();
 
-    public final void write(HproseWriterImpl writer, Byte obj) throws IOException {
+    public final void write(HproseWriter writer, Byte obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

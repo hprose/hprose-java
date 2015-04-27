@@ -32,16 +32,16 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
     public final static HproseUnserializer instance = new AtomicReferenceArrayUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReaderImpl reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
         return new AtomicReferenceArray<T>(reader.readOtherTypeArray(buffer, componentClass, componentType));
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReaderImpl reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
         return new AtomicReferenceArray<T>(reader.readOtherTypeArray(stream, componentClass, componentType));
     }
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = HproseHelper.toClass(type);
@@ -52,7 +52,7 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = HproseHelper.toClass(type);

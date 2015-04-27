@@ -34,7 +34,7 @@ final class CharArraySerializer implements HproseSerializer<char[]> {
         ValueWriter.write(stream, s);
     }
 
-    public final void write(HproseWriterImpl writer, char[] obj) throws IOException {
+    public final void write(HproseWriter writer, char[] obj) throws IOException {
         OutputStream stream = writer.stream;
         switch (obj.length) {
             case 0:

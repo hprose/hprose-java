@@ -26,7 +26,7 @@ final class BigIntegerSerializer implements HproseSerializer<BigInteger> {
 
     public final static BigIntegerSerializer instance = new BigIntegerSerializer();
 
-    public final void write(HproseWriterImpl writer, BigInteger obj) throws IOException {
+    public final void write(HproseWriter writer, BigInteger obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

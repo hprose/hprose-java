@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class HproseWriterImpl implements HproseTags {
+public class HproseWriter implements HproseTags {
 
     private static final EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>>(HproseMode.class);
     static {
@@ -53,19 +53,19 @@ public class HproseWriterImpl implements HproseTags {
     final ObjectIntMap classref = new ObjectIntMap();
     private int lastclassref = 0;
 
-    public HproseWriterImpl(OutputStream stream) {
+    public HproseWriter(OutputStream stream) {
         this(stream, HproseMode.MemberMode, false);
     }
 
-    public HproseWriterImpl(OutputStream stream, boolean simple) {
+    public HproseWriter(OutputStream stream, boolean simple) {
         this(stream, HproseMode.MemberMode, simple);
     }
 
-    public HproseWriterImpl(OutputStream stream, HproseMode mode) {
+    public HproseWriter(OutputStream stream, HproseMode mode) {
         this(stream, mode, false);
     }
 
-    public HproseWriterImpl(OutputStream stream, HproseMode mode, boolean simple) {
+    public HproseWriter(OutputStream stream, HproseMode mode, boolean simple) {
         this.stream = stream;
         this.mode = mode;
         this.refer = simple ? null : new WriterRefer();

@@ -42,7 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class HproseReaderImpl implements HproseTags {
+public class HproseReader implements HproseTags {
 
     interface ReaderRefer {
         void set(Object obj);
@@ -70,19 +70,19 @@ public class HproseReaderImpl implements HproseTags {
     private final ArrayList<Object> classref = new ArrayList<Object>();
     private final IdentityHashMap<Object, String[]> membersref = new IdentityHashMap<Object, String[]>();
 
-    public HproseReaderImpl(InputStream stream) {
+    public HproseReader(InputStream stream) {
         this(stream, HproseMode.MemberMode, false);
     }
 
-    public HproseReaderImpl(InputStream stream, boolean simple) {
+    public HproseReader(InputStream stream, boolean simple) {
         this(stream, HproseMode.MemberMode, simple);
     }
 
-    public HproseReaderImpl(InputStream stream, HproseMode mode) {
+    public HproseReader(InputStream stream, HproseMode mode) {
         this(stream, mode, false);
     }
 
-    public HproseReaderImpl(InputStream stream, HproseMode mode, boolean simple) {
+    public HproseReader(InputStream stream, HproseMode mode, boolean simple) {
         this.stream = stream;
         if (stream != null && stream instanceof ByteBufferInputStream) {
             buffer = ((ByteBufferInputStream)stream).stream.buffer;
@@ -94,38 +94,38 @@ public class HproseReaderImpl implements HproseTags {
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
 
-    public HproseReaderImpl(ByteBuffer buffer) {
+    public HproseReader(ByteBuffer buffer) {
         this(buffer, HproseMode.MemberMode, false);
     }
 
-    public HproseReaderImpl(ByteBuffer buffer, boolean simple) {
+    public HproseReader(ByteBuffer buffer, boolean simple) {
         this(buffer, HproseMode.MemberMode, simple);
     }
 
-    public HproseReaderImpl(ByteBuffer buffer, HproseMode mode) {
+    public HproseReader(ByteBuffer buffer, HproseMode mode) {
         this(buffer, mode, false);
     }
 
-    public HproseReaderImpl(ByteBuffer buffer, HproseMode mode, boolean simple) {
+    public HproseReader(ByteBuffer buffer, HproseMode mode, boolean simple) {
         this.stream = null;
         this.buffer = buffer;
         this.mode = mode;
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
 
-    public HproseReaderImpl(byte[] bytes) {
+    public HproseReader(byte[] bytes) {
         this(bytes, HproseMode.MemberMode, false);
     }
 
-    public HproseReaderImpl(byte[] bytes, boolean simple) {
+    public HproseReader(byte[] bytes, boolean simple) {
         this(bytes, HproseMode.MemberMode, simple);
     }
 
-    public HproseReaderImpl(byte[] bytes, HproseMode mode) {
+    public HproseReader(byte[] bytes, HproseMode mode) {
         this(bytes, mode, false);
     }
 
-    public HproseReaderImpl(byte[] bytes, HproseMode mode, boolean simple) {
+    public HproseReader(byte[] bytes, HproseMode mode, boolean simple) {
         this.stream = null;
         this.buffer = ByteBuffer.wrap(bytes);
         this.mode = mode;

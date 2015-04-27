@@ -29,11 +29,11 @@ final class AtomicIntegerArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicIntegerArrayUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return new AtomicIntegerArray(reader.readIntArray(buffer));
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return new AtomicIntegerArray(reader.readIntArray(stream));
     }
 

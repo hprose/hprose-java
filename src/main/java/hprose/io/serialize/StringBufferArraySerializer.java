@@ -50,7 +50,7 @@ final class StringBufferArraySerializer implements HproseSerializer<StringBuffer
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, StringBuffer[] obj) throws IOException {
+    public final void write(HproseWriter writer, StringBuffer[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

@@ -30,7 +30,7 @@ final class AtomicReferenceArraySerializer implements HproseSerializer<AtomicRef
 
     public final static AtomicReferenceArraySerializer instance = new AtomicReferenceArraySerializer();
 
-    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, AtomicReferenceArray array) throws IOException {
+    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, AtomicReferenceArray array) throws IOException {
         if (refer != null) refer.set(array);
         int length = array.length();
         stream.write(TagList);
@@ -44,7 +44,7 @@ final class AtomicReferenceArraySerializer implements HproseSerializer<AtomicRef
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, AtomicReferenceArray obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicReferenceArray obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

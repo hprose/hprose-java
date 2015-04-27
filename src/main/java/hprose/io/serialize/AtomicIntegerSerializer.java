@@ -26,7 +26,7 @@ final class AtomicIntegerSerializer implements HproseSerializer<AtomicInteger> {
 
     public final static AtomicIntegerSerializer instance = new AtomicIntegerSerializer();
 
-    public final void write(HproseWriterImpl writer, AtomicInteger obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicInteger obj) throws IOException {
         ValueWriter.write(writer.stream, obj.get());
     }
 }

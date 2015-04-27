@@ -22,5 +22,5 @@ package hprose.io.serialize;
 import java.io.IOException;
 
 public interface HproseSerializer<T> {
-    void write(HproseWriterImpl writer, T obj) throws IOException;    
+    void write(HproseWriter writer, T obj) throws IOException;    
 }

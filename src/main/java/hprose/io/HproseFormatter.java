@@ -18,9 +18,9 @@
 \**********************************************************/
 package hprose.io;
 
-import hprose.io.serialize.HproseWriterImpl;
+import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
-import hprose.io.unserialize.HproseReaderImpl;
+import hprose.io.unserialize.HproseReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -100,7 +100,7 @@ public final class HproseFormatter {
     }
 
     public final static OutputStream serialize(Object obj, OutputStream stream, HproseMode mode, boolean simple) throws IOException {
-        HproseWriterImpl writer = new HproseWriterImpl(stream, mode, simple);
+        HproseWriter writer = new HproseWriter(stream, mode, simple);
         writer.serialize(obj);
         return stream;
     }
@@ -181,162 +181,162 @@ public final class HproseFormatter {
     }
 
     public final static Object unserialize(ByteBufferStream stream) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer);
+        HproseReader reader = new HproseReader(stream.buffer);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBufferStream stream, HproseMode mode) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, mode);
+        HproseReader reader = new HproseReader(stream.buffer, mode);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBufferStream stream, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, simple);
+        HproseReader reader = new HproseReader(stream.buffer, simple);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBufferStream stream, HproseMode mode, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, mode, simple);
+        HproseReader reader = new HproseReader(stream.buffer, mode, simple);
         return reader.unserialize();
     }
 
     public final static <T> T unserialize(ByteBufferStream stream, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer);
+        HproseReader reader = new HproseReader(stream.buffer);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBufferStream stream, HproseMode mode, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, mode);
+        HproseReader reader = new HproseReader(stream.buffer, mode);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBufferStream stream, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, simple);
+        HproseReader reader = new HproseReader(stream.buffer, simple);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBufferStream stream, HproseMode mode, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream.buffer, mode, simple);
+        HproseReader reader = new HproseReader(stream.buffer, mode, simple);
         return reader.unserialize(type);
     }
 
     public final static Object unserialize(ByteBuffer data) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data);
+        HproseReader reader = new HproseReader(data);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBuffer data, HproseMode mode) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode);
+        HproseReader reader = new HproseReader(data, mode);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBuffer data, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, simple);
+        HproseReader reader = new HproseReader(data, simple);
         return reader.unserialize();
     }
 
     public final static Object unserialize(ByteBuffer data, HproseMode mode, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode, simple);
+        HproseReader reader = new HproseReader(data, mode, simple);
         return reader.unserialize();
     }
 
     public final static <T> T unserialize(ByteBuffer data, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data);
+        HproseReader reader = new HproseReader(data);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBuffer data, HproseMode mode, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode);
+        HproseReader reader = new HproseReader(data, mode);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBuffer data, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, simple);
+        HproseReader reader = new HproseReader(data, simple);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(ByteBuffer data, HproseMode mode, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode, simple);
+        HproseReader reader = new HproseReader(data, mode, simple);
         return reader.unserialize(type);
     }
 
     public final static Object unserialize(byte[] data) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data);
+        HproseReader reader = new HproseReader(data);
         return reader.unserialize();
     }
 
     public final static Object unserialize(byte[] data, HproseMode mode) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode);
+        HproseReader reader = new HproseReader(data, mode);
         return reader.unserialize();
     }
 
     public final static Object unserialize(byte[] data, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, simple);
+        HproseReader reader = new HproseReader(data, simple);
         return reader.unserialize();
     }
 
     public final static Object unserialize(byte[] data, HproseMode mode, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode, simple);
+        HproseReader reader = new HproseReader(data, mode, simple);
         return reader.unserialize();
     }
 
     public final static <T> T unserialize(byte[] data, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data);
+        HproseReader reader = new HproseReader(data);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(byte[] data, HproseMode mode, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode);
+        HproseReader reader = new HproseReader(data, mode);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(byte[] data, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, simple);
+        HproseReader reader = new HproseReader(data, simple);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(byte[] data, HproseMode mode, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(data, mode, simple);
+        HproseReader reader = new HproseReader(data, mode, simple);
         return reader.unserialize(type);
     }
 
     public final static Object unserialize(InputStream stream) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream);
+        HproseReader reader = new HproseReader(stream);
         return reader.unserialize();
     }
 
     public final static Object unserialize(InputStream stream, HproseMode mode) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, mode);
+        HproseReader reader = new HproseReader(stream, mode);
         return reader.unserialize();
     }
 
     public final static Object unserialize(InputStream stream, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, simple);
+        HproseReader reader = new HproseReader(stream, simple);
         return reader.unserialize();
     }
 
     public final static Object unserialize(InputStream stream, HproseMode mode, boolean simple) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, mode, simple);
+        HproseReader reader = new HproseReader(stream, mode, simple);
         return reader.unserialize();
     }
 
     public final static <T> T unserialize(InputStream stream, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream);
+        HproseReader reader = new HproseReader(stream);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(InputStream stream, HproseMode mode, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, mode);
+        HproseReader reader = new HproseReader(stream, mode);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(InputStream stream, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, simple);
+        HproseReader reader = new HproseReader(stream, simple);
         return reader.unserialize(type);
     }
 
     public final static <T> T unserialize(InputStream stream, HproseMode mode, boolean simple, Class<T> type) throws IOException {
-        HproseReaderImpl reader = new HproseReaderImpl(stream, mode, simple);
+        HproseReader reader = new HproseReader(stream, mode, simple);
         return reader.unserialize(type);
     }
 }

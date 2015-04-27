@@ -25,7 +25,7 @@ final class FloatSerializer implements HproseSerializer<Float> {
 
     public final static FloatSerializer instance = new FloatSerializer();
 
-    public final void write(HproseWriterImpl writer, Float obj) throws IOException {
+    public final void write(HproseWriter writer, Float obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

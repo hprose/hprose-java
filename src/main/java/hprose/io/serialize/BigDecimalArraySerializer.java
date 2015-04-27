@@ -51,7 +51,7 @@ final class BigDecimalArraySerializer implements HproseSerializer<BigDecimal[]> 
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, BigDecimal[] obj) throws IOException {
+    public final void write(HproseWriter writer, BigDecimal[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

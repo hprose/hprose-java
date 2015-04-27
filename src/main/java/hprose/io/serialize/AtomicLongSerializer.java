@@ -26,7 +26,7 @@ final class AtomicLongSerializer implements HproseSerializer<AtomicLong> {
 
     public final static AtomicLongSerializer instance = new AtomicLongSerializer();
 
-    public final void write(HproseWriterImpl writer, AtomicLong obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicLong obj) throws IOException {
         ValueWriter.write(writer.stream, obj.get());
     }
 }

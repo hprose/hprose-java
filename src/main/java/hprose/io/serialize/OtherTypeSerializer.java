@@ -34,7 +34,7 @@ final class OtherTypeSerializer implements HproseSerializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
-    private static void writeObject(HproseWriterImpl writer, OutputStream stream, Object object, Class<?> type) throws IOException {
+    private static void writeObject(HproseWriter writer, OutputStream stream, Object object, Class<?> type) throws IOException {
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, writer.mode);
         for (Map.Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
@@ -55,7 +55,7 @@ final class OtherTypeSerializer implements HproseSerializer {
     }
 
     @SuppressWarnings({"unchecked"})
-    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
+    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
         Class<?> type = object.getClass();
         int cr = writer.classref.get(type);
         if (cr < 0) {
@@ -69,7 +69,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, Object obj) throws IOException {
+    public final void write(HproseWriter writer, Object obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

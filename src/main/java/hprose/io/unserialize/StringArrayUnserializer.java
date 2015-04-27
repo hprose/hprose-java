@@ -28,11 +28,11 @@ final class StringArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new StringArrayUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer stream, Class<?> cls, Type type) throws IOException {
         return reader.readStringArray(stream);
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return reader.readStringArray(stream);
     }
 

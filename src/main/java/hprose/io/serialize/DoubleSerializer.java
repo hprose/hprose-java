@@ -25,7 +25,7 @@ final class DoubleSerializer implements HproseSerializer<Double> {
 
     public final static DoubleSerializer instance = new DoubleSerializer();
 
-    public final void write(HproseWriterImpl writer, Double obj) throws IOException {
+    public final void write(HproseWriter writer, Double obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

@@ -25,7 +25,7 @@ final class BooleanSerializer implements HproseSerializer<Boolean> {
 
     public final static BooleanSerializer instance = new BooleanSerializer();
 
-    public final void write(HproseWriterImpl writer, Boolean obj) throws IOException {
+    public final void write(HproseWriter writer, Boolean obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

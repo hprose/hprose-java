@@ -26,7 +26,7 @@ final class BigDecimalSerializer implements HproseSerializer<BigDecimal> {
 
     public final static BigDecimalSerializer instance = new BigDecimalSerializer();
 
-    public final void write(HproseWriterImpl writer, BigDecimal obj) throws IOException {
+    public final void write(HproseWriter writer, BigDecimal obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

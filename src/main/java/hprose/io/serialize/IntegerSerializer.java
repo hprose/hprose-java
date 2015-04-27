@@ -25,7 +25,7 @@ final class IntegerSerializer implements HproseSerializer<Integer> {
 
     public final static IntegerSerializer instance = new IntegerSerializer();
 
-    public final void write(HproseWriterImpl writer, Integer obj) throws IOException {
+    public final void write(HproseWriter writer, Integer obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

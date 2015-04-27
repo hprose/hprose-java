@@ -29,11 +29,11 @@ final class HashSetUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new HashSetUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return reader.readCollection(buffer, HashSet.class, type);
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return reader.readCollection(stream, HashSet.class, type);
     }
 

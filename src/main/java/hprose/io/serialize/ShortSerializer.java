@@ -25,7 +25,7 @@ final class ShortSerializer implements HproseSerializer<Short> {
 
     public final static ShortSerializer instance = new ShortSerializer();
 
-    public final void write(HproseWriterImpl writer, Short obj) throws IOException {
+    public final void write(HproseWriter writer, Short obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

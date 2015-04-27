@@ -28,11 +28,11 @@ final class EnumUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new EnumUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return reader.readEnum(buffer, cls);
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return reader.readEnum(stream, cls);
     }
 

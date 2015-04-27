@@ -30,7 +30,7 @@ final class MapSerializer implements HproseSerializer<Map> {
 
     public final static MapSerializer instance = new MapSerializer();
 
-    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, Map<?,?> map) throws IOException {
+    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Map<?,?> map) throws IOException {
         if (refer != null) refer.set(map);
         int count = map.size();
         stream.write(TagList);
@@ -45,7 +45,7 @@ final class MapSerializer implements HproseSerializer<Map> {
         stream.write(TagClosebrace);        
     }
 
-    public final void write(HproseWriterImpl writer, Map obj) throws IOException {
+    public final void write(HproseWriter writer, Map obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

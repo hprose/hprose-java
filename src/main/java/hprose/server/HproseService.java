@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 24, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,9 +27,9 @@ import hprose.common.HproseResultMode;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
-import hprose.io.HproseReader;
 import hprose.io.HproseTags;
-import hprose.io.HproseWriter;
+import hprose.io.serialize.HproseWriter;
+import hprose.io.unserialize.HproseReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

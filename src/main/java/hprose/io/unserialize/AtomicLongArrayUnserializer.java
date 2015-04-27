@@ -29,11 +29,11 @@ final class AtomicLongArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicLongArrayUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return new AtomicLongArray(reader.readLongArray(buffer));
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return new AtomicLongArray(reader.readLongArray(stream));
     }
 

@@ -29,7 +29,7 @@ final class OtherTypeArrayUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new OtherTypeArrayUnserializer();
 
-    public final Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         Class<?> componentClass = cls.getComponentType();
         if (type instanceof GenericArrayType) {
             Type componentType = ((GenericArrayType) type).getGenericComponentType();
@@ -40,7 +40,7 @@ final class OtherTypeArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         Class<?> componentClass = cls.getComponentType();
         if (type instanceof GenericArrayType) {
             Type componentType = ((GenericArrayType) type).getGenericComponentType();

@@ -30,7 +30,7 @@ final class ListSerializer implements HproseSerializer<List> {
 
     public final static ListSerializer instance = new ListSerializer();
 
-    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, List list) throws IOException {
+    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, List list) throws IOException {
         if (refer != null) refer.set(list);
         int count = list.size();
         stream.write(TagList);
@@ -44,7 +44,7 @@ final class ListSerializer implements HproseSerializer<List> {
         stream.write(TagClosebrace);        
     }
 
-    public final void write(HproseWriterImpl writer, List obj) throws IOException {
+    public final void write(HproseWriter writer, List obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

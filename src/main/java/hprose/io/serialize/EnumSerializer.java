@@ -25,7 +25,7 @@ final class EnumSerializer implements HproseSerializer<Enum> {
 
     public final static EnumSerializer instance = new EnumSerializer();
 
-    public final void write(HproseWriterImpl writer, Enum obj) throws IOException {
+    public final void write(HproseWriter writer, Enum obj) throws IOException {
         ValueWriter.write(writer.stream, obj.ordinal());
     }
 }

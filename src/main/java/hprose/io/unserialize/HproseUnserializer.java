@@ -25,6 +25,6 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
 public interface HproseUnserializer {
-    Object read(HproseReaderImpl reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException;
-    Object read(HproseReaderImpl reader, InputStream stream, Class<?> cls, Type type) throws IOException;
+    Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException;
+    Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException;
 }

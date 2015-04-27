@@ -12,7 +12,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Apr 20, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -105,6 +105,16 @@ public final class HproseHelper {
         newInstance = _newInstance;
     }
 
+    public final static boolean isAndroid() {
+        String vmName = System.getProperty("java.vm.name");
+         if (vmName == null) {
+            return false;
+        }
+        String lowerVMName = vmName.toLowerCase();
+        return lowerVMName.contains("dalvik") ||
+               lowerVMName.contains("lemur");
+    }
+    
     public final static Class<?> toClass(Type type) {
         if (type == null) {
             return null;

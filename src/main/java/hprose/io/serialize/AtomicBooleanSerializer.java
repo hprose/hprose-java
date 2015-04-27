@@ -26,7 +26,7 @@ final class AtomicBooleanSerializer implements HproseSerializer<AtomicBoolean> {
 
     public final static AtomicBooleanSerializer instance = new AtomicBooleanSerializer();
 
-    public final void write(HproseWriterImpl writer, AtomicBoolean obj) throws IOException {
+    public final void write(HproseWriter writer, AtomicBoolean obj) throws IOException {
         ValueWriter.write(writer.stream, obj.get());
     }
 }

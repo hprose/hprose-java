@@ -45,7 +45,7 @@ final class CalendarSerializer implements HproseSerializer<Calendar> {
         stream.write(tz.hasSameRules(HproseHelper.UTC) ? TagUTC : TagSemicolon);
     }
 
-    public final void write(HproseWriterImpl writer, Calendar obj) throws IOException {
+    public final void write(HproseWriter writer, Calendar obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

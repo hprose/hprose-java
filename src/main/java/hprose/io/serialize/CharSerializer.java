@@ -25,7 +25,7 @@ final class CharSerializer implements HproseSerializer<Character> {
 
     public final static CharSerializer instance = new CharSerializer();
 
-    public final void write(HproseWriterImpl writer, Character obj) throws IOException {
+    public final void write(HproseWriter writer, Character obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

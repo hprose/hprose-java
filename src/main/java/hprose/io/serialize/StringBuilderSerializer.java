@@ -34,7 +34,7 @@ final class StringBuilderSerializer implements HproseSerializer<StringBuilder> {
         ValueWriter.write(stream, s.toString());
     }
 
-    public final void write(HproseWriterImpl writer, StringBuilder obj) throws IOException {
+    public final void write(HproseWriter writer, StringBuilder obj) throws IOException {
         OutputStream stream = writer.stream;
         switch (obj.length()) {
             case 0:

@@ -26,7 +26,7 @@ final class ObjectSerializer implements HproseSerializer {
 
     public final static ObjectSerializer instance = new ObjectSerializer();
 
-    public final void write(HproseWriterImpl writer, Object obj) throws IOException {
+    public final void write(HproseWriter writer, Object obj) throws IOException {
         if (obj != null) {
             Class<?> cls = obj.getClass();
             if (Object.class.equals(cls)) {

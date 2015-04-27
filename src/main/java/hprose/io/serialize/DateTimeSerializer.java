@@ -39,7 +39,7 @@ final class DateTimeSerializer implements HproseSerializer<Date> {
         stream.write(TagSemicolon);
     }
 
-    public final void write(HproseWriterImpl writer, Date obj) throws IOException {
+    public final void write(HproseWriter writer, Date obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

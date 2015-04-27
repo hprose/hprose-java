@@ -43,7 +43,7 @@ final class FloatArraySerializer implements HproseSerializer<float[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, float[] obj) throws IOException {
+    public final void write(HproseWriter writer, float[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

@@ -25,7 +25,7 @@ final class LongSerializer implements HproseSerializer<Long> {
 
     public final static LongSerializer instance = new LongSerializer();
 
-    public final void write(HproseWriterImpl writer, Long obj) throws IOException {
+    public final void write(HproseWriter writer, Long obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

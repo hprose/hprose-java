@@ -51,7 +51,7 @@ final class TimestampArraySerializer implements HproseSerializer<Timestamp[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriterImpl writer, Timestamp[] obj) throws IOException {
+    public final void write(HproseWriter writer, Timestamp[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

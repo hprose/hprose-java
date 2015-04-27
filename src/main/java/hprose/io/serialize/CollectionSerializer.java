@@ -30,7 +30,7 @@ final class CollectionSerializer implements HproseSerializer<Collection> {
 
     public final static HproseSerializer instance = new CollectionSerializer();
 
-    public final static void write(HproseWriterImpl writer, OutputStream stream, WriterRefer refer, Collection collection) throws IOException {
+    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Collection collection) throws IOException {
         if (refer != null) refer.set(collection);
         int count = collection.size();
         stream.write(TagList);
@@ -44,7 +44,7 @@ final class CollectionSerializer implements HproseSerializer<Collection> {
         stream.write(TagClosebrace);        
     }
 
-    public final void write(HproseWriterImpl writer, Collection obj) throws IOException {
+    public final void write(HproseWriter writer, Collection obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

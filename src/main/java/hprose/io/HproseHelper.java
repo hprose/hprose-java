@@ -12,7 +12,7 @@
  *                                                        *
  * hprose helper class for Java.                          *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,10 +22,8 @@ import hprose.io.accessor.FieldAccessor;
 import hprose.io.accessor.MemberAccessor;
 import hprose.io.accessor.PropertyAccessor;
 import hprose.util.IdentityMap;
-import java.io.IOException;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -36,14 +34,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class HproseHelper {
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
@@ -138,39 +134,6 @@ public final class HproseHelper {
         else {
             return Object.class;
         }
-    }
-
-    public final static String[] split(String s, char c, int limit) {
-        if (s == null) {
-            return null;
-        }
-        ArrayList<Integer> pos = new ArrayList<Integer>();
-        int i = -1;
-        while ((i = s.indexOf((int) c, i + 1)) > 0) {
-            pos.add(i);
-        }
-        int n = pos.size();
-        int[] p = new int[n];
-        i = -1;
-        for (int x : pos) {
-            p[++i] = x;
-        }
-        if ((limit == 0) || (limit > n)) {
-            limit = n + 1;
-        }
-        String[] result = new String[limit];
-        if (n > 0) {
-            result[0] = s.substring(0, p[0]);
-        } else {
-            result[0] = s;
-        }
-        for (i = 1; i < limit - 1; ++i) {
-            result[i] = s.substring(p[i - 1] + 1, p[i]);
-        }
-        if (limit > 1) {
-            result[limit - 1] = s.substring(p[limit - 2] + 1);
-        }
-        return result;
     }
 
     private static Method findGetter(Method[] methods, String name, Class<?> paramType) {
@@ -475,14 +438,5 @@ public final class HproseHelper {
     }
 
 
-    public final static String readWrongInfo(ByteBufferStream stream) {
-        byte[] bytes = stream.toArray();
-        try {
-            return new String(bytes, "UTF-8");
-        }
-        catch (UnsupportedEncodingException e) {
-            return new String(bytes);
-        }
-    }
 
 }

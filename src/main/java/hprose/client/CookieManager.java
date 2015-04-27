@@ -19,6 +19,7 @@
 package hprose.client;
 
 import hprose.io.HproseHelper;
+import hprose.util.StrUtil;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,21 +53,21 @@ public class CookieManager {
         if (str == null || str.equals("")) {
             return calendar;
         }
-        String[] datetime = HproseHelper.split(str, ' ', 0);
+        String[] datetime = StrUtil.split(str, ' ', 0);
         int day, month, year, hour, minute, second;
         String[] time;
         if (datetime[1].indexOf('-') > 0) {
-            String[] date = HproseHelper.split(datetime[1], '-', 0);
+            String[] date = StrUtil.split(datetime[1], '-', 0);
             day = Integer.parseInt(date[0]);
             month = parseMonth(date[1]);
             year = Integer.parseInt(date[2]);
-            time = HproseHelper.split(datetime[2], ':', 0);
+            time = StrUtil.split(datetime[2], ':', 0);
         }
         else {
             day = Integer.parseInt(datetime[1]);
             month = parseMonth(datetime[2]);
             year = Integer.parseInt(datetime[3]);
-            time = HproseHelper.split(datetime[4], ':', 0);
+            time = StrUtil.split(datetime[4], ':', 0);
         }
         hour = Integer.parseInt(time[0]);
         minute = Integer.parseInt(time[1]);
@@ -95,9 +96,9 @@ public class CookieManager {
             if (cookieString.equals("")) {
                 continue;
             }
-            String[] cookies = HproseHelper.split(cookieString.trim(), ';', 0);
+            String[] cookies = StrUtil.split(cookieString.trim(), ';', 0);
             ConcurrentHashMap<String, String> cookie = new ConcurrentHashMap<String, String>();
-            String[] value = HproseHelper.split(cookies[0].trim(), '=', 2);
+            String[] value = StrUtil.split(cookies[0].trim(), '=', 2);
             cookie.put("name", value[0]);
             if (value.length == 2) {
                 cookie.put("value", value[1]);
@@ -105,7 +106,7 @@ public class CookieManager {
                 cookie.put("value", "");
             }
             for (int j = 1, m = cookies.length; j < m; j++) {
-                value = HproseHelper.split(cookies[j].trim(), '=', 2);
+                value = StrUtil.split(cookies[j].trim(), '=', 2);
                 if (value.length == 2) {
                     cookie.put(value[0].toUpperCase(), value[1]);
                 } else {

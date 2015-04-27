@@ -33,6 +33,7 @@ import hprose.io.HproseMode;
 import hprose.io.HproseTags;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.unserialize.HproseReader;
+import hprose.util.StrUtil;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -590,7 +591,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
         }
         int tag = stream.buffer.get(stream.buffer.limit() - 1);
         if (tag != TagEnd) {
-            throw new HproseException("Wrong Response: \r\n" + HproseHelper.readWrongInfo(stream));
+            throw new HproseException("Wrong Response: \r\n" + StrUtil.toString(stream));
         }
         if (resultMode == HproseResultMode.Raw) {
             stream.buffer.limit(stream.buffer.limit() - 1);
@@ -627,7 +628,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
                     break;
                 default:
                     stream.rewind();
-                    throw new HproseException("Wrong Response: \r\n" + HproseHelper.readWrongInfo(stream));
+                    throw new HproseException("Wrong Response: \r\n" + StrUtil.toString(stream));
             }
         }
         return result;

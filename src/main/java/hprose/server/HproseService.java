@@ -25,11 +25,11 @@ import hprose.common.HproseMethod;
 import hprose.common.HproseMethods;
 import hprose.common.HproseResultMode;
 import hprose.io.ByteBufferStream;
-import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.unserialize.HproseReader;
+import hprose.util.StrUtil;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -685,7 +685,7 @@ public abstract class HproseService implements HproseTags {
                 case TagEnd:
                     return doFunctionList(methods, context);
                 default:
-                    return sendError(new HproseException("Wrong Request: \r\n" + HproseHelper.readWrongInfo(stream)), context);
+                    return sendError(new HproseException("Wrong Request: \r\n" + StrUtil.toString(stream)), context);
             }
         }
         catch (Throwable e) {

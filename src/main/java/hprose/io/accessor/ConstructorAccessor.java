@@ -101,6 +101,7 @@ public class ConstructorAccessor {
         return args;
     }
 
+    @SuppressWarnings({"unchecked"})
     public static final <T> T newInstance(Class<T> type) {
         Constructor<?> ctor = ctorCache.get(type);
         if (ctor == null) {

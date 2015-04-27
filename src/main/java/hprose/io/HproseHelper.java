@@ -110,7 +110,7 @@ public final class HproseHelper {
                     int mod = field.getModifiers();
                     if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                         String fieldName = field.getName();
-                        fields.putIfAbsent(fieldName, new FieldAccessor(field));
+                        fields.put(fieldName, new FieldAccessor(field));
                     }
                 }
             }
@@ -154,7 +154,7 @@ public final class HproseHelper {
                 int mod = field.getModifiers();
                 if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                     String fieldName = field.getName();
-                    members.putIfAbsent(fieldName, new FieldAccessor(field));
+                    members.put(fieldName, new FieldAccessor(field));
                 }
             }
             membersCache.put(type, members);

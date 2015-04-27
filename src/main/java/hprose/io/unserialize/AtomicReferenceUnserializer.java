@@ -30,6 +30,7 @@ final class AtomicReferenceUnserializer implements HproseUnserializer {
 
     public final static HproseUnserializer instance = new AtomicReferenceUnserializer();
 
+    @SuppressWarnings({"unchecked"})
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             return new AtomicReference(reader.unserialize(buffer, ((ParameterizedType)type).getActualTypeArguments()[0]));
@@ -39,6 +40,7 @@ final class AtomicReferenceUnserializer implements HproseUnserializer {
         }
     }
 
+    @SuppressWarnings({"unchecked"})
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             return new AtomicReference(reader.unserialize(stream, ((ParameterizedType)type).getActualTypeArguments()[0]));

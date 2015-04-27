@@ -49,6 +49,7 @@ public final class FieldAccessor implements MemberAccessor {
     }
 
     @Override
+    @SuppressWarnings({"unchecked"})
     public void serialize(HproseWriter writer, Object obj) throws IOException {
         Object value;
         try {

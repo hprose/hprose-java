@@ -427,6 +427,7 @@ public class HproseWriter implements HproseTags {
         CollectionSerializer.write(this, stream, refer, collection);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeCollectionWithRef(Collection<?> collection) throws IOException {
         CollectionSerializer.instance.write(this, collection);
     }

@@ -12,14 +12,14 @@
  *                                                        *
  * AtomicReferenceArray unserializer class for Java.      *
  *                                                        *
- * LastModified: Apr 25, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseHelper;
+import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
@@ -44,7 +44,7 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
-            cls = HproseHelper.toClass(type);
+            cls = ClassUtil.toClass(type);
             return readAtomicReferenceArray(reader, buffer, cls, type);
         }
         else {
@@ -55,7 +55,7 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
-            cls = HproseHelper.toClass(type);
+            cls = ClassUtil.toClass(type);
             return readAtomicReferenceArray(reader, stream, cls, type);
         }
         else {

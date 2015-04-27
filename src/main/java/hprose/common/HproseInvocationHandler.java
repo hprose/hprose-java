@@ -19,6 +19,7 @@
 package hprose.common;
 
 import hprose.io.HproseHelper;
+import hprose.util.ClassUtil;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -50,7 +51,7 @@ public class HproseInvocationHandler implements InvocationHandler {
         }
         int n = paramTypes.length;
         Object result = null;
-        if ((n > 0) && HproseHelper.toClass(paramTypes[n - 1]).equals(HproseCallback1.class)) {
+        if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback1.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }
@@ -59,7 +60,7 @@ public class HproseInvocationHandler implements InvocationHandler {
             System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
             client.invoke(functionName, tmpargs, callback, null, returnType, resultMode, simple);
         }
-        else if ((n > 0) && HproseHelper.toClass(paramTypes[n - 1]).equals(HproseCallback.class)) {
+        else if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }
@@ -68,8 +69,8 @@ public class HproseInvocationHandler implements InvocationHandler {
             System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
             client.invoke(functionName, tmpargs, callback, null, returnType, byRef, resultMode, simple);
         }
-        else if ((n > 1) && HproseHelper.toClass(paramTypes[n - 2]).equals(HproseCallback1.class)
-                         && HproseHelper.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
+        else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback1.class)
+                         && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
             if (paramTypes[n - 2] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 2]).getActualTypeArguments()[0];
             }
@@ -79,8 +80,8 @@ public class HproseInvocationHandler implements InvocationHandler {
             System.arraycopy(arguments, 0, tmpargs, 0, n - 2);
             client.invoke(functionName, tmpargs, callback, errorEvent, returnType, resultMode, simple);
         }
-        else if ((n > 1) && HproseHelper.toClass(paramTypes[n - 2]).equals(HproseCallback.class)
-                         && HproseHelper.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
+        else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback.class)
+                         && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
             if (paramTypes[n - 2] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 2]).getActualTypeArguments()[0];
             }

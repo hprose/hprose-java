@@ -19,7 +19,6 @@
 package hprose.io.accessor;
 
 import hprose.common.HproseException;
-import hprose.io.HproseHelper;
 import static hprose.io.HproseTags.TagNull;
 import hprose.io.serialize.HproseSerializer;
 import hprose.io.serialize.HproseWriter;
@@ -27,6 +26,7 @@ import hprose.io.serialize.SerializerFactory;
 import hprose.io.unserialize.HproseReader;
 import hprose.io.unserialize.HproseUnserializer;
 import hprose.io.unserialize.UnserializerFactory;
+import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -48,7 +48,7 @@ public final class PropertyAccessor implements MemberAccessor {
         this.getter = getter;
         this.setter = setter;
         this.type = getter.getGenericReturnType();
-        this.cls =  HproseHelper.toClass(type);
+        this.cls =  ClassUtil.toClass(type);
         this.serializer = SerializerFactory.get(cls);
         this.unserializer = UnserializerFactory.get(cls);
     }

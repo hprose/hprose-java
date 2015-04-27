@@ -23,6 +23,7 @@ import hprose.io.HproseTags;
 import hprose.io.HproseMode;
 import hprose.util.ObjectIntMap;
 import hprose.io.accessor.MemberAccessor;
+import hprose.util.ClassUtil;
 import hprose.util.IdentityMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -462,7 +463,7 @@ public class HproseWriter implements HproseTags {
             Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
             int count = members.size();
             cachestream.write(TagClass);
-            ValueWriter.write(cachestream, HproseHelper.getClassName(type));
+            ValueWriter.write(cachestream, ClassUtil.getClassAlias(type));
             if (count > 0) {
                 ValueWriter.writeInt(cachestream, count);
             }

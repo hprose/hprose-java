@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Mar 2, 2015                              *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,6 @@ package hprose.server;
 import hprose.common.HproseFilter;
 import hprose.common.HproseMethods;
 import hprose.io.HproseClassManager;
-import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.util.StrUtil;
 import java.io.IOException;

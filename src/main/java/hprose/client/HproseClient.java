@@ -28,11 +28,11 @@ import hprose.common.HproseInvocationHandler;
 import hprose.common.HproseInvoker;
 import hprose.common.HproseResultMode;
 import hprose.io.ByteBufferStream;
-import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.unserialize.HproseReader;
+import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -508,7 +508,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
     }
 
     public Object invoke(final String functionName, final Object[] arguments, Type returnType, final boolean byRef, final HproseResultMode resultMode, final boolean simple) throws IOException {
-        if (Future.class.equals(HproseHelper.toClass(returnType))) {
+        if (Future.class.equals(ClassUtil.toClass(returnType))) {
             if (returnType instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)returnType).getActualTypeArguments()[0];
             }

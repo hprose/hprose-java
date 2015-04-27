@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseReaderImpl.java                                  *
+ * HproseReader.java                                      *
  *                                                        *
- * hprose reader implementation class for Java.           *
+ * hprose reader class for Java.                          *
  *                                                        *
  * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -25,6 +25,7 @@ import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
 import hprose.io.accessor.MemberAccessor;
+import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1491,7 +1492,7 @@ public class HproseReader implements HproseTags {
             memberNames[i] = readString(buffer);
         }
         buffer.get();
-        Type type = HproseHelper.getClass(className);
+        Type type = ClassUtil.getClass(className);
         Object key = (type.equals(void.class)) ? new Object() : type;
         classref.add(key);
         membersref.put(key, memberNames);
@@ -1505,7 +1506,7 @@ public class HproseReader implements HproseTags {
             memberNames[i] = readString(stream);
         }
         stream.read();
-        Type type = HproseHelper.getClass(className);
+        Type type = ClassUtil.getClass(className);
         Object key = (type.equals(void.class)) ? new Object() : type;
         classref.add(key);
         membersref.put(key, memberNames);
@@ -4181,7 +4182,7 @@ public class HproseReader implements HproseTags {
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
             componentType = ((ParameterizedType)type).getActualTypeArguments()[0];
-            componentClass = HproseHelper.toClass(componentType);
+            componentClass = ClassUtil.toClass(componentType);
         }
         else {
             componentType = Object.class;
@@ -4195,7 +4196,7 @@ public class HproseReader implements HproseTags {
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
             componentType = ((ParameterizedType)type).getActualTypeArguments()[0];
-            componentClass = HproseHelper.toClass(componentType);
+            componentClass = ClassUtil.toClass(componentType);
         }
         else {
             componentType = Object.class;
@@ -4290,8 +4291,8 @@ public class HproseReader implements HproseTags {
             Type[] argsType = ((ParameterizedType)type).getActualTypeArguments();
             keyType = argsType[0];
             valueType = argsType[1];
-            keyClass = HproseHelper.toClass(keyType);
-            valueClass = HproseHelper.toClass(valueType);
+            keyClass = ClassUtil.toClass(keyType);
+            valueClass = ClassUtil.toClass(valueType);
         }
         else {
             keyType = Object.class;
@@ -4310,8 +4311,8 @@ public class HproseReader implements HproseTags {
             Type[] argsType = ((ParameterizedType)type).getActualTypeArguments();
             keyType = argsType[0];
             valueType = argsType[1];
-            keyClass = HproseHelper.toClass(keyType);
-            valueClass = HproseHelper.toClass(valueType);
+            keyClass = ClassUtil.toClass(keyType);
+            valueClass = ClassUtil.toClass(valueType);
         }
         else {
             keyType = Object.class;
@@ -4378,7 +4379,7 @@ public class HproseReader implements HproseTags {
         if (type == null) {
             return unserialize(buffer);
         }
-        Class<?> cls = HproseHelper.toClass(type);
+        Class<?> cls = ClassUtil.toClass(type);
         return unserialize(buffer, cls, type);
     }
 
@@ -4386,7 +4387,7 @@ public class HproseReader implements HproseTags {
         if (type == null) {
             return unserialize(stream);
         }
-        Class<?> cls = HproseHelper.toClass(type);
+        Class<?> cls = ClassUtil.toClass(type);
         return unserialize(stream, cls, type);
     }
 

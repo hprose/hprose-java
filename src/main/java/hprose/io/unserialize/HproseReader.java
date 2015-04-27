@@ -12,14 +12,19 @@
  *                                                        *
  * hprose reader implementation class for Java.           *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.unserialize;
 
-import hprose.io.*;
 import hprose.common.HproseException;
+import hprose.io.ByteBufferInputStream;
+import hprose.io.ByteBufferStream;
+import hprose.io.HproseHelper;
+import hprose.io.HproseMode;
+import hprose.io.HproseTags;
+import hprose.io.accessor.MemberAccessor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1442,14 +1447,7 @@ public class HproseReader implements HproseTags {
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(buffer));
             if (member != null) {
-                Object value;
-                value = member.unserializer().read(this, buffer, member.cls(), member.type());
-                try {
-                    member.set(obj, value);
-                }
-                catch (Exception e) {
-                    throw new HproseException(e.getMessage());
-                }
+                member.unserialize(this, buffer, obj);
             }
             else {
                 unserialize(buffer);
@@ -1470,13 +1468,7 @@ public class HproseReader implements HproseTags {
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(stream));
             if (member != null) {
-                Object value = member.unserializer().read(this, stream, member.cls(), member.type());
-                try {
-                    member.set(obj, value);
-                }
-                catch (Exception e) {
-                    throw new HproseException(e.getMessage());
-                }
+                member.unserialize(this, stream, obj);
             }
             else {
                 unserialize(stream);
@@ -1769,13 +1761,7 @@ public class HproseReader implements HproseTags {
             for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
-                    Object value = member.unserializer().read(this, buffer, member.cls(), member.type());
-                    try {
-                        member.set(obj, value);
-                    }
-                    catch (Exception e) {
-                        throw new HproseException(e.getMessage());
-                    }
+                    member.unserialize(this, buffer, obj);
                 }
                 else {
                     unserialize(buffer);
@@ -1812,13 +1798,7 @@ public class HproseReader implements HproseTags {
             for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
-                    Object value = member.unserializer().read(this, stream, member.cls(), member.type());
-                    try {
-                        member.set(obj, value);
-                    }
-                    catch (Exception e) {
-                        throw new HproseException(e.getMessage());
-                    }
+                    member.unserialize(this, stream, obj);
                 }
                 else {
                     unserialize(stream);

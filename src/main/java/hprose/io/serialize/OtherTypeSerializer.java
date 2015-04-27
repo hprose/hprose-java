@@ -12,20 +12,18 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.common.HproseException;
 import hprose.io.HproseHelper;
 import static hprose.io.HproseTags.TagClosebrace;
-import static hprose.io.HproseTags.TagNull;
 import static hprose.io.HproseTags.TagObject;
 import static hprose.io.HproseTags.TagOpenbrace;
-import hprose.io.MemberAccessor;
+import hprose.io.accessor.MemberAccessor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
@@ -38,19 +36,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         Map<String, MemberAccessor> members = HproseHelper.getMembers(type, writer.mode);
         for (Map.Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
-            Object value;
-            try {
-                value = member.get(object);
-            }
-            catch (Exception e) {
-                throw new HproseException(e.getMessage());
-            }
-            if (value == null) {
-                stream.write(TagNull);
-            }
-            else {
-                member.serializer().write(writer, value);
-            }
+            member.serialize(writer, object);
         }
     }
 

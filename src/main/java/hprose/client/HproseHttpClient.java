@@ -20,8 +20,8 @@ package hprose.client;
 
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
-import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
+import hprose.utils.Base64;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -205,7 +205,7 @@ public class HproseHttpClient extends HproseClient {
         }
         if (proxyUser != null && proxyPass != null) {
             conn.setRequestProperty("Proxy-Authorization",
-                "Basic " + HproseHelper.base64Encode((proxyUser + ":" + proxyPass).getBytes()));
+                "Basic " + Base64.base64Encode((proxyUser + ":" + proxyPass).getBytes()));
         }
         for (Entry<String, String> entry : headers.entrySet()) {
             conn.setRequestProperty(entry.getKey(), entry.getValue());

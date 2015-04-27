@@ -12,21 +12,28 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Apr 23, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.io;
+package hprose.io.accessor;
 
+import hprose.common.HproseException;
+import hprose.io.HproseHelper;
+import static hprose.io.HproseTags.TagNull;
 import hprose.io.serialize.HproseSerializer;
+import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.SerializerFactory;
+import hprose.io.unserialize.HproseReader;
 import hprose.io.unserialize.HproseUnserializer;
 import hprose.io.unserialize.UnserializerFactory;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 
-final class FieldAccessor implements MemberAccessor {
+public final class FieldAccessor implements MemberAccessor {
     private final Field accessor;
     private final Class<?> cls;
     private final Type type;
@@ -42,31 +49,39 @@ final class FieldAccessor implements MemberAccessor {
         this.unserializer = UnserializerFactory.get(cls);
     }
 
-    public final void set(Object obj, Object value) throws IllegalAccessException,
-                                              IllegalArgumentException,
-                                              InvocationTargetException {
-        accessor.set(obj, value);
+    public void serialize(HproseWriter writer, Object obj) throws IOException {
+        Object value;
+        try {
+            value = accessor.get(obj);
+        }
+        catch (Exception e) {
+            throw new HproseException(e.getMessage());
+        }
+        if (value == null) {
+            writer.stream.write(TagNull);
+        }
+        else {
+            serializer.write(writer, value);
+        }
     }
 
-    public final Object get(Object obj) throws IllegalAccessException,
-                                  IllegalArgumentException,
-                                  InvocationTargetException {
-        return accessor.get(obj);
+    public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
+        Object value = unserializer.read(reader, buffer, cls, type);
+        try {
+            accessor.set(obj, value);
+        }
+        catch (Exception e) {
+            throw new HproseException(e.getMessage());
+        }
     }
 
-    public final Class<?> cls() {
-        return cls;
-    }
-
-    public final Type type() {
-        return type;
-    }
-
-    public final HproseSerializer serializer() {
-        return serializer;
-    }
-
-    public final HproseUnserializer unserializer() {
-        return unserializer;
+    public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
+        Object value = unserializer.read(reader, stream, cls, type);
+        try {
+            accessor.set(obj, value);
+        }
+        catch (Exception e) {
+            throw new HproseException(e.getMessage());
+        }
     }
 }

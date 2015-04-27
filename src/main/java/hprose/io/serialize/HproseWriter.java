@@ -18,7 +18,11 @@
 \**********************************************************/
 package hprose.io.serialize;
 
-import hprose.io.*;
+import hprose.io.HproseHelper;
+import hprose.io.HproseTags;
+import hprose.io.HproseMode;
+import hprose.io.ObjectIntMap;
+import hprose.io.accessor.MemberAccessor;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;

@@ -12,26 +12,20 @@
  *                                                        *
  * MemberAccessor interface for Java.                     *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.io;
+package hprose.io.accessor;
 
-import hprose.io.serialize.HproseSerializer;
-import hprose.io.unserialize.HproseUnserializer;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
+import hprose.io.serialize.HproseWriter;
+import hprose.io.unserialize.HproseReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public interface MemberAccessor {
-    Class<?> cls();
-    Type type();
-    HproseSerializer serializer();
-    HproseUnserializer unserializer();
-    void set(Object obj, Object value) throws IllegalAccessException,
-                                              IllegalArgumentException,
-                                              InvocationTargetException;
-    Object get(Object obj) throws IllegalAccessException,
-                                  IllegalArgumentException,
-                                  InvocationTargetException;
+    void serialize(HproseWriter writer, Object obj) throws IOException;
+    void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException;
+    void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException;
 }

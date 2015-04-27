@@ -28,16 +28,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 
 public final class HproseHelper {
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
-
-    private HproseHelper() {
-    }
-
 
     public final static boolean isAndroid() {
         String vmName = System.getProperty("java.vm.name");
@@ -48,7 +43,6 @@ public final class HproseHelper {
         return lowerVMName.contains("dalvik") ||
                lowerVMName.contains("lemur");
     }
-    
 
     private static Method findGetter(Method[] methods, String name, Class<?> paramType) {
         String getterName = "get" + name;
@@ -71,7 +65,7 @@ public final class HproseHelper {
         return null;
     }
 
-    final static Map<String, MemberAccessor> getProperties(Class<?> type) {
+    private static Map<String, MemberAccessor> getProperties(Class<?> type) {
         HashMap<String, MemberAccessor> properties = propertiesCache.get(type);
         if (properties == null) {
             properties = new HashMap<String, MemberAccessor>();
@@ -106,7 +100,7 @@ public final class HproseHelper {
         return properties;
     }
 
-    public final static Map<String, MemberAccessor> getFields(Class<?> type) {
+    private static Map<String, MemberAccessor> getFields(Class<?> type) {
         HashMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
             fields = new HashMap<String, MemberAccessor>();
@@ -125,7 +119,7 @@ public final class HproseHelper {
         return fields;
     }
 
-    public final static Map<String, MemberAccessor> getMembers(Class<?> type) {
+    private static Map<String, MemberAccessor> getMembers(Class<?> type) {
         HashMap<String, MemberAccessor> members = membersCache.get(type);
         if (members == null) {
             members = new HashMap<String, MemberAccessor>();

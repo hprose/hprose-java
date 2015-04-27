@@ -53,6 +53,7 @@ public final class PropertyAccessor implements MemberAccessor {
         this.unserializer = UnserializerFactory.get(cls);
     }
 
+    @Override
     public void serialize(HproseWriter writer, Object obj) throws IOException {
         Object value;
         try {
@@ -69,6 +70,7 @@ public final class PropertyAccessor implements MemberAccessor {
         }
     }
 
+    @Override
     public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
         Object value = unserializer.read(reader, buffer, cls, type);
         try {
@@ -79,6 +81,7 @@ public final class PropertyAccessor implements MemberAccessor {
         }
     }
 
+    @Override
     public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
         Object value = unserializer.read(reader, stream, cls, type);
         try {

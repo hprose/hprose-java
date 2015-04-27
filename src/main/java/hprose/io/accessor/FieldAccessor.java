@@ -26,7 +26,6 @@ import hprose.io.serialize.SerializerFactory;
 import hprose.io.unserialize.HproseReader;
 import hprose.io.unserialize.HproseUnserializer;
 import hprose.io.unserialize.UnserializerFactory;
-import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -44,11 +43,12 @@ public final class FieldAccessor implements MemberAccessor {
         accessor.setAccessible(true);
         this.accessor = accessor;
         this.type = accessor.getGenericType();
-        this.cls = ClassUtil.toClass(type);
+        this.cls = accessor.getType();
         this.serializer = SerializerFactory.get(cls);
         this.unserializer = UnserializerFactory.get(cls);
     }
 
+    @Override
     public void serialize(HproseWriter writer, Object obj) throws IOException {
         Object value;
         try {
@@ -65,6 +65,7 @@ public final class FieldAccessor implements MemberAccessor {
         }
     }
 
+    @Override
     public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
         Object value = unserializer.read(reader, buffer, cls, type);
         try {
@@ -75,6 +76,7 @@ public final class FieldAccessor implements MemberAccessor {
         }
     }
 
+    @Override
     public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
         Object value = unserializer.read(reader, stream, cls, type);
         try {

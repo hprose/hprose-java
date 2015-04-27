@@ -19,6 +19,7 @@
 
 package hprose.io.serialize;
 
+import hprose.util.IdentityMap;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -43,7 +44,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class SerializerFactory {
-    private static final ConcurrentHashMap<Class<?>, HproseSerializer> serializers = new ConcurrentHashMap<Class<?>, HproseSerializer>();
+    private static final IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
     static {
         serializers.put(void.class, NullSerializer.instance);
         serializers.put(boolean.class, BooleanSerializer.instance);
@@ -150,7 +150,7 @@ public final class SerializerFactory {
             else {
                 serializer = OtherTypeSerializer.instance;
             }
-            serializers.putIfAbsent(type, serializer);
+            serializers.put(type, serializer);
         }
         return serializer;
     }

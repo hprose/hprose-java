@@ -16,7 +16,7 @@
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.utils;
+package hprose.util;
 
 public class IdentityMap<K, V> {
     

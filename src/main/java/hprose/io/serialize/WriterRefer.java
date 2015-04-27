@@ -20,7 +20,7 @@ package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagSemicolon;
-import hprose.utils.ObjectIntMap;
+import hprose.util.ObjectIntMap;
 import java.io.IOException;
 import java.io.OutputStream;
 

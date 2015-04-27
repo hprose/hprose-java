@@ -21,7 +21,7 @@ package hprose.client;
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
-import hprose.utils.Base64;
+import hprose.util.Base64;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

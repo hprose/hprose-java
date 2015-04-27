@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,7 @@ package hprose.server;
 import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
-import hprose.io.HproseHelper;
+import hprose.util.TcpUtil;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
@@ -103,9 +103,9 @@ public class HproseTcpServer extends HproseService {
             final TcpContext context = new TcpContext(socketChannel);
             try {
                 currentContext.set(context);
-                istream = HproseHelper.receiveDataOverTcp(socketChannel);
+                istream = TcpUtil.receiveDataOverTcp(socketChannel);
                 ostream = server.handle(istream, context);
-                HproseHelper.sendDataOverTcp(socketChannel, ostream);
+                TcpUtil.sendDataOverTcp(socketChannel, ostream);
                 socketChannel.register(selector, SelectionKey.OP_READ);
             }
             catch (IOException e) {
@@ -122,7 +122,7 @@ public class HproseTcpServer extends HproseService {
         private void execInThreadPool(final SocketChannel socketChannel) throws IOException {
             final TcpContext context = new TcpContext(socketChannel);
             try {
-                final ByteBufferStream istream = HproseHelper.receiveDataOverTcp(socketChannel);
+                final ByteBufferStream istream = TcpUtil.receiveDataOverTcp(socketChannel);
                 socketChannel.register(selector, SelectionKey.OP_READ);
                 threadPool.execute(new Runnable() {
                     public void run() {
@@ -130,7 +130,7 @@ public class HproseTcpServer extends HproseService {
                         try {
                             currentContext.set(context);
                             ostream = server.handle(istream, context);
-                            HproseHelper.sendDataOverTcp(socketChannel, ostream);
+                            TcpUtil.sendDataOverTcp(socketChannel, ostream);
                         }
                         catch (IOException e) {
                             server.fireErrorEvent(e, context);

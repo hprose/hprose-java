@@ -3,7 +3,7 @@ package hprose.tcpsessionexam;
 import hprose.common.HproseContext;
 import hprose.common.HproseFilter;
 import hprose.io.ByteBufferStream;
-import hprose.utils.ObjectIntMap;
+import hprose.util.ObjectIntMap;
 import hprose.server.HproseService;
 import hprose.server.HproseTcpServer;
 import java.io.IOException;

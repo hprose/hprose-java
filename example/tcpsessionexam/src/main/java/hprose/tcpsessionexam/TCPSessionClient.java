@@ -4,7 +4,7 @@ import hprose.client.HproseTcpClient;
 import hprose.common.HproseContext;
 import hprose.common.HproseFilter;
 import hprose.io.ByteBufferStream;
-import hprose.utils.ObjectIntMap;
+import hprose.util.ObjectIntMap;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;

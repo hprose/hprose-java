@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader implementation class for Java.           *
  *                                                        *
- * LastModified: Apr 24, 2015                             *
+ * LastModified: Apr 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -603,7 +603,7 @@ public class HproseReaderImpl implements HproseTags {
                                    type.toString());
     }
 
-    private StringBuilder readUntil(ByteBuffer buffer, int tag) throws IOException {
+    private static StringBuilder readUntil(ByteBuffer buffer, int tag) throws IOException {
         StringBuilder sb = new StringBuilder();
         int i = buffer.get();
         while (i != tag) {
@@ -613,7 +613,7 @@ public class HproseReaderImpl implements HproseTags {
         return sb;
     }
 
-    private StringBuilder readUntil(InputStream stream, int tag) throws IOException {
+    private static StringBuilder readUntil(InputStream stream, int tag) throws IOException {
         StringBuilder sb = new StringBuilder();
         int i = stream.read();
         while ((i != tag) && (i != -1)) {
@@ -635,7 +635,7 @@ public class HproseReaderImpl implements HproseTags {
 //    }
 
     @SuppressWarnings({"fallthrough"})
-    private int readInt(ByteBuffer buffer, int tag) throws IOException {
+    private static int readInt(ByteBuffer buffer, int tag) throws IOException {
         int result = 0;
         int i = buffer.get();
         if (i == tag) {
@@ -662,7 +662,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private int readInt(InputStream stream, int tag) throws IOException {
+    private static int readInt(InputStream stream, int tag) throws IOException {
         int result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -689,7 +689,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private long readLong(ByteBuffer buffer, int tag) throws IOException {
+    private static long readLong(ByteBuffer buffer, int tag) throws IOException {
         long result = 0;
         int i = buffer.get();
         if (i == tag) {
@@ -716,7 +716,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private long readLong(InputStream stream, int tag) throws IOException {
+    private static long readLong(InputStream stream, int tag) throws IOException {
         long result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -743,7 +743,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private float readLongAsFloat(ByteBuffer buffer) throws IOException {
+    private static float readLongAsFloat(ByteBuffer buffer) throws IOException {
         float result = 0.0f;
         int i = buffer.get();
         if (i == TagSemicolon) {
@@ -770,7 +770,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private float readLongAsFloat(InputStream stream) throws IOException {
+    private static float readLongAsFloat(InputStream stream) throws IOException {
         float result = 0.0f;
         int i = stream.read();
         if (i == TagSemicolon) {
@@ -797,7 +797,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private double readLongAsDouble(ByteBuffer buffer) throws IOException {
+    private static double readLongAsDouble(ByteBuffer buffer) throws IOException {
         double result = 0.0f;
         int i = buffer.get();
         if (i == TagSemicolon) {
@@ -824,7 +824,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private double readLongAsDouble(InputStream stream) throws IOException {
+    private static double readLongAsDouble(InputStream stream) throws IOException {
         double result = 0.0;
         int i = stream.read();
         if (i == TagSemicolon) {
@@ -850,7 +850,7 @@ public class HproseReaderImpl implements HproseTags {
         return result;
     }
 
-    private float parseFloat(String value) {
+    private static float parseFloat(String value) {
         try {
             return Float.parseFloat(value);
         }
@@ -859,11 +859,11 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private float parseFloat(StringBuilder value) {
+    private static float parseFloat(StringBuilder value) {
         return parseFloat(value.toString());
     }
 
-    private double parseDouble(String value) {
+    private static double parseDouble(String value) {
         try {
             return Double.parseDouble(value);
         }
@@ -872,12 +872,12 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private double parseDouble(StringBuilder value) {
+    private static double parseDouble(StringBuilder value) {
         return parseDouble(value.toString());
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> T readDateAs(ByteBuffer buffer, Class<T> type) throws IOException {
+    private static <T> T readDateAs(ByteBuffer buffer, Class<T> type, ReaderRefer refer) throws IOException {
         int hour = 0, minute = 0, second = 0, nanosecond = 0;
         int year = buffer.get() - '0';
         year = year * 10 + buffer.get() - '0';
@@ -931,7 +931,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> T readDateAs(InputStream stream, Class<T> type) throws IOException {
+    private static <T> T readDateAs(InputStream stream, Class<T> type, ReaderRefer refer) throws IOException {
         int hour = 0, minute = 0, second = 0, nanosecond = 0;
         int year = stream.read() - '0';
         year = year * 10 + stream.read() - '0';
@@ -985,7 +985,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> T readTimeAs(ByteBuffer buffer, Class<T> type) throws IOException {
+    private static <T> T readTimeAs(ByteBuffer buffer, Class<T> type, ReaderRefer refer) throws IOException {
         int hour = buffer.get() - '0';
         hour = hour * 10 + buffer.get() - '0';
         int minute = buffer.get() - '0';
@@ -1028,7 +1028,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> T readTimeAs(InputStream stream, Class<T> type) throws IOException {
+    private static <T> T readTimeAs(InputStream stream, Class<T> type, ReaderRefer refer) throws IOException {
         int hour = stream.read() - '0';
         hour = hour * 10 + stream.read() - '0';
         int minute = stream.read() - '0';
@@ -1076,7 +1076,7 @@ public class HproseReaderImpl implements HproseTags {
                         "0x" + Integer.toHexString(c & 0xff)));
     }
 
-    private char readUTF8CharAsChar(ByteBuffer buffer) throws IOException {
+    private static char readUTF8CharAsChar(ByteBuffer buffer) throws IOException {
         char u;
         int b1 = buffer.get();
         switch ((b1 & 0xff) >>> 4) {
@@ -1111,7 +1111,7 @@ public class HproseReaderImpl implements HproseTags {
         return u;
     }
 
-    private char readUTF8CharAsChar(InputStream stream) throws IOException {
+    private static char readUTF8CharAsChar(InputStream stream) throws IOException {
         char u;
         int b1 = stream.read();
         switch (b1 >>> 4) {
@@ -1155,7 +1155,7 @@ public class HproseReaderImpl implements HproseTags {
 //    }
 
     @SuppressWarnings({"fallthrough"})
-    private char[] readChars(ByteBuffer buffer) throws IOException {
+    private static char[] readChars(ByteBuffer buffer) throws IOException {
         int count = readInt(buffer, TagQuote);
         char[] buf = new char[count];
         for (int i = 0; i < count; ++i) {
@@ -1214,7 +1214,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private char[] readChars(InputStream stream) throws IOException {
+    private static char[] readChars(InputStream stream) throws IOException {
         int count = readInt(stream, TagQuote);
         char[] buf = new char[count];
         for (int i = 0; i < count; ++i) {
@@ -1274,11 +1274,6 @@ public class HproseReaderImpl implements HproseTags {
         stream.read();
         return buf;
     }
-
-//    private char[] readChars() throws IOException {
-//        return (buffer != null ? readChars(buffer) :
-//                        readChars(stream));
-//    }
 
 //    @SuppressWarnings({"fallthrough"})
 //    private char[] readChars() throws IOException {
@@ -1402,17 +1397,13 @@ public class HproseReaderImpl implements HproseTags {
 //        return buf;
 //    }
 
-    private String readCharsAsString(ByteBuffer buffer) throws IOException {
+    private static String readCharsAsString(ByteBuffer buffer) throws IOException {
         return new String(readChars(buffer));
     }
 
-    private String readCharsAsString(InputStream stream) throws IOException {
+    private static String readCharsAsString(InputStream stream) throws IOException {
         return new String(readChars(stream));
     }
-
-//    private String readCharsAsString() throws IOException {
-//        return new String(readChars());
-//    }
 
     @SuppressWarnings({"unchecked"})
     private Map readObjectAsMap(ByteBuffer buffer, Map map) throws IOException {
@@ -1439,11 +1430,6 @@ public class HproseReaderImpl implements HproseTags {
         stream.read();
         return map;
     }
-
-//    private Map readObjectAsMap(Map map) throws IOException {
-//        return (buffer != null ? readObjectAsMap(buffer, map) :
-//                        readObjectAsMap(stream, map));
-//    }
 
     private <T> T readMapAsObject(ByteBuffer buffer, Class<T> type) throws IOException {
         T obj = HproseHelper.newInstance(type);
@@ -1568,62 +1554,62 @@ public class HproseReaderImpl implements HproseTags {
         throw castError(objType.toString(), type);
     }
 
-    private int readIntWithoutTag(ByteBuffer buffer) throws IOException {
+    private static int readIntWithoutTag(ByteBuffer buffer) throws IOException {
         return readInt(buffer, TagSemicolon);
     }
 
-    private int readIntWithoutTag(InputStream stream) throws IOException {
+    private static int readIntWithoutTag(InputStream stream) throws IOException {
         return readInt(stream, TagSemicolon);
     }
 
-    private BigInteger readBigIntegerWithoutTag(ByteBuffer buffer) throws IOException {
+    private static BigInteger readBigIntegerWithoutTag(ByteBuffer buffer) throws IOException {
         return new BigInteger(readUntil(buffer, TagSemicolon).toString(), 10);
     }
 
-    private BigInteger readBigIntegerWithoutTag(InputStream stream) throws IOException {
+    private static BigInteger readBigIntegerWithoutTag(InputStream stream) throws IOException {
         return new BigInteger(readUntil(stream, TagSemicolon).toString(), 10);
     }
 
-    private long readLongWithoutTag(ByteBuffer buffer) throws IOException {
+    private static long readLongWithoutTag(ByteBuffer buffer) throws IOException {
         return readLong(buffer, TagSemicolon);
     }
 
-    private long readLongWithoutTag(InputStream stream) throws IOException {
+    private static long readLongWithoutTag(InputStream stream) throws IOException {
         return readLong(stream, TagSemicolon);
     }
 
-    private double readDoubleWithoutTag(ByteBuffer buffer) throws IOException {
+    private static double readDoubleWithoutTag(ByteBuffer buffer) throws IOException {
         return parseDouble(readUntil(buffer, TagSemicolon));
     }
 
-    private double readDoubleWithoutTag(InputStream stream) throws IOException {
+    private static double readDoubleWithoutTag(InputStream stream) throws IOException {
         return parseDouble(readUntil(stream, TagSemicolon));
     }
 
-    private double readInfinityWithoutTag(ByteBuffer buffer) throws IOException {
+    private static double readInfinityWithoutTag(ByteBuffer buffer) throws IOException {
         return ((buffer.get() == TagNeg) ?
             Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
     }
 
-    private double readInfinityWithoutTag(InputStream stream) throws IOException {
+    private static double readInfinityWithoutTag(InputStream stream) throws IOException {
         return ((stream.read() == TagNeg) ?
             Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
     }
 
     private Calendar readDateWithoutTag(ByteBuffer buffer)throws IOException {
-        return readDateAs(buffer, Calendar.class);
+        return readDateAs(buffer, Calendar.class, refer);
     }
 
     private Calendar readDateWithoutTag(InputStream stream)throws IOException {
-        return readDateAs(stream, Calendar.class);
+        return readDateAs(stream, Calendar.class, refer);
     }
 
     private Calendar readTimeWithoutTag(ByteBuffer buffer)throws IOException {
-        return readTimeAs(buffer, Calendar.class);
+        return readTimeAs(buffer, Calendar.class, refer);
     }
 
     private Calendar readTimeWithoutTag(InputStream stream)throws IOException {
-        return readTimeAs(stream, Calendar.class);
+        return readTimeAs(stream, Calendar.class, refer);
     }
 
     private byte[] readBytesWithoutTag(ByteBuffer buffer) throws IOException {
@@ -1649,11 +1635,11 @@ public class HproseReaderImpl implements HproseTags {
         return b;
     }
 
-    private String readUTF8CharWithoutTag(ByteBuffer buffer) throws IOException {
+    private static String readUTF8CharWithoutTag(ByteBuffer buffer) throws IOException {
         return new String(new char[] { readUTF8CharAsChar(buffer) });
     }
 
-    private String readUTF8CharWithoutTag(InputStream stream) throws IOException {
+    private static String readUTF8CharWithoutTag(InputStream stream) throws IOException {
         return new String(new char[] { readUTF8CharAsChar(stream) });
     }
 
@@ -2847,8 +2833,8 @@ public class HproseReaderImpl implements HproseTags {
 
     final Timestamp readTimestamp(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return readDateAs(buffer, Timestamp.class);
-        if (tag == TagTime) return readTimeAs(buffer, Timestamp.class);
+        if (tag == TagDate) return readDateAs(buffer, Timestamp.class, refer);
+        if (tag == TagTime) return readTimeAs(buffer, Timestamp.class, refer);
         if (tag == TagNull ||
             tag == TagEmpty) return null;
         if (tag == TagRef) {
@@ -2881,8 +2867,8 @@ public class HproseReaderImpl implements HproseTags {
 
     final Timestamp readTimestamp(InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return readDateAs(stream, Timestamp.class);
-        if (tag == TagTime) return readTimeAs(stream, Timestamp.class);
+        if (tag == TagDate) return readDateAs(stream, Timestamp.class, refer);
+        if (tag == TagTime) return readTimeAs(stream, Timestamp.class, refer);
         if (tag == TagNull ||
             tag == TagEmpty) return null;
         if (tag == TagRef) {
@@ -4449,14 +4435,6 @@ public class HproseReaderImpl implements HproseTags {
     	return rawstream;
     }
 
-    private void readRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
-        readRaw(buffer, ostream, buffer.get());
-    }
-
-    private void readRaw(InputStream stream, OutputStream ostream) throws IOException {
-        readRaw(stream, ostream, stream.read());
-    }
-
     public final void readRaw(OutputStream ostream) throws IOException {
         if (buffer != null) {
             readRaw(buffer, ostream, buffer.get());
@@ -4466,7 +4444,15 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private void readRaw(ByteBuffer buffer, OutputStream ostream, int tag) throws IOException {
+    private static void readRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+        readRaw(buffer, ostream, buffer.get());
+    }
+
+    private static void readRaw(InputStream stream, OutputStream ostream) throws IOException {
+        readRaw(stream, ostream, stream.read());
+    }
+
+    private static void readRaw(ByteBuffer buffer, OutputStream ostream, int tag) throws IOException {
         ostream.write(tag);
         switch (tag) {
             case '0':
@@ -4530,7 +4516,7 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private void readRaw(InputStream stream, OutputStream ostream, int tag) throws IOException {
+    private static void readRaw(InputStream stream, OutputStream ostream, int tag) throws IOException {
         ostream.write(tag);
         switch (tag) {
             case '0':
@@ -4594,7 +4580,7 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private void readNumberRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readNumberRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = buffer.get();
@@ -4602,7 +4588,7 @@ public class HproseReaderImpl implements HproseTags {
         } while (tag != TagSemicolon);
     }
 
-    private void readNumberRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readNumberRaw(InputStream stream, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = stream.read();
@@ -4610,7 +4596,7 @@ public class HproseReaderImpl implements HproseTags {
         } while (tag != TagSemicolon);
     }
 
-    private void readDateTimeRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readDateTimeRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = buffer.get();
@@ -4619,7 +4605,7 @@ public class HproseReaderImpl implements HproseTags {
                  tag != TagUTC);
     }
 
-    private void readDateTimeRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readDateTimeRaw(InputStream stream, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = stream.read();
@@ -4628,7 +4614,7 @@ public class HproseReaderImpl implements HproseTags {
                  tag != TagUTC);
     }
 
-    private void readUTF8CharRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readUTF8CharRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int tag = buffer.get();
         switch ((tag & 0xff) >>> 4) {
             case 0:
@@ -4662,7 +4648,7 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private void readUTF8CharRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readUTF8CharRaw(InputStream stream, OutputStream ostream) throws IOException {
         int tag = stream.read();
         switch (tag >>> 4) {
             case 0:
@@ -4696,7 +4682,7 @@ public class HproseReaderImpl implements HproseTags {
         }
     }
 
-    private void readBytesRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readBytesRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int len = 0;
         int tag = '0';
         do {
@@ -4710,7 +4696,7 @@ public class HproseReaderImpl implements HproseTags {
         ostream.write(buffer.get());
     }
 
-    private void readBytesRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readBytesRaw(InputStream stream, OutputStream ostream) throws IOException {
         int len = 0;
         int tag = '0';
         do {
@@ -4728,7 +4714,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private void readStringRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readStringRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int count = 0;
         int tag = '0';
         do {
@@ -4785,7 +4771,7 @@ public class HproseReaderImpl implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    private void readStringRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readStringRaw(InputStream stream, OutputStream ostream) throws IOException {
         int count = 0;
         int tag = '0';
         do {
@@ -4841,14 +4827,14 @@ public class HproseReaderImpl implements HproseTags {
         ostream.write(stream.read());
     }
 
-    private void readGuidRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readGuidRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int len = 38;
         byte[] b = new byte[len];
         buffer.get(b, 0, len);
         ostream.write(b);
     }
 
-    private void readGuidRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readGuidRaw(InputStream stream, OutputStream ostream) throws IOException {
         int len = 38;
         int off = 0;
         byte[] b = new byte[len];
@@ -4858,7 +4844,7 @@ public class HproseReaderImpl implements HproseTags {
         ostream.write(b);
     }
 
-    private void readComplexRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
+    private static void readComplexRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = buffer.get();
@@ -4870,7 +4856,7 @@ public class HproseReaderImpl implements HproseTags {
         ostream.write(tag);
     }
 
-    private void readComplexRaw(InputStream stream, OutputStream ostream) throws IOException {
+    private static void readComplexRaw(InputStream stream, OutputStream ostream) throws IOException {
         int tag;
         do {
             tag = stream.read();

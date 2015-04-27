@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Feb 8, 2015                              *
+ * LastModified: Apr 28, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -42,7 +42,7 @@ public class HproseHttpClient extends HproseClient {
     private final ConcurrentHashMap<String, String> headers = new ConcurrentHashMap<String, String>();
     private static boolean disableGlobalCookie = false;
     private static CookieManager globalCookieManager = new CookieManager();
-    private CookieManager cookieManager = disableGlobalCookie ? new CookieManager() : globalCookieManager;
+    private final CookieManager cookieManager = disableGlobalCookie ? new CookieManager() : globalCookieManager;
     private boolean keepAlive = true;
     private int keepAliveTimeout = 300;
     private String proxyHost = null;

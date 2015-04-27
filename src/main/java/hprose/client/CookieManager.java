@@ -18,7 +18,6 @@
 \**********************************************************/
 package hprose.client;
 
-import hprose.io.HproseHelper;
 import hprose.util.StrUtil;
 import java.util.ArrayList;
 import java.util.Calendar;

@@ -205,7 +205,7 @@ public class HproseHttpClient extends HproseClient {
         }
         if (proxyUser != null && proxyPass != null) {
             conn.setRequestProperty("Proxy-Authorization",
-                "Basic " + Base64.base64Encode((proxyUser + ":" + proxyPass).getBytes()));
+                "Basic " + Base64.encode((proxyUser + ":" + proxyPass).getBytes()));
         }
         for (Entry<String, String> entry : headers.entrySet()) {
             conn.setRequestProperty(entry.getKey(), entry.getValue());

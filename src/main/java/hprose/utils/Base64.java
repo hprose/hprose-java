@@ -40,7 +40,7 @@ public final class Base64 {
     -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1 };
 
-    public final static String base64Encode(byte[] data) {
+    public final static String encode(byte[] data) {
         StringBuilder sb = new StringBuilder();
         int r = data.length % 3;
         int len = data.length - r;
@@ -72,7 +72,7 @@ public final class Base64 {
         return sb.toString();
     }
 
-    public final static byte[] base64Decode(String str) {
+    public final static byte[] decode(String str) {
         byte[] data = str.getBytes();
         int len = data.length;
         ByteBufferStream buf = new ByteBufferStream(len);

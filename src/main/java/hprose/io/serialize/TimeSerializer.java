@@ -12,15 +12,15 @@
  *                                                        *
  * Time serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseHelper;
 import static hprose.io.HproseTags.TagSemicolon;
+import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Time;
@@ -32,7 +32,7 @@ final class TimeSerializer implements HproseSerializer<Time> {
 
     public final static void write(OutputStream stream, WriterRefer refer, Time time) throws IOException {
         if (refer != null) refer.set(time);
-        Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
+        Calendar calendar = Calendar.getInstance(TimeZoneUtil.DefaultTZ);
         calendar.setTime(time);
         ValueWriter.writeTimeOfCalendar(stream, calendar, false, false);
         stream.write(TagSemicolon);

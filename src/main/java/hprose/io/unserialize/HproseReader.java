@@ -24,8 +24,10 @@ import hprose.io.ByteBufferStream;
 import hprose.io.HproseHelper;
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
+import hprose.io.accessor.ConstructorAccessor;
 import hprose.io.accessor.MemberAccessor;
 import hprose.util.ClassUtil;
+import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -923,7 +925,7 @@ public class HproseReader implements HproseTags {
             }
         }
         Calendar calendar = Calendar.getInstance(tag == TagUTC ?
-                HproseHelper.UTC : HproseHelper.DefaultTZ);
+                TimeZoneUtil.UTC : TimeZoneUtil.DefaultTZ);
         calendar.set(year, month - 1, day, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
         if (Timestamp.class.equals(type)) {
@@ -977,7 +979,7 @@ public class HproseReader implements HproseTags {
             }
         }
         Calendar calendar = Calendar.getInstance(tag == TagUTC ?
-                HproseHelper.UTC : HproseHelper.DefaultTZ);
+                TimeZoneUtil.UTC : TimeZoneUtil.DefaultTZ);
         calendar.set(year, month - 1, day, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
         if (Timestamp.class.equals(type)) {
@@ -1020,7 +1022,7 @@ public class HproseReader implements HproseTags {
             }
         }
         Calendar calendar = Calendar.getInstance(tag == TagUTC ?
-                HproseHelper.UTC : HproseHelper.DefaultTZ);
+                TimeZoneUtil.UTC : TimeZoneUtil.DefaultTZ);
         calendar.set(1970, 0, 1, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
         if (Timestamp.class.equals(type)) {
@@ -1063,7 +1065,7 @@ public class HproseReader implements HproseTags {
             }
         }
         Calendar calendar = Calendar.getInstance(tag == TagUTC ?
-                HproseHelper.UTC : HproseHelper.DefaultTZ);
+                TimeZoneUtil.UTC : TimeZoneUtil.DefaultTZ);
         calendar.set(1970, 0, 1, hour, minute, second);
         calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
         if (Timestamp.class.equals(type)) {
@@ -1438,7 +1440,7 @@ public class HproseReader implements HproseTags {
     }
 
     private <T> T readMapAsObject(ByteBuffer buffer, Class<T> type) throws IOException {
-        T obj = HproseHelper.newInstance(type);
+        T obj = ConstructorAccessor.newInstance(type);
         if (obj == null) {
             throw new HproseException("Can not make an instance of type: " + type.toString());
         }
@@ -1459,7 +1461,7 @@ public class HproseReader implements HproseTags {
     }
 
     private <T> T readMapAsObject(InputStream stream, Class<T> type) throws IOException {
-        T obj = HproseHelper.newInstance(type);
+        T obj = ConstructorAccessor.newInstance(type);
         if (obj == null) {
             throw new HproseException("Can not make an instance of type: " + type.toString());
         }
@@ -1756,7 +1758,7 @@ public class HproseReader implements HproseTags {
             return map;
         }
         else {
-            Object obj = HproseHelper.newInstance(type);
+            Object obj = ConstructorAccessor.newInstance(type);
             refer.set(obj);
             Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
             for (int i = 0; i < count; ++i) {
@@ -1793,7 +1795,7 @@ public class HproseReader implements HproseTags {
             return map;
         }
         else {
-            Object obj = HproseHelper.newInstance(type);
+            Object obj = ConstructorAccessor.newInstance(type);
             refer.set(obj);
             Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
             for (int i = 0; i < count; ++i) {
@@ -4142,7 +4144,7 @@ public class HproseReader implements HproseTags {
             case TagNull: return null;
             case TagList: {
                 int count = readInt(buffer, TagOpenbrace);
-                Collection<T> a = (Collection<T>)HproseHelper.newInstance(cls);
+                Collection<T> a = (Collection<T>)ConstructorAccessor.newInstance(cls);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
@@ -4163,7 +4165,7 @@ public class HproseReader implements HproseTags {
             case TagNull: return null;
             case TagList: {
                 int count = readInt(stream, TagOpenbrace);
-                Collection<T> a = (Collection<T>)HproseHelper.newInstance(cls);
+                Collection<T> a = (Collection<T>)ConstructorAccessor.newInstance(cls);
                 refer.set(a);
                 HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
@@ -4208,7 +4210,7 @@ public class HproseReader implements HproseTags {
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readListAsMap(ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
         int count = readInt(buffer, TagOpenbrace);
-        Map<K, V> m = (Map<K, V>)HproseHelper.newInstance(cls);
+        Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         refer.set(m);
         if (count > 0) {
             if (keyClass.equals(int.class) &&
@@ -4231,7 +4233,7 @@ public class HproseReader implements HproseTags {
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readListAsMap(InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
         int count = readInt(stream, TagOpenbrace);
-        Map<K, V> m = (Map<K, V>)HproseHelper.newInstance(cls);
+        Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         refer.set(m);
         if (count > 0) {
             if (keyClass.equals(int.class) &&
@@ -4254,7 +4256,7 @@ public class HproseReader implements HproseTags {
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readMapWithoutTag(ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int count = readInt(buffer, TagOpenbrace);
-        Map m = (Map)HproseHelper.newInstance(cls);
+        Map m = (Map)ConstructorAccessor.newInstance(cls);
         refer.set(m);
         HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
         HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
@@ -4270,7 +4272,7 @@ public class HproseReader implements HproseTags {
     @SuppressWarnings({"unchecked"})
     private <K, V> Map<K, V> readMapWithoutTag(InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int count = readInt(stream, TagOpenbrace);
-        Map m = (Map)HproseHelper.newInstance(cls);
+        Map m = (Map)ConstructorAccessor.newInstance(cls);
         refer.set(m);
         HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
         HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
@@ -4331,7 +4333,7 @@ public class HproseReader implements HproseTags {
             case TagList: return readListAsMap(buffer, cls, keyClass, valueClass, valueType);
             case TagMap: return readMapWithoutTag(buffer, cls, keyClass, valueClass, keyType, valueType);
             case TagClass: readClass(buffer); return readMap(buffer, cls, keyClass, valueClass, keyType, valueType);
-            case TagObject: return (Map<K, V>)readObjectAsMap(buffer, (Map<K, V>)HproseHelper.newInstance(cls));
+            case TagObject: return (Map<K, V>)readObjectAsMap(buffer, (Map<K, V>)ConstructorAccessor.newInstance(cls));
             case TagRef: return (Map<K, V>)readRef(buffer);
             default: throw castError(tagToString(tag), cls);
         }
@@ -4345,7 +4347,7 @@ public class HproseReader implements HproseTags {
             case TagList: return readListAsMap(stream, cls, keyClass, valueClass, valueType);
             case TagMap: return readMapWithoutTag(stream, cls, keyClass, valueClass, keyType, valueType);
             case TagClass: readClass(stream); return readMap(stream, cls, keyClass, valueClass, keyType, valueType);
-            case TagObject: return (Map<K, V>)readObjectAsMap(stream, (Map<K, V>)HproseHelper.newInstance(cls));
+            case TagObject: return (Map<K, V>)readObjectAsMap(stream, (Map<K, V>)ConstructorAccessor.newInstance(cls));
             case TagRef: return (Map<K, V>)readRef(stream);
             default: throw castError(tagToString(tag), cls);
         }

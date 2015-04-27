@@ -12,15 +12,15 @@
  *                                                        *
  * DateTime serializer class for Java.                    *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseHelper;
 import static hprose.io.HproseTags.TagSemicolon;
+import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Calendar;
@@ -32,7 +32,7 @@ final class DateTimeSerializer implements HproseSerializer<Date> {
 
     public final static void write(OutputStream stream, WriterRefer refer, Date date) throws IOException {
         if (refer != null) refer.set(date);
-        Calendar calendar = Calendar.getInstance(HproseHelper.DefaultTZ);
+        Calendar calendar = Calendar.getInstance(TimeZoneUtil.DefaultTZ);
         calendar.setTime(date);
         ValueWriter.writeDateOfCalendar(stream, calendar);
         ValueWriter.writeTimeOfCalendar(stream, calendar, true, false);

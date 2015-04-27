@@ -12,16 +12,16 @@
  *                                                        *
  * Calendar serializer class for Java.                    *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.io.HproseHelper;
 import static hprose.io.HproseTags.TagSemicolon;
 import static hprose.io.HproseTags.TagUTC;
+import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Calendar;
@@ -34,15 +34,15 @@ final class CalendarSerializer implements HproseSerializer<Calendar> {
     public final static void write(OutputStream stream, WriterRefer refer, Calendar calendar) throws IOException {
         if (refer != null) refer.set(calendar);
         TimeZone tz = calendar.getTimeZone();
-        if (!(tz.hasSameRules(HproseHelper.DefaultTZ) || tz.hasSameRules(HproseHelper.UTC))) {
-            tz = HproseHelper.UTC;
+        if (!(tz.hasSameRules(TimeZoneUtil.DefaultTZ) || tz.hasSameRules(TimeZoneUtil.UTC))) {
+            tz = TimeZoneUtil.UTC;
             Calendar c = (Calendar) calendar.clone();
             c.setTimeZone(tz);
             calendar = c;
         }
         ValueWriter.writeDateOfCalendar(stream, calendar);
         ValueWriter.writeTimeOfCalendar(stream, calendar, true, false);
-        stream.write(tz.hasSameRules(HproseHelper.UTC) ? TagUTC : TagSemicolon);
+        stream.write(tz.hasSameRules(TimeZoneUtil.UTC) ? TagUTC : TagSemicolon);
     }
 
     public final void write(HproseWriter writer, Calendar obj) throws IOException {

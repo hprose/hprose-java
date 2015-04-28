@@ -12,7 +12,7 @@
  *                                                        *
  * hprose formatter class for Java.                       *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 28, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -30,6 +30,21 @@ import java.nio.ByteBuffer;
 
 public final class HproseFormatter {
 
+    static final class Cache {
+        final Object obj;
+        final HproseMode mode;
+        final boolean simple;
+        final byte[] buffer;
+        public Cache(Object o, HproseMode m, boolean s, byte[] b) {
+            obj = o;
+            mode = m;
+            simple = s;
+            buffer = b;
+        }
+    }
+    
+    public static ThreadLocal<Cache> cache = new ThreadLocal<Cache>();
+            
     private HproseFormatter() {
     }
 
@@ -175,9 +190,20 @@ public final class HproseFormatter {
 
     public final static ByteBufferStream serialize(Object obj, HproseMode mode, boolean simple) throws IOException {
         ByteBufferStream bufstream = new ByteBufferStream();
-        serialize(obj, bufstream.getOutputStream(), mode, simple);
-        bufstream.flip();
-        return bufstream;
+        Cache c = cache.get();
+        if ((c != null) &&
+            (obj == c.obj) &&
+            (mode == c.mode) &&
+            (simple == c.simple)) {
+            bufstream.write(c.buffer);
+            return bufstream;
+        }
+        else {
+            serialize(obj, bufstream.getOutputStream(), mode, simple);
+            cache.set(new Cache(obj, mode, simple, bufstream.toArray()));
+            bufstream.flip();
+            return bufstream;
+        }
     }
 
     public final static Object unserialize(ByteBufferStream stream) throws IOException {

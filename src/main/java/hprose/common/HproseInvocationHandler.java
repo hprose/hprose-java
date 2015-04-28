@@ -12,13 +12,12 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Sep 7, 2014                              *
+ * LastModified: Apr 28, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.common;
 
-import hprose.io.HproseHelper;
 import hprose.util.ClassUtil;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

@@ -19,7 +19,7 @@
 
 package hprose.io.serialize;
 
-import hprose.io.HproseHelper;
+import hprose.io.accessor.Accessors;
 import static hprose.io.HproseTags.TagClosebrace;
 import static hprose.io.HproseTags.TagObject;
 import static hprose.io.HproseTags.TagOpenbrace;
@@ -33,7 +33,7 @@ final class OtherTypeSerializer implements HproseSerializer {
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
     private static void writeObject(HproseWriter writer, OutputStream stream, Object object, Class<?> type) throws IOException {
-        Map<String, MemberAccessor> members = HproseHelper.getMembers(type, writer.mode);
+        Map<String, MemberAccessor> members = Accessors.getMembers(type, writer.mode);
         for (Map.Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
             member.serialize(writer, object);

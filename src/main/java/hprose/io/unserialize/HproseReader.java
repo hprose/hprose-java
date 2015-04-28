@@ -21,7 +21,7 @@ package hprose.io.unserialize;
 import hprose.common.HproseException;
 import hprose.io.ByteBufferInputStream;
 import hprose.io.ByteBufferStream;
-import hprose.io.HproseHelper;
+import hprose.io.accessor.Accessors;
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
 import hprose.io.accessor.ConstructorAccessor;
@@ -1445,7 +1445,7 @@ public class HproseReader implements HproseTags {
             throw new HproseException("Can not make an instance of type: " + type.toString());
         }
         refer.set(obj);
-        Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
+        Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
         int count = readInt(buffer, TagOpenbrace);
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(buffer));
@@ -1466,7 +1466,7 @@ public class HproseReader implements HproseTags {
             throw new HproseException("Can not make an instance of type: " + type.toString());
         }
         refer.set(obj);
-        Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
+        Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
         int count = readInt(stream, TagOpenbrace);
         for (int i = 0; i < count; ++i) {
             MemberAccessor member = members.get(readString(stream));
@@ -1760,7 +1760,7 @@ public class HproseReader implements HproseTags {
         else {
             Object obj = ConstructorAccessor.newInstance(type);
             refer.set(obj);
-            Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
+            Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
             for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
@@ -1797,7 +1797,7 @@ public class HproseReader implements HproseTags {
         else {
             Object obj = ConstructorAccessor.newInstance(type);
             refer.set(obj);
-            Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
+            Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
             for (int i = 0; i < count; ++i) {
                 MemberAccessor member = members.get(memberNames[i]);
                 if (member != null) {
@@ -1981,7 +1981,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final boolean readBoolean(ByteBuffer buffer) throws IOException {
+    public final boolean readBoolean(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagTrue) return true;
         if (tag == TagFalse) return false;
@@ -1989,7 +1989,7 @@ public class HproseReader implements HproseTags {
         return readBooleanWithTag(buffer, tag);
     }
 
-    final boolean readBoolean(InputStream stream) throws IOException {
+    public final boolean readBoolean(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagTrue) return true;
         if (tag == TagFalse) return false;
@@ -2056,14 +2056,14 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final char readChar(ByteBuffer buffer) throws IOException {
+    public final char readChar(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagUTF8Char) return readUTF8CharAsChar(buffer);
         if (tag == TagNull) return (char)0;
         return readCharWithTag(buffer, tag);
     }
 
-    final char readChar(InputStream stream) throws IOException {
+    public final char readChar(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagUTF8Char) return readUTF8CharAsChar(stream);
         if (tag == TagNull) return (char)0;
@@ -2112,7 +2112,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final byte readByte(ByteBuffer buffer) throws IOException {
+    public final byte readByte(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
         if (tag == TagInteger) return (byte)readInt(buffer, TagSemicolon);
@@ -2120,7 +2120,7 @@ public class HproseReader implements HproseTags {
         return readByteWithTag(buffer, tag);
     }
 
-    final byte readByte(InputStream stream) throws IOException {
+    public final byte readByte(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (byte)(tag - '0');
         if (tag == TagInteger) return (byte)readInt(stream, TagSemicolon);
@@ -2172,7 +2172,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final short readShort(ByteBuffer buffer) throws IOException {
+    public final short readShort(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
         if (tag == TagInteger) return (short)readInt(buffer, TagSemicolon);
@@ -2180,7 +2180,7 @@ public class HproseReader implements HproseTags {
         return readShortWithTag(buffer, tag);
     }
 
-    final short readShort(InputStream stream) throws IOException {
+    public final short readShort(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (short)(tag - '0');
         if (tag == TagInteger) return (short)readInt(stream, TagSemicolon);
@@ -2232,7 +2232,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final int readInt(ByteBuffer buffer) throws IOException {
+    public final int readInt(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (tag - '0');
         if (tag == TagInteger) return readInt(buffer, TagSemicolon);
@@ -2240,7 +2240,7 @@ public class HproseReader implements HproseTags {
         return readIntWithTag(buffer, tag);
     }
 
-    final int readInt(InputStream stream) throws IOException {
+    public final int readInt(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (tag - '0');
         if (tag == TagInteger) return readInt(stream, TagSemicolon);
@@ -2294,7 +2294,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final long readLong(ByteBuffer buffer) throws IOException {
+    public final long readLong(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (tag - '0');
         if (tag == TagInteger ||
@@ -2303,7 +2303,7 @@ public class HproseReader implements HproseTags {
         return readLongWithTag(buffer, tag);
     }
 
-    final long readLong(InputStream stream) throws IOException {
+    public final long readLong(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
         if (tag == TagInteger ||
@@ -2364,7 +2364,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final float readFloat(ByteBuffer buffer) throws IOException {
+    public final float readFloat(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagDouble) return parseFloat(readUntil(buffer, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
@@ -2373,7 +2373,7 @@ public class HproseReader implements HproseTags {
         return readFloatWithTag(buffer, tag);
     }
 
-    final float readFloat(InputStream stream) throws IOException {
+    public final float readFloat(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagDouble) return parseFloat(readUntil(stream, TagSemicolon));
         if (tag >= '0' && tag <= '9') return (float)(tag - '0');
@@ -2430,7 +2430,7 @@ public class HproseReader implements HproseTags {
         }
     }
 
-    final double readDouble(ByteBuffer buffer) throws IOException {
+    public final double readDouble(ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagDouble) return readDoubleWithoutTag(buffer);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
@@ -2439,7 +2439,7 @@ public class HproseReader implements HproseTags {
         return readDoubleWithTag(buffer, tag);
     }
 
-    final double readDouble(InputStream stream) throws IOException {
+    public final double readDouble(InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagDouble) return readDoubleWithoutTag(stream);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');

@@ -24,6 +24,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConstructorAccessor {
     private static final IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
@@ -103,6 +105,14 @@ public class ConstructorAccessor {
 
     @SuppressWarnings({"unchecked"})
     public static final <T> T newInstance(Class<T> type) {
+        if (Accessors.unsafe != null) {
+            try {
+                return (T) Accessors.unsafe.allocateInstance(type);
+            }
+            catch (InstantiationException e) {
+                return null;
+            }
+        }
         Constructor<?> ctor = ctorCache.get(type);
         if (ctor == null) {
             Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();

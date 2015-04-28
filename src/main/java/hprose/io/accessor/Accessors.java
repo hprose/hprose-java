@@ -8,19 +8,17 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseHelper.java                                      *
+ * Accessors.java                                         *
  *                                                        *
- * hprose helper class for Java.                          *
+ * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 28, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.io;
+package hprose.io.accessor;
 
-import hprose.io.accessor.FieldAccessor;
-import hprose.io.accessor.MemberAccessor;
-import hprose.io.accessor.PropertyAccessor;
+import hprose.io.HproseMode;
 import hprose.util.IdentityMap;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -28,11 +26,27 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import sun.misc.Unsafe;
 
-public final class HproseHelper {
+public final class Accessors {
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+
+    static final Unsafe unsafe;
+    
+    static {
+        Unsafe _unsafe;
+        try {
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");    
+            theUnsafe.setAccessible(true);    
+            _unsafe = (Unsafe) theUnsafe.get(null);
+        }
+        catch (Exception e) {
+            _unsafe = null;
+        }
+        unsafe = _unsafe;
+    }
 
     public final static boolean isAndroid() {
         String vmName = System.getProperty("java.vm.name");
@@ -100,6 +114,38 @@ public final class HproseHelper {
         return properties;
     }
 
+    private static MemberAccessor getFieldAccessor(Field field) {
+        if (Accessors.unsafe != null) {
+            Class<?> cls = field.getType();
+            if (cls == int.class) {
+                return new IntFieldAccessor(field);
+            }
+            if (cls == byte.class) {
+                return new ByteFieldAccessor(field);
+            }
+            if (cls == short.class) {
+                return new ShortFieldAccessor(field);
+            }
+            if (cls == long.class) {
+                return new LongFieldAccessor(field);
+            }
+            if (cls == boolean.class) {
+                return new BoolFieldAccessor(field);
+            }
+            if (cls == char.class) {
+                return new CharFieldAccessor(field);
+            }
+            if (cls == float.class) {
+                return new FloatFieldAccessor(field);
+            }
+            if (cls == double.class) {
+                return new DoubleFieldAccessor(field);
+            }
+            return new FieldAccessor(field);
+        }
+        return new SafeFieldAccessor(field);
+    }
+
     private static Map<String, MemberAccessor> getFields(Class<?> type) {
         HashMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
@@ -110,7 +156,7 @@ public final class HproseHelper {
                     int mod = field.getModifiers();
                     if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                         String fieldName = field.getName();
-                        fields.put(fieldName, new FieldAccessor(field));
+                        fields.put(fieldName, getFieldAccessor(field));
                     }
                 }
             }
@@ -154,7 +200,7 @@ public final class HproseHelper {
                 int mod = field.getModifiers();
                 if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                     String fieldName = field.getName();
-                    members.put(fieldName, new FieldAccessor(field));
+                    members.put(fieldName, getFieldAccessor(field));
                 }
             }
             membersCache.put(type, members);

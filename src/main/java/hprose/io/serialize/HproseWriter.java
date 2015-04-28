@@ -18,7 +18,7 @@
 \**********************************************************/
 package hprose.io.serialize;
 
-import hprose.io.HproseHelper;
+import hprose.io.accessor.Accessors;
 import hprose.io.HproseTags;
 import hprose.io.HproseMode;
 import hprose.util.ObjectIntMap;
@@ -461,7 +461,7 @@ public class HproseWriter implements HproseTags {
         if (cache == null) {
             cache = new SerializeCache();
             ByteArrayOutputStream cachestream = new ByteArrayOutputStream();
-            Map<String, MemberAccessor> members = HproseHelper.getMembers(type, mode);
+            Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
             int count = members.size();
             cachestream.write(TagClass);
             ValueWriter.write(cachestream, ClassUtil.getClassAlias(type));

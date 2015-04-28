@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * FieldAccessor.java                                     *
+ * SafeFieldAccessor.java                                 *
  *                                                        *
- * FieldAccessor class for Java.                          *
+ * SafeFieldAccessor class for Java.                      *
  *                                                        *
  * LastModified: Apr 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -32,16 +32,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-public final class FieldAccessor implements MemberAccessor {
-    private final long offset;
+public final class SafeFieldAccessor implements MemberAccessor {
+    private final Field accessor;
     private final Class<?> cls;
     private final Type type;
     private final HproseSerializer serializer;
     private final HproseUnserializer unserializer;
 
-    public FieldAccessor(Field accessor) {
-        accessor.setAccessible(true);
-        offset = Accessors.unsafe.objectFieldOffset(accessor);
+    public SafeFieldAccessor(Field field) {
+        field.setAccessible(true);
+        accessor = field;
         type = accessor.getGenericType();
         cls = accessor.getType();
         serializer = SerializerFactory.get(cls);
@@ -53,7 +53,7 @@ public final class FieldAccessor implements MemberAccessor {
     public void serialize(HproseWriter writer, Object obj) throws IOException {
         Object value;
         try {
-            value = Accessors.unsafe.getObject(obj, offset);
+            value = accessor.get(obj);
         }
         catch (Exception e) {
             throw new HproseException(e.getMessage());
@@ -70,7 +70,7 @@ public final class FieldAccessor implements MemberAccessor {
     public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
         Object value = unserializer.read(reader, buffer, cls, type);
         try {
-            Accessors.unsafe.putObject(obj, offset, value);
+            accessor.set(obj, value);
         }
         catch (Exception e) {
             throw new HproseException(e.getMessage());
@@ -81,7 +81,7 @@ public final class FieldAccessor implements MemberAccessor {
     public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
         Object value = unserializer.read(reader, stream, cls, type);
         try {
-            Accessors.unsafe.putObject(obj, offset, value);
+            accessor.set(obj, value);
         }
         catch (Exception e) {
             throw new HproseException(e.getMessage());

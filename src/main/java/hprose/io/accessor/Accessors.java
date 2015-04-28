@@ -38,7 +38,8 @@ public final class Accessors {
     static {
         Unsafe _unsafe;
         try {
-            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");    
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");    
             theUnsafe.setAccessible(true);    
             _unsafe = (Unsafe) theUnsafe.get(null);
         }

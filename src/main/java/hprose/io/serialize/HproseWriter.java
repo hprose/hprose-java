@@ -486,7 +486,9 @@ public class HproseWriter implements HproseTags {
     }
 
     public final void reset() {
-        refer.reset();
+        if (refer != null) {
+            refer.reset();
+        }
         classref.clear();
         lastclassref = 0;
     }

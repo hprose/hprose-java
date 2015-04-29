@@ -27,6 +27,7 @@ import hprose.io.HproseTags;
 import hprose.io.accessor.ConstructorAccessor;
 import hprose.io.accessor.MemberAccessor;
 import hprose.util.ClassUtil;
+import hprose.util.StrUtil;
 import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -149,10 +150,23 @@ public class HproseReader implements HproseTags {
             return new HproseException("No byte found in stream");
         }
         else if (expectTags == null) {
+            if (buffer != null) {
+                String moreinfo = StrUtil.toString(new ByteBufferStream(buffer));
+                return new HproseException("Unexpected serialize tag '" +
+                                           (char)tag + "' in stream. \r\n" +
+                                            "The whole data: " + moreinfo);
+            }
             return new HproseException("Unexpected serialize tag '" +
                                        (char)tag + "' in stream");
         }
         else {
+            if (buffer != null) {
+                String moreinfo = StrUtil.toString(new ByteBufferStream(buffer));
+                return new HproseException("Tag '" + expectTags +
+                                       "' expected, but '" + (char)tag +
+                                       "' found in stream. \r\n" +
+                                            "The whole data: " + moreinfo);
+            }
             return new HproseException("Tag '" + expectTags +
                                        "' expected, but '" + (char)tag +
                                        "' found in stream");

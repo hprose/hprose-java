@@ -105,14 +105,6 @@ public class ConstructorAccessor {
 
     @SuppressWarnings({"unchecked"})
     public static final <T> T newInstance(Class<T> type) {
-        if (Accessors.unsafe != null) {
-            try {
-                return (T) Accessors.unsafe.allocateInstance(type);
-            }
-            catch (InstantiationException e) {
-                return null;
-            }
-        }
         Constructor<?> ctor = ctorCache.get(type);
         if (ctor == null) {
             Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();

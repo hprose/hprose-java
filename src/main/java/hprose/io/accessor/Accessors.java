@@ -116,7 +116,7 @@ public final class Accessors {
     }
 
     private static MemberAccessor getFieldAccessor(Field field) {
-        if (Accessors.unsafe != null) {
+        if (unsafe != null && !isAndroid()) {
             Class<?> cls = field.getType();
             if (cls == int.class) {
                 return new IntFieldAccessor(field);

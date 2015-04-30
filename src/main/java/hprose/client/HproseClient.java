@@ -511,11 +511,11 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
         if (Future.class.equals(ClassUtil.toClass(returnType))) {
             if (returnType instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)returnType).getActualTypeArguments()[0];
+                if (void.class.equals(returnType) || Void.class.equals(returnType)) {
+                    returnType = null;
+                }
             }
             else {
-                returnType = null;
-            }
-            if (void.class.equals(returnType) || Void.class.equals(returnType)) {
                 returnType = null;
             }
             final Type _returnType = returnType;
@@ -572,7 +572,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
             returnType == Buffer.class) {
             return stream.buffer;
         }
-        if (returnType == ByteBufferStream.class) {
+        else if (returnType == ByteBufferStream.class) {
             return stream;
         }
         else if (returnType == byte[].class) {

@@ -47,7 +47,7 @@
     </licenses>
     <scm>
         <connection>scm:git:https://github.com/hprose/hprose-java.git</connection>
-        <developerConnection>scm:https://github.com/hprose/hprose-java.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/hprose/hprose-java.git</developerConnection>
         <url>https://github.com/hprose/hprose-java</url>
     </scm>
     <developers>

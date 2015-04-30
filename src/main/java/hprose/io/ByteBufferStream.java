@@ -235,8 +235,8 @@ public final class ByteBufferStream {
     private void grow(int n) {
         if (buffer.remaining() < n) {
             int required = buffer.position() + n;
-            int size = pow2roundup(required) << 1;
-            if (size > buffer.capacity()) {
+            if (required > buffer.capacity()) {
+                int size = pow2roundup(required);
                 ByteBuffer buf = allocate(size);
                 buffer.flip();
                 buf.put(buffer);
@@ -244,7 +244,7 @@ public final class ByteBufferStream {
                 buffer = buf;
             }
             else {
-                buffer.limit(size);
+                buffer.limit(required);
             }
         }
     }

@@ -1,5 +1,7 @@
 # Hprose for Java
 
+[![Join the chat at https://gitter.im/hprose/hprose-java](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/hprose/hprose-java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 *Hprose* is a High Performance Remote Object Service Engine.
 
 It is a modern, lightweight, cross-language, cross-platform, object-oriented, high performance, remote dynamic communication middleware. It is not only easy to use, but powerful. You just need a little time to learn, then you can use it to easily construct cross language cross platform distributed application system.

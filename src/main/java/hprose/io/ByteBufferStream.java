@@ -52,9 +52,8 @@ public final class ByteBufferStream {
                 return ByteBuffer.allocate(capacity);
             }
             int index = log2(capacity) - 10;
-            int pos = position[index];
-            assert(pos < 8);
-            if (index < 12 && pos >= 0) {
+            if (index < 12 && position[index] >= 0) {
+                int pos = position[index];
                 ByteBuffer byteBuffer = pool[index][pos];
                 pool[index][pos] = null;
                 position[index] = pos - 1;

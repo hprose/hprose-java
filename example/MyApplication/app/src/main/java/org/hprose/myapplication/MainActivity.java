@@ -8,15 +8,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.json.JSONObject;
-
 import hprose.client.HproseHttpClient;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseErrorEvent;
 import hprose.io.HproseClassManager;
-import hprose.io.HproseFormatter;
 
-import java.io.IOException;
 import java.sql.Date;
 
 public class MainActivity extends Activity {

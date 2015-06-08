@@ -12,7 +12,7 @@
  *                                                        *
  * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Apr 28, 2015                             *
+ * LastModified: Jun 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,29 +26,33 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
-import sun.misc.Unsafe;
 
 public final class Accessors {
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
     private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
 
-    static final Unsafe unsafe;
-    
-    static {
-        Unsafe _unsafe;
+    private static sun.misc.Unsafe getUnsafe() {
         try {
-            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-            Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");    
-            theUnsafe.setAccessible(true);    
-            _unsafe = (Unsafe) theUnsafe.get(null);
+            return sun.misc.Unsafe.getUnsafe();
+        }
+        catch (Exception e) {}
+        try {
+            Class<sun.misc.Unsafe> k = sun.misc.Unsafe.class;
+            for (Field f : k.getDeclaredFields()) {
+                f.setAccessible(true);
+                Object x = f.get(null);
+                if (k.isInstance(x)) return k.cast(x);
+            }
+            return null;
         }
         catch (Exception e) {
-            _unsafe = null;
+            return null;
         }
-        unsafe = _unsafe;
     }
 
+    static final sun.misc.Unsafe unsafe = getUnsafe();
+    
     public final static boolean isAndroid() {
         String vmName = System.getProperty("java.vm.name");
          if (vmName == null) {

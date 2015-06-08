@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,6 +35,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.concurrent.Future;
 
 public abstract class HproseService implements HproseTags {
 
@@ -596,6 +597,9 @@ public abstract class HproseService implements HproseTags {
                 }
                 else {
                     result = remoteMethod.method.invoke(remoteMethod.obj, args);
+                }
+                if (result instanceof Future) {
+                    result = ((Future)result).get();
                 }
             }
             catch (ExceptionInInitializerError ex1) {

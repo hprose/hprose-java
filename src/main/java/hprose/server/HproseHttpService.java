@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Mar 2, 2015                              *
+ * LastModified: Jun 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,6 +24,9 @@ import hprose.io.ByteBufferStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +37,7 @@ public class HproseHttpService extends HproseService {
     private boolean crossDomainEnabled = false;
     private boolean p3pEnabled = false;
     private boolean getEnabled = true;
+    private long timeout = 30000;
     private final HashMap<String, Boolean> origins = new HashMap<String, Boolean>();
     private static final ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
 
@@ -89,6 +93,14 @@ public class HproseHttpService extends HproseService {
 
     public void removeAccessControlAllowOrigin(String origin) {
         origins.remove(origin);
+    }
+    
+    public void setTimeout(long value) {
+        timeout = value;
+    }
+
+    public long getTimeout() {
+        return timeout;
     }
 
     @Override
@@ -157,27 +169,87 @@ public class HproseHttpService extends HproseService {
     }
 
     public void handle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
+        sendHeader(httpContext);
+        String method = httpContext.getRequest().getMethod();
+        if (method.equals("GET")) {
+            if (getEnabled) {
+                ByteBufferStream ostream = null;
+                try {
+                    ostream = doFunctionList(methods, httpContext);
+                    ostream.writeTo(httpContext.getResponse().getOutputStream());
+                }
+                finally {
+                    if (ostream != null) {
+                        ostream.close();
+                    }
+                }
+            }
+            else {
+                httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
+            }
+        }
+        else if (method.equals("POST")) {
+            if (httpContext.getRequest().isAsyncSupported()) {
+                asyncHandle(httpContext, methods);
+            }
+            else {
+                syncHandle(httpContext, methods);
+            }
+        }
+    }
+
+    private void asyncHandle(final HttpContext httpContext, final HproseHttpMethods methods) {
+        final AsyncContext async = httpContext.getRequest().startAsync();
+        async.setTimeout(timeout);
+        async.addListener(new AsyncListener() {
+            public void onComplete(AsyncEvent ae) throws IOException {
+            }
+            public void onTimeout(AsyncEvent ae) throws IOException {
+                ByteBufferStream ostream = sendError(ae.getThrowable(), httpContext);
+                ostream.writeTo(ae.getSuppliedResponse().getOutputStream());
+            }
+            public void onError(AsyncEvent ae) throws IOException {
+            }
+            public void onStartAsync(AsyncEvent ae) throws IOException {
+            }
+        });
+        async.start(new Runnable() {
+            public void run() {
+                ByteBufferStream istream = null;
+                ByteBufferStream ostream = null;
+                try {
+                    currentContext.set(httpContext);
+                    istream = new ByteBufferStream();
+                    istream.readFrom(async.getRequest().getInputStream());
+                    ostream = handle(istream, methods, httpContext);
+                    ostream.writeTo(async.getResponse().getOutputStream());
+                }
+                catch (IOException ex) {
+                    fireErrorEvent(ex, httpContext);
+                }
+                finally {
+                    currentContext.remove();
+                    if (istream != null) {
+                        istream.close();
+                    }
+                    if (ostream != null) {
+                        ostream.close();
+                    }
+                    async.complete();
+                }
+            }
+        });
+    }
+
+    private void syncHandle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
         ByteBufferStream istream = null;
         ByteBufferStream ostream = null;
         try {
             currentContext.set(httpContext);
-            sendHeader(httpContext);
-            String method = httpContext.getRequest().getMethod();
-            if (method.equals("GET")) {
-                if (getEnabled) {
-                    ostream = doFunctionList(methods, httpContext);
-                    ostream.writeTo(httpContext.getResponse().getOutputStream());
-                }
-                else {
-                    httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
-                }
-            }
-            else if (method.equals("POST")) {
-                istream = new ByteBufferStream();
-                istream.readFrom(httpContext.getRequest().getInputStream());
-                ostream = handle(istream, methods, httpContext);
-                ostream.writeTo(httpContext.getResponse().getOutputStream());
-            }
+            istream = new ByteBufferStream();
+            istream.readFrom(httpContext.getRequest().getInputStream());
+            ostream = handle(istream, methods, httpContext);
+            ostream.writeTo(httpContext.getResponse().getOutputStream());
         }
         finally {
             currentContext.remove();

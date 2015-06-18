@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 18, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -32,7 +32,7 @@ final class OtherTypeSerializer implements HproseSerializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
-    private static void writeObject(HproseWriter writer, OutputStream stream, Object object, Class<?> type) throws IOException {
+    private static void writeObject(HproseWriter writer, Object object, Class<?> type) throws IOException {
         Map<String, MemberAccessor> members = Accessors.getMembers(type, writer.mode);
         for (Map.Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
@@ -51,7 +51,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         stream.write(TagObject);
         ValueWriter.write(stream, cr);
         stream.write(TagOpenbrace);
-        writeObject(writer, stream, object, type);
+        writeObject(writer, object, type);
         stream.write(TagClosebrace);
     }
 

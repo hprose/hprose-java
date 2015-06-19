@@ -12,7 +12,7 @@
  *                                                        *
  * value writer class for Java.                           *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Jun 18, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -313,10 +313,7 @@ public final class ValueWriter implements HproseTags {
         stream.write(TagQuote);
     }
 
-    final static void writeDateOfCalendar(OutputStream stream, Calendar calendar) throws IOException {
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH) + 1;
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+    final static void writeDateOfCalendar(OutputStream stream, int year, int month, int day) throws IOException {
         stream.write(TagDate);
         stream.write((byte) ('0' + (year / 1000 % 10)));
         stream.write((byte) ('0' + (year / 100 % 10)));
@@ -328,11 +325,14 @@ public final class ValueWriter implements HproseTags {
         stream.write((byte) ('0' + (day % 10)));
     }
 
-    final static void writeTimeOfCalendar(OutputStream stream, Calendar calendar, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-        int second = calendar.get(Calendar.SECOND);
-        int millisecond = calendar.get(Calendar.MILLISECOND);
+    final static void writeDateOfCalendar(OutputStream stream, Calendar calendar) throws IOException {
+        writeDateOfCalendar(stream,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH) + 1,
+            calendar.get(Calendar.DAY_OF_MONTH));
+    }
+
+    final static void writeTimeOfCalendar(OutputStream stream, int hour, int minute, int second, int millisecond, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
         if (ignoreZero && hour == 0 && minute == 0 && second == 0 && millisecond == 0) {
             return;
         }
@@ -349,6 +349,15 @@ public final class ValueWriter implements HproseTags {
             stream.write((byte) ('0' + (millisecond / 10 % 10)));
             stream.write((byte) ('0' + (millisecond % 10)));
         }
+    }
+
+    final static void writeTimeOfCalendar(OutputStream stream, Calendar calendar, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
+        writeTimeOfCalendar(stream,
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            calendar.get(Calendar.SECOND),
+            calendar.get(Calendar.MILLISECOND),
+            ignoreZero, ignoreMillisecond);
     }
 
     final static byte[] getAscii(String s) {

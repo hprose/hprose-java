@@ -24,8 +24,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ConstructorAccessor {
     private static final IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
@@ -71,7 +69,7 @@ public class ConstructorAccessor {
         }
     }
 
-    private static Object[] getArgs(Constructor ctor) {
+    private static Object[] getArgs(Constructor<?> ctor) {
         Object[] args = argsCache.get(ctor);
         if (args == null) {
             Class<?>[] params = ctor.getParameterTypes();

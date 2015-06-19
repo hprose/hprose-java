@@ -62,9 +62,9 @@ public class HproseTcpServer extends HproseService {
                     if (n == 0) {
                         continue;
                     }
-                    Iterator it = selector.selectedKeys().iterator();
+                    Iterator<SelectionKey> it = selector.selectedKeys().iterator();
                     while (it.hasNext()) {
-                        SelectionKey key = (SelectionKey) it.next();
+                        SelectionKey key = it.next();
                         it.remove();
                         if (key.isAcceptable()) {
                             doAccept((ServerSocketChannel) key.channel());

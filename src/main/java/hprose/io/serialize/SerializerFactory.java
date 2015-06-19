@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Sep 13, 2014                             *
+ * LastModified: Jun 18, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,7 @@
 package hprose.io.serialize;
 
 import hprose.util.IdentityMap;
+import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -54,6 +55,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class SerializerFactory {
     private static final IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
+
     static {
         serializers.put(void.class, NullSerializer.instance);
         serializers.put(boolean.class, BooleanSerializer.instance);
@@ -130,6 +132,9 @@ public final class SerializerFactory {
         serializers.put(AtomicIntegerArray.class, AtomicIntegerArraySerializer.instance);
         serializers.put(AtomicLongArray.class, AtomicLongArraySerializer.instance);
         serializers.put(AtomicReferenceArray.class, AtomicReferenceArraySerializer.instance);
+        if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
+            serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
+        }
     }
     
     public final static HproseSerializer get(Class<?> type) {

@@ -1,6 +1,6 @@
 # Hprose for Java
 
-[![Join the chat at https://gitter.im/hprose/hprose-java](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/hprose/hprose-java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/hprose/hprose-java](https://img.shields.io/badge/GITTER-join%20chat-green.svg)](https://gitter.im/hprose/hprose-java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.hprose/hprose-java/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.hprose/hprose-java/)
 [![GitHub release](https://img.shields.io/github/release/hprose/hprose-java.svg)](https://github.com/hprose/hprose-java/releases)
 [![License](https://img.shields.io/github/license/hprose/hprose-java.svg)](http://opensource.org/licenses/MIT)

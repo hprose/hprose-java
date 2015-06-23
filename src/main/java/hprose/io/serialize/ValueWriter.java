@@ -49,7 +49,7 @@ public final class ValueWriter implements HproseTags {
             return new byte[20];
         }
     };
-    
+
     public final static void writeInt(OutputStream stream, int i) throws IOException {
         if ((i >= 0) && (i <= 9)) {
             stream.write((byte)('0' + i));
@@ -143,7 +143,7 @@ public final class ValueWriter implements HproseTags {
             stream.write(TagSemicolon);
         }
     }
-    
+
     public final static void write(OutputStream stream, long l) throws IOException {
             if (l >= 0 && l <= 9) {
             stream.write((int)l + '0');
@@ -154,11 +154,11 @@ public final class ValueWriter implements HproseTags {
             stream.write(TagSemicolon);
         }
     }
-    
+
     public final static void write(OutputStream stream, boolean b) throws IOException {
         stream.write(b ? TagTrue : TagFalse);
     }
-    
+
     public final static void write(OutputStream stream, float f) throws IOException {
         if (Float.isNaN(f)) {
             stream.write(TagNaN);

@@ -135,6 +135,7 @@ public final class SerializerFactory {
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
             serializers.put(java.time.LocalTime.class, LocalTimeSerializer.instance);
+            serializers.put(java.time.LocalDateTime.class, LocalDateTimeSerializer.instance);
         }
     }
 

@@ -313,7 +313,7 @@ public final class ValueWriter implements HproseTags {
         stream.write(TagQuote);
     }
 
-    final static void writeDateOfCalendar(OutputStream stream, int year, int month, int day) throws IOException {
+    final static void writeDate(OutputStream stream, int year, int month, int day) throws IOException {
         stream.write(TagDate);
         stream.write((byte) ('0' + (year / 1000 % 10)));
         stream.write((byte) ('0' + (year / 100 % 10)));
@@ -326,13 +326,13 @@ public final class ValueWriter implements HproseTags {
     }
 
     final static void writeDateOfCalendar(OutputStream stream, Calendar calendar) throws IOException {
-        writeDateOfCalendar(stream,
+        writeDate(stream,
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH) + 1,
             calendar.get(Calendar.DAY_OF_MONTH));
     }
 
-    final static void writeTimeOfCalendar(OutputStream stream, int hour, int minute, int second, int millisecond, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
+    final static void writeTime(OutputStream stream, int hour, int minute, int second, int millisecond, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
         if (ignoreZero && hour == 0 && minute == 0 && second == 0 && millisecond == 0) {
             return;
         }
@@ -352,12 +352,31 @@ public final class ValueWriter implements HproseTags {
     }
 
     final static void writeTimeOfCalendar(OutputStream stream, Calendar calendar, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
-        writeTimeOfCalendar(stream,
+        writeTime(stream,
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
             calendar.get(Calendar.SECOND),
             calendar.get(Calendar.MILLISECOND),
             ignoreZero, ignoreMillisecond);
+    }
+
+    final static void writeNano(OutputStream stream, int nanosecond) throws IOException {
+        if (nanosecond > 0) {
+            stream.write(TagPoint);
+            stream.write((byte) ('0' + (nanosecond / 100000000 % 10)));
+            stream.write((byte) ('0' + (nanosecond / 10000000 % 10)));
+            stream.write((byte) ('0' + (nanosecond / 1000000 % 10)));
+            if (nanosecond % 1000000 > 0) {
+                stream.write((byte) ('0' + (nanosecond / 100000 % 10)));
+                stream.write((byte) ('0' + (nanosecond / 10000 % 10)));
+                stream.write((byte) ('0' + (nanosecond / 1000 % 10)));
+                if (nanosecond % 1000 > 0) {
+                    stream.write((byte) ('0' + (nanosecond / 100 % 10)));
+                    stream.write((byte) ('0' + (nanosecond / 10 % 10)));
+                    stream.write((byte) ('0' + (nanosecond % 10)));
+                }
+            }
+        }
     }
 
     final static byte[] getAscii(String s) {

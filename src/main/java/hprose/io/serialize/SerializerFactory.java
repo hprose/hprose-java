@@ -134,9 +134,10 @@ public final class SerializerFactory {
         serializers.put(AtomicReferenceArray.class, AtomicReferenceArraySerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
+            serializers.put(java.time.LocalTime.class, LocalTimeSerializer.instance);
         }
     }
-    
+
     public final static HproseSerializer get(Class<?> type) {
         HproseSerializer serializer = serializers.get(type);
         if (serializer == null) {

@@ -30,7 +30,7 @@ final class LocalDateSerializer implements HproseSerializer<LocalDate> {
 
     public final static void write(OutputStream stream, WriterRefer refer, LocalDate date) throws IOException {
         if (refer != null) refer.set(date);
-        ValueWriter.writeDateOfCalendar(stream, date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+        ValueWriter.writeDate(stream, date.getYear(), date.getMonthValue(), date.getDayOfMonth());
         stream.write(TagSemicolon);
     }
 

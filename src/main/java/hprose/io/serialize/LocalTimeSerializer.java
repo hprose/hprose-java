@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * TimestampSerializer.java                               *
+ * DateSerializer.java                                    *
  *                                                        *
- * Timestamp serializer class for Java.                   *
+ * Date serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 18, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,32 +20,26 @@
 package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagSemicolon;
-import hprose.util.TimeZoneUtil;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.Timestamp;
-import java.util.Calendar;
+import java.time.LocalTime;
 
-final class TimestampSerializer implements HproseSerializer<Timestamp> {
+final class LocalTimeSerializer implements HproseSerializer<LocalTime> {
 
-    public final static TimestampSerializer instance = new TimestampSerializer();
+    public final static LocalTimeSerializer instance = new LocalTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Timestamp time) throws IOException {
+    public final static void write(OutputStream stream, WriterRefer refer, LocalTime time) throws IOException {
         if (refer != null) refer.set(time);
-        Calendar calendar = Calendar.getInstance(TimeZoneUtil.DefaultTZ);
-        calendar.setTime(time);
-        ValueWriter.writeDateOfCalendar(stream, calendar);
-        ValueWriter.writeTimeOfCalendar(stream, calendar, false, true);
-        ValueWriter.writeNano(stream, time.getNanos());
+        ValueWriter.writeTime(stream, time.getHour(), time.getMinute(), time.getSecond(), 0, false, true);
+        ValueWriter.writeNano(stream, time.getNano());        
         stream.write(TagSemicolon);
     }
 
-    public final void write(HproseWriter writer, Timestamp obj) throws IOException {
+    public final void write(HproseWriter writer, LocalTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {
             write(stream, refer, obj);
         }
     }
-
 }

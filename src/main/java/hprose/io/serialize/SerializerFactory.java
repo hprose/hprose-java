@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Jun 18, 2015                             *
+ * LastModified: Jun 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,6 +23,8 @@ import hprose.util.IdentityMap;
 import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URL;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -52,6 +55,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.regex.Pattern;
 
 public final class SerializerFactory {
     private static final IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
@@ -132,10 +136,25 @@ public final class SerializerFactory {
         serializers.put(AtomicIntegerArray.class, AtomicIntegerArraySerializer.instance);
         serializers.put(AtomicLongArray.class, AtomicLongArraySerializer.instance);
         serializers.put(AtomicReferenceArray.class, AtomicReferenceArraySerializer.instance);
+        serializers.put(Locale.class, ToStringSerializer.instance);
+        serializers.put(URI.class, ToStringSerializer.instance);
+        serializers.put(URL.class, ToStringSerializer.instance);
+        serializers.put(Pattern.class, ToStringSerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
             serializers.put(java.time.LocalTime.class, LocalTimeSerializer.instance);
             serializers.put(java.time.LocalDateTime.class, LocalDateTimeSerializer.instance);
+            serializers.put(java.time.OffsetTime.class, OffsetTimeSerializer.instance);
+            serializers.put(java.time.OffsetDateTime.class, OffsetDateTimeSerializer.instance);
+            serializers.put(java.time.ZonedDateTime.class, ZonedDateTimeSerializer.instance);
+            serializers.put(java.time.Duration.class, ToStringSerializer.instance);
+            serializers.put(java.time.Instant.class, ToStringSerializer.instance);
+            serializers.put(java.time.MonthDay.class, ToStringSerializer.instance);
+            serializers.put(java.time.Period.class, ToStringSerializer.instance);
+            serializers.put(java.time.Year.class, ToStringSerializer.instance);
+            serializers.put(java.time.YearMonth.class, ToStringSerializer.instance);
+            serializers.put(java.time.ZoneId.class, ToStringSerializer.instance);
+            serializers.put(java.time.ZoneOffset.class, ToStringSerializer.instance);
         }
     }
 
@@ -160,5 +179,9 @@ public final class SerializerFactory {
             serializers.put(type, serializer);
         }
         return serializer;
+    }
+
+    public final static void register(Class<?> type, HproseSerializer serializer) {
+        serializers.put(type, serializer);
     }
 }

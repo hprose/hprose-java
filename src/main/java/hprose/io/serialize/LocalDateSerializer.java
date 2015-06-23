@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * DateSerializer.java                                    *
+ * LocalDateSerializer.java                               *
  *                                                        *
- * Date serializer class for Java.                        *
+ * LocalDate serializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 18, 2015                             *
+ * LastModified: Jun 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,7 @@
 package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -30,8 +31,15 @@ final class LocalDateSerializer implements HproseSerializer<LocalDate> {
 
     public final static void write(OutputStream stream, WriterRefer refer, LocalDate date) throws IOException {
         if (refer != null) refer.set(date);
-        ValueWriter.writeDate(stream, date.getYear(), date.getMonthValue(), date.getDayOfMonth());
-        stream.write(TagSemicolon);
+        int year = date.getYear();
+        if (year > 9999 || year < 1) {
+            stream.write(TagString);
+            ValueWriter.write(stream, date.toString());
+        }
+        else {
+            ValueWriter.writeDate(stream, year, date.getMonthValue(), date.getDayOfMonth());
+            stream.write(TagSemicolon);
+        }
     }
 
     public final void write(HproseWriter writer, LocalDate obj) throws IOException {

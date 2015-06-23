@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * DateSerializer.java                                    *
+ * LocalTimeSerializer.java                               *
  *                                                        *
- * Date serializer class for Java.                        *
+ * LocalTime serializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 18, 2015                             *
+ * LastModified: Jun 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,7 +31,7 @@ final class LocalTimeSerializer implements HproseSerializer<LocalTime> {
     public final static void write(OutputStream stream, WriterRefer refer, LocalTime time) throws IOException {
         if (refer != null) refer.set(time);
         ValueWriter.writeTime(stream, time.getHour(), time.getMinute(), time.getSecond(), 0, false, true);
-        ValueWriter.writeNano(stream, time.getNano());        
+        ValueWriter.writeNano(stream, time.getNano());
         stream.write(TagSemicolon);
     }
 

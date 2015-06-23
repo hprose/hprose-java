@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * LocalDateTimeSerializer.java                           *
+ * ZonedDateTimeSerializer.java                           *
  *                                                        *
- * LocalDateTime serializer class for Java.               *
+ * ZonedDateTime serializer class for Java.               *
  *                                                        *
  * LastModified: Jun 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -19,32 +19,39 @@
 
 package hprose.io.serialize;
 
-import static hprose.io.HproseTags.TagSemicolon;
 import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagUTC;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
-final class LocalDateTimeSerializer implements HproseSerializer<LocalDateTime> {
+final class ZonedDateTimeSerializer implements HproseSerializer<ZonedDateTime> {
 
-    public final static LocalDateTimeSerializer instance = new LocalDateTimeSerializer();
+    public final static ZonedDateTimeSerializer instance = new ZonedDateTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, LocalDateTime datetime) throws IOException {
+    public final static void write(OutputStream stream, WriterRefer refer, ZonedDateTime datetime) throws IOException {
         if (refer != null) refer.set(datetime);
-        int year = datetime.getYear();
-        if (year > 9999 || year < 1) {
+        if (!(datetime.getOffset().equals(ZoneOffset.UTC))) {
             stream.write(TagString);
             ValueWriter.write(stream, datetime.toString());
         }
         else {
-            ValueWriter.writeDate(stream, year, datetime.getMonthValue(), datetime.getDayOfMonth());
-            ValueWriter.writeTime(stream, datetime.getHour(), datetime.getMinute(), datetime.getSecond(), 0, false, true);
-            ValueWriter.writeNano(stream, datetime.getNano());
-            stream.write(TagSemicolon);
+            int year = datetime.getYear();
+            if (year > 9999 || year < 1) {
+                stream.write(TagString);
+                ValueWriter.write(stream, datetime.toString());
+            }
+            else {
+                ValueWriter.writeDate(stream, year, datetime.getMonthValue(), datetime.getDayOfMonth());
+                ValueWriter.writeTime(stream, datetime.getHour(), datetime.getMinute(), datetime.getSecond(), 0, false, true);
+                ValueWriter.writeNano(stream, datetime.getNano());
+                stream.write(TagUTC);
+            }
         }
     }
 
-    public final void write(HproseWriter writer, LocalDateTime obj) throws IOException {
+    public final void write(HproseWriter writer, ZonedDateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * LocalDateTimeSerializer.java                           *
+ * OffsetTimeSerializer.java                              *
  *                                                        *
- * LocalDateTime serializer class for Java.               *
+ * OffsetTime serializer class for Java.                  *
  *                                                        *
  * LastModified: Jun 23, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -19,32 +19,31 @@
 
 package hprose.io.serialize;
 
-import static hprose.io.HproseTags.TagSemicolon;
 import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagUTC;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.time.LocalDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 
-final class LocalDateTimeSerializer implements HproseSerializer<LocalDateTime> {
+final class OffsetTimeSerializer implements HproseSerializer<OffsetTime> {
 
-    public final static LocalDateTimeSerializer instance = new LocalDateTimeSerializer();
+    public final static OffsetTimeSerializer instance = new OffsetTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, LocalDateTime datetime) throws IOException {
-        if (refer != null) refer.set(datetime);
-        int year = datetime.getYear();
-        if (year > 9999 || year < 1) {
+    public final static void write(OutputStream stream, WriterRefer refer, OffsetTime time) throws IOException {
+        if (refer != null) refer.set(time);
+        if (!(time.getOffset().equals(ZoneOffset.UTC))) {
             stream.write(TagString);
-            ValueWriter.write(stream, datetime.toString());
+            ValueWriter.write(stream, time.toString());
         }
         else {
-            ValueWriter.writeDate(stream, year, datetime.getMonthValue(), datetime.getDayOfMonth());
-            ValueWriter.writeTime(stream, datetime.getHour(), datetime.getMinute(), datetime.getSecond(), 0, false, true);
-            ValueWriter.writeNano(stream, datetime.getNano());
-            stream.write(TagSemicolon);
+            ValueWriter.writeTime(stream, time.getHour(), time.getMinute(), time.getSecond(), 0, false, true);
+            ValueWriter.writeNano(stream, time.getNano());
+            stream.write(TagUTC);
         }
     }
 
-    public final void write(HproseWriter writer, LocalDateTime obj) throws IOException {
+    public final void write(HproseWriter writer, OffsetTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 public final class StrUtil {
 
-    public static final String toString(ByteBufferStream stream) {
+    public final static String toString(ByteBufferStream stream) {
         byte[] bytes = stream.toArray();
         try {
             return new String(bytes, "UTF-8");
@@ -33,7 +33,7 @@ public final class StrUtil {
         }
     }
 
-    public static final String[] split(String s, char c, int limit) {
+    public final static String[] split(String s, char c, int limit) {
         if (s == null) {
             return null;
         }

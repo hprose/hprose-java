@@ -39,7 +39,7 @@ public class HproseHttpService extends HproseService {
     private boolean getEnabled = true;
     private long timeout = 30000;
     private final HashMap<String, Boolean> origins = new HashMap<String, Boolean>();
-    private static final ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
+    private final static ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
 
     public static HttpContext getCurrentContext() {
         return currentContext.get();

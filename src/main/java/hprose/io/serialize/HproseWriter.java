@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class HproseWriter implements HproseTags {
 
-    private static final EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>>(HproseMode.class);
+    private final static EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>>(HproseMode.class);
     static {
         memberCache.put(HproseMode.FieldMode, new IdentityMap<Class<?>, SerializeCache>());
         memberCache.put(HproseMode.PropertyMode, new IdentityMap<Class<?>, SerializeCache>());

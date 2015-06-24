@@ -12,7 +12,7 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,7 +34,7 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
 public final class PropertyAccessor implements MemberAccessor {
-    private static final Object[] nullArgs = new Object[0];
+    private final static Object[] nullArgs = new Object[0];
     private final Method getter;
     private final Method setter;
     private final Class<?> cls;

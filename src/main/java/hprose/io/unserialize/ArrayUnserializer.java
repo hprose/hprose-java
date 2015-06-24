@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * CharsArrayUnserializer.java                            *
+ * OtherTypeArrayUnserializer.java                        *
  *                                                        *
- * chars array unserializer class for Java.               *
+ * other type array unserializer class for Java.          *
  *                                                        *
  * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -26,57 +26,77 @@ import static hprose.io.HproseTags.TagRef;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class CharsArrayUnserializer implements HproseUnserializer {
+final class ArrayUnserializer implements HproseUnserializer {
 
-    public final static CharsArrayUnserializer instance = new CharsArrayUnserializer();
+    public final static ArrayUnserializer instance = new ArrayUnserializer();
 
-    final static char[][] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    @SuppressWarnings({"unchecked"})
+    final static <T> T[] readArray(HproseReader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
             case TagList: {
                 int count = ValueReader.readInt(buffer, TagOpenbrace);
-                char[][] a = new char[count][];
+                T[] a = (T[])Array.newInstance(componentClass, count);
                 reader.refer.set(a);
+                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
-                    a[i] = CharArrayUnserializer.read(reader, buffer);
+                    a[i] = (T) unserializer.read(reader, buffer, componentClass, componentType);
                 }
                 buffer.get();
                 return a;
             }
-            case TagRef: return (char[][])reader.readRef(buffer);
-            default: throw ValueReader.castError(reader.tagToString(tag), Array.class);
+            case TagRef: return (T[])reader.readRef(buffer);
+            default: throw ValueReader.castError(reader.tagToString(tag), Array.newInstance(componentClass, 0).getClass());
         }
     }
 
-    final static char[][] read(HproseReader reader, InputStream stream) throws IOException {
+    @SuppressWarnings({"unchecked"})
+    final static <T> T[] readArray(HproseReader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
             case TagList: {
                 int count = ValueReader.readInt(stream, TagOpenbrace);
-                char[][] a = new char[count][];
+                T[] a = (T[])Array.newInstance(componentClass, count);
                 reader.refer.set(a);
+                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
-                    a[i] = CharArrayUnserializer.read(reader, stream);
+                    a[i] = (T) unserializer.read(reader, stream, componentClass, componentType);
                 }
                 stream.read();
                 return a;
             }
-            case TagRef: return (char[][])reader.readRef(stream);
-            default: throw ValueReader.castError(reader.tagToString(tag), Array.class);
+            case TagRef: return (T[])reader.readRef(stream);
+            default: throw ValueReader.castError(reader.tagToString(tag), Array.newInstance(componentClass, 0).getClass());
         }
     }
 
+
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(reader, buffer);
+        Class<?> componentClass = cls.getComponentType();
+        if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return readArray(reader, buffer, componentClass, componentType);
+        }
+        else {
+            return readArray(reader, buffer, componentClass, componentClass);
+        }
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(reader, stream);
+        Class<?> componentClass = cls.getComponentType();
+        if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return readArray(reader, stream, componentClass, componentType);
+        }
+        else {
+            return readArray(reader, stream, componentClass, componentClass);
+        }
     }
 
 }

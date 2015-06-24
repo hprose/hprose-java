@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 import java.util.TimeZone;
 
 public class CookieManager {
-    private static final TimeZone utc = TimeZone.getTimeZone("UTC");
+    private final static TimeZone utc = TimeZone.getTimeZone("UTC");
 
     private static int parseMonth(String str) {
         str = str.toLowerCase();

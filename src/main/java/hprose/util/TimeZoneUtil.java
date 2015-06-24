@@ -22,6 +22,6 @@ package hprose.util;
 import java.util.TimeZone;
 
 public final class TimeZoneUtil {
-    public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
-    public static final TimeZone DefaultTZ = TimeZone.getDefault();
+    public final static TimeZone UTC = TimeZone.getTimeZone("UTC");
+    public final static TimeZone DefaultTZ = TimeZone.getDefault();
 }

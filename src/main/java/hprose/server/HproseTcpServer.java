@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HproseTcpServer extends HproseService {
-    private static final ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
+    private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
     
     public static TcpContext getCurrentContext() {
         return currentContext.get();

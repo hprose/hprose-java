@@ -12,7 +12,7 @@
  *                                                        *
  * ConstructorAccessor class for Java.                    *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,18 +26,18 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class ConstructorAccessor {
-    private static final IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
-    private static final IdentityMap<Constructor<?>, Object[]> argsCache = new IdentityMap<Constructor<?>, Object[]>();
-    private static final Long longZero = (long) 0;
-    private static final Object[] nullArgs = new Object[0];
-    private static final Short shortZero = (short) 0;
-    private static final Double doubleZero = (double) 0;
-    private static final Byte byteZero = (byte) 0;
-    private static final Integer intZero = 0;
-    private static final Float floatZero = (float) 0;
-    private static final Character charZero = (char) 0;
-    private static final Constructor<Object> nullCtor;
-    private static final Method newInstance;
+    private final static IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
+    private final static IdentityMap<Constructor<?>, Object[]> argsCache = new IdentityMap<Constructor<?>, Object[]>();
+    private final static Long longZero = (long) 0;
+    private final static Object[] nullArgs = new Object[0];
+    private final static Short shortZero = (short) 0;
+    private final static Double doubleZero = (double) 0;
+    private final static Byte byteZero = (byte) 0;
+    private final static Integer intZero = 0;
+    private final static Float floatZero = (float) 0;
+    private final static Character charZero = (char) 0;
+    private final static Constructor<Object> nullCtor;
+    private final static Method newInstance;
 
     static {
         Constructor<Object> _nullCtor;
@@ -53,7 +53,7 @@ public class ConstructorAccessor {
         Method _newInstance;
         try {
             _newInstance = ObjectStreamClass.class.getDeclaredMethod("newInstance", new Class[0]);
-            _newInstance.setAccessible(true);            
+            _newInstance.setAccessible(true);
         }
         catch (Exception e) {
             _newInstance = null;
@@ -102,7 +102,7 @@ public class ConstructorAccessor {
     }
 
     @SuppressWarnings({"unchecked"})
-    public static final <T> T newInstance(Class<T> type) {
+    public final static <T> T newInstance(Class<T> type) {
         Constructor<?> ctor = ctorCache.get(type);
         if (ctor == null) {
             Constructor<T>[] ctors = (Constructor<T>[]) type.getDeclaredConstructors();

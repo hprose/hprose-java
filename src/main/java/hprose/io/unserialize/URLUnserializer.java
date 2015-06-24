@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 
 final class URLUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new URLUnserializer();
+    public final static URLUnserializer instance = new URLUnserializer();
 
     private static URL toURL(String s, Type type) throws IOException {
         try {
@@ -45,7 +45,7 @@ final class URLUnserializer implements HproseUnserializer {
         int tag = buffer.get();
         if (tag == TagNull) return null;
         if (tag == TagString) {
-            URL url = toURL(ValueReader.readCharsAsString(buffer), type);
+            URL url = toURL(ValueReader.readString(buffer), type);
             reader.refer.set(url);
             return url;
         }
@@ -66,7 +66,7 @@ final class URLUnserializer implements HproseUnserializer {
         int tag = stream.read();
         if (tag == TagNull) return null;
         if (tag == TagString) {
-            URL url = toURL(ValueReader.readCharsAsString(stream), type);
+            URL url = toURL(ValueReader.readString(stream), type);
             reader.refer.set(url);
             return url;
         }

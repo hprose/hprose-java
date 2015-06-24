@@ -12,7 +12,7 @@
  *                                                        *
  * LinkedList unserializer class for Java.                *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,14 @@ import java.util.LinkedList;
 
 final class LinkedListUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new LinkedListUnserializer();
+    public final static LinkedListUnserializer instance = new LinkedListUnserializer();
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return reader.readCollection(buffer, LinkedList.class, type);
+        return CollectionUnserializer.readCollection(reader, buffer, LinkedList.class, type);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return reader.readCollection(stream, LinkedList.class, type);
+        return CollectionUnserializer.readCollection(reader, stream, LinkedList.class, type);
     }
 
 }

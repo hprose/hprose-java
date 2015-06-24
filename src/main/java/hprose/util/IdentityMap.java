@@ -21,7 +21,7 @@ package hprose.util;
 @SuppressWarnings({"unchecked"})
 public class IdentityMap<K, V> {
 
-    static final class Entry<K, V> {
+    final static class Entry<K, V> {
 
         final int           hash;
         final K             key;
@@ -35,7 +35,7 @@ public class IdentityMap<K, V> {
             next = n;
         }
     }
-    public static final int     DEFAULT_TABLE_SIZE = 1024;
+    public final static int     DEFAULT_TABLE_SIZE = 1024;
 
     private final Entry<K, V>[] buckets;
     private final int           indexMask;

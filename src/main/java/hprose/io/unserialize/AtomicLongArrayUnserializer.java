@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicLongArray unserializer class for Java.           *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,14 @@ import java.util.concurrent.atomic.AtomicLongArray;
 
 final class AtomicLongArrayUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new AtomicLongArrayUnserializer();
+    public final static AtomicLongArrayUnserializer instance = new AtomicLongArrayUnserializer();
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return new AtomicLongArray(reader.readLongArray(buffer));
+        return new AtomicLongArray(LongArrayUnserializer.read(reader, buffer));
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return new AtomicLongArray(reader.readLongArray(stream));
+        return new AtomicLongArray(LongArrayUnserializer.read(reader, stream));
     }
 
 }

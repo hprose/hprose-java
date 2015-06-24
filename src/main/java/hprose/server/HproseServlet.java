@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class HproseServlet extends HttpServlet {
 
-    private static final long serialVersionUID = 1716958719284073368L;
+    private final static long serialVersionUID = 1716958719284073368L;
     private final HproseHttpService service = new HproseHttpService();
 
     @Override

@@ -12,7 +12,7 @@
  *                                                        *
  * BoolFieldAccessor class for Java.                      *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,7 @@ package hprose.io.accessor;
 import hprose.common.HproseException;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
+import hprose.io.unserialize.BooleanUnserializer;
 import hprose.io.unserialize.HproseReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,7 @@ public final class BoolFieldAccessor implements MemberAccessor {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void serialize(HproseWriter writer, Object obj) throws IOException {
+    public final void serialize(HproseWriter writer, Object obj) throws IOException {
         boolean value;
         try {
             value = Accessors.unsafe.getBoolean(obj, offset);
@@ -49,8 +50,8 @@ public final class BoolFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
-        boolean value = reader.readBoolean(buffer);
+    public final void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
+        boolean value = BooleanUnserializer.read(reader, buffer);
         try {
             Accessors.unsafe.putBoolean(obj, offset, value);
         }
@@ -60,8 +61,8 @@ public final class BoolFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
-        boolean value = reader.readBoolean(stream);
+    public final void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
+        boolean value = BooleanUnserializer.read(reader, stream);
         try {
             Accessors.unsafe.putBoolean(obj, offset, value);
         }

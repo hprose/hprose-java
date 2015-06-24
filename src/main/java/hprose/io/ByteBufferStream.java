@@ -28,10 +28,10 @@ import java.nio.channels.ByteChannel;
 
 public final class ByteBufferStream {
 
-    static final class ByteBufferPool {
+    final static class ByteBufferPool {
         private final ByteBuffer[][] pool = new ByteBuffer[12][];
         private final int[] position = new int[12];
-        private static final int[] debruijn = new int[] {
+        private final static int[] debruijn = new int[] {
             0,  1,  28,  2, 29, 14, 24,  3,
             30, 22, 20, 15, 25, 17,  4,  8,
             31, 27, 13, 23, 21, 19, 16,  7,
@@ -80,7 +80,7 @@ public final class ByteBufferStream {
         }
     }
 
-    private static final ThreadLocal<ByteBufferPool> byteBufferPool = new ThreadLocal<ByteBufferPool>() {
+    private final static ThreadLocal<ByteBufferPool> byteBufferPool = new ThreadLocal<ByteBufferPool>() {
         @Override
         protected ByteBufferPool initialValue() {
             return new ByteBufferPool();
@@ -101,11 +101,11 @@ public final class ByteBufferStream {
         return x + 1;
     }
 
-    public static final ByteBuffer allocate(int capacity) {
+    public final static ByteBuffer allocate(int capacity) {
         return byteBufferPool.get().allocate(capacity);
     }
 
-    public static final void free(ByteBuffer buffer) {
+    public final static void free(ByteBuffer buffer) {
         byteBufferPool.get().free(buffer);
     }
 
@@ -121,11 +121,11 @@ public final class ByteBufferStream {
         this.buffer = buffer;
     }
 
-    public static final ByteBufferStream wrap(byte[] array, int offset, int length) {
+    public final static ByteBufferStream wrap(byte[] array, int offset, int length) {
         return new ByteBufferStream(ByteBuffer.wrap(array, offset, length));
     }
 
-    public static final ByteBufferStream wrap(byte[] array) {
+    public final static ByteBufferStream wrap(byte[] array) {
         return new ByteBufferStream(ByteBuffer.wrap(array));
     }
 

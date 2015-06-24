@@ -28,7 +28,7 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
 public class HproseWebSocketService extends HproseService {
-    private static final ThreadLocal<WebSocketContext> currentContext = new ThreadLocal<WebSocketContext>();
+    private final static ThreadLocal<WebSocketContext> currentContext = new ThreadLocal<WebSocketContext>();
     private EndpointConfig config = null;
     
     public static WebSocketContext getCurrentContext() {

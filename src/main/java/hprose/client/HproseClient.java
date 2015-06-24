@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
 public abstract class HproseClient implements HproseInvoker, HproseTags {
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
-    private static final Object[] nullArgs = new Object[0];
+    private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode;
     protected String uri;
@@ -87,7 +87,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
         super.finalize();
     }
 
-    private static final HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
+    private final static HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
 
     public static void registerClientFactory(String scheme, Class<? extends HproseClient> clientClass) {
         synchronized (clientFactories) {

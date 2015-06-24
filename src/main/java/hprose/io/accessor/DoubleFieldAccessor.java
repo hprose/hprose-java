@@ -12,7 +12,7 @@
  *                                                        *
  * DoubleFieldAccessor class for Java.                    *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,7 @@ package hprose.io.accessor;
 import hprose.common.HproseException;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
+import hprose.io.unserialize.DoubleUnserializer;
 import hprose.io.unserialize.HproseReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
-        double value = reader.readDouble(buffer);
+        double value = DoubleUnserializer.read(reader, buffer);
         try {
             Accessors.unsafe.putDouble(obj, offset, value);
         }
@@ -61,7 +62,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
-        double value = reader.readDouble(stream);
+        double value = DoubleUnserializer.read(reader, stream);
         try {
             Accessors.unsafe.putDouble(obj, offset, value);
         }

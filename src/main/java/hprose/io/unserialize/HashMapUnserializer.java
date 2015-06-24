@@ -12,7 +12,7 @@
  *                                                        *
  * HashMap unserializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,14 @@ import java.util.HashMap;
 
 final class HashMapUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new HashMapUnserializer();
+    public final static HashMapUnserializer instance = new HashMapUnserializer();
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return reader.readMap(buffer, HashMap.class, type);
+        return MapUnserializer.readMap(reader, buffer, HashMap.class, type);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return reader.readMap(stream, HashMap.class, type);
+        return MapUnserializer.readMap(reader, stream, HashMap.class, type);
     }
 
 }

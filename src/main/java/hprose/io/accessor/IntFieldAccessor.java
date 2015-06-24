@@ -12,7 +12,7 @@
  *                                                        *
  * IntFieldAccessor class for Java.                       *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,6 +22,7 @@ import hprose.common.HproseException;
 import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
 import hprose.io.unserialize.HproseReader;
+import hprose.io.unserialize.IntUnserializer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -50,7 +51,7 @@ public final class IntFieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
-        int value = reader.readInt(buffer);
+        int value = IntUnserializer.read(reader, buffer);
         try {
             Accessors.unsafe.putInt(obj, offset, value);
         }
@@ -61,7 +62,7 @@ public final class IntFieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
-        int value = reader.readInt(stream);
+        int value = IntUnserializer.read(reader, stream);
         try {
             Accessors.unsafe.putInt(obj, offset, value);
         }

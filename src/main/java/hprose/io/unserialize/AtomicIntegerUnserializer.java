@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicInteger unserializer class for Java.             *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class AtomicIntegerUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new AtomicIntegerUnserializer();
+    public final static AtomicIntegerUnserializer instance = new AtomicIntegerUnserializer();
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return new AtomicInteger(reader.readInt(buffer));
+        return new AtomicInteger(IntUnserializer.read(reader, buffer));
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return new AtomicInteger(reader.readInt(stream));
+        return new AtomicInteger(IntUnserializer.read(reader, stream));
     }
 
 }

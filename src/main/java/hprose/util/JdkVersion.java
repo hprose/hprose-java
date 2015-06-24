@@ -20,13 +20,13 @@
 package hprose.util;
 
 public abstract class JdkVersion {  
-    public static final int JAVA_15 = 5;  
-    public static final int JAVA_16 = 6;  
-    public static final int JAVA_17 = 7;  
-    public static final int JAVA_18 = 8;  
-    public static final int JAVA_19 = 9;  
-    public static final String javaVersion;  
-    public static final int majorJavaVersion;
+    public final static int JAVA_15 = 5;  
+    public final static int JAVA_16 = 6;  
+    public final static int JAVA_17 = 7;  
+    public final static int JAVA_18 = 8;  
+    public final static int JAVA_19 = 9;  
+    public final static String javaVersion;  
+    public final static int majorJavaVersion;
     static {  
         javaVersion = System.getProperty("java.version");  
         if (javaVersion.contains("1.9.")) {

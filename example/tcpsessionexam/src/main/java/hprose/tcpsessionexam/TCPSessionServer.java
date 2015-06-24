@@ -14,8 +14,8 @@ import java.util.HashMap;
 
 public class TCPSessionServer {
     static class Session {
-        static final ObjectIntMap sidMap = new ObjectIntMap();
-        static final ArrayList<HashMap<String, Object>> sessions = new ArrayList<HashMap<String, Object>>();
+        final static ObjectIntMap sidMap = new ObjectIntMap();
+        final static ArrayList<HashMap<String, Object>> sessions = new ArrayList<HashMap<String, Object>>();
         public static HashMap<String, Object> getSession(Object context) {
             return sessions.get(sidMap.get(context));
         }

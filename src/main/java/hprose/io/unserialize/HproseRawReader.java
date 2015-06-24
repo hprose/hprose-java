@@ -289,7 +289,7 @@ public final class HproseRawReader implements HproseTags {
         readRaw(stream, ostream, stream.read());
     }
 
-    static final void readRaw(ByteBuffer buffer, OutputStream ostream, int tag) throws IOException {
+    final static void readRaw(ByteBuffer buffer, OutputStream ostream, int tag) throws IOException {
         ostream.write(tag);
         switch (tag) {
             case '0':
@@ -352,7 +352,7 @@ public final class HproseRawReader implements HproseTags {
         }
     }
 
-    static final void readRaw(InputStream stream, OutputStream ostream, int tag) throws IOException {
+    final static void readRaw(InputStream stream, OutputStream ostream, int tag) throws IOException {
         ostream.write(tag);
         switch (tag) {
             case '0':

@@ -44,7 +44,7 @@ public abstract class HproseService implements HproseTags {
     private boolean debugEnabled = false;
     protected HproseServiceEvent event = null;
     protected HproseMethods globalMethods = null;
-    private static final ThreadLocal<HproseContext> currentContext = new ThreadLocal<HproseContext>();
+    private final static ThreadLocal<HproseContext> currentContext = new ThreadLocal<HproseContext>();
 
     public static HproseContext getCurrentContext() {
         return currentContext.get();

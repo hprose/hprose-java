@@ -20,28 +20,30 @@ package hprose.io.unserialize;
 
 import hprose.common.HproseException;
 import hprose.io.HproseTags;
+import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 public final class ValueReader implements HproseTags {
 
-    static final HproseException badEncoding(int c) {
+    final static HproseException badEncoding(int c) {
         return new HproseException("bad utf-8 encoding at " + ((c < 0) ? "end of stream" : "0x" + Integer.toHexString(c & 255)));
     }
 
-    static final HproseException castError(String srctype, Type desttype) {
+    final static HproseException castError(String srctype, Type desttype) {
         return new HproseException(srctype + " can't change to " + desttype.toString());
     }
 
-    static final HproseException castError(Object obj, Type type) {
+    final static HproseException castError(Object obj, Type type) {
         return new HproseException(obj.getClass().toString() + " can't change to " + type.toString());
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final int readInt(ByteBuffer buffer, int tag) throws IOException {
+    final static int readInt(ByteBuffer buffer, int tag) throws IOException {
         int result = 0;
         int i = buffer.get();
         if (i == tag) {
@@ -70,7 +72,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final int readInt(InputStream stream, int tag) throws IOException {
+    final static int readInt(InputStream stream, int tag) throws IOException {
         int result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -99,7 +101,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final long readLong(ByteBuffer buffer, int tag) throws IOException {
+    final static long readLong(ByteBuffer buffer, int tag) throws IOException {
         long result = 0;
         int i = buffer.get();
         if (i == tag) {
@@ -128,7 +130,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final long readLong(InputStream stream, int tag) throws IOException {
+    final static long readLong(InputStream stream, int tag) throws IOException {
         long result = 0;
         int i = stream.read();
         if (i == tag) {
@@ -157,7 +159,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final float readLongAsFloat(ByteBuffer buffer) throws IOException {
+    final static float readLongAsFloat(ByteBuffer buffer) throws IOException {
         float result = 0.0F;
         int i = buffer.get();
         if (i == TagSemicolon) {
@@ -186,7 +188,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final float readLongAsFloat(InputStream stream) throws IOException {
+    final static float readLongAsFloat(InputStream stream) throws IOException {
         float result = 0.0F;
         int i = stream.read();
         if (i == TagSemicolon) {
@@ -215,7 +217,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final double readLongAsDouble(ByteBuffer buffer) throws IOException {
+    final static double readLongAsDouble(ByteBuffer buffer) throws IOException {
         double result = 0.0;
         int i = buffer.get();
         if (i == TagSemicolon) {
@@ -244,7 +246,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final double readLongAsDouble(InputStream stream) throws IOException {
+    final static double readLongAsDouble(InputStream stream) throws IOException {
         double result = 0.0;
         int i = stream.read();
         if (i == TagSemicolon) {
@@ -272,7 +274,25 @@ public final class ValueReader implements HproseTags {
         return result;
     }
 
-    static final float parseFloat(StringBuilder value) {
+    final static float parseFloat(String value) {
+        try {
+            return Float.parseFloat(value);
+        }
+        catch (NumberFormatException e) {
+            return Float.NaN;
+        }
+    }
+
+    final static double parseDouble(String value) {
+        try {
+            return Double.parseDouble(value);
+        }
+        catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
+
+    final static float parseFloat(StringBuilder value) {
         try {
             return Float.parseFloat(value.toString());
         }
@@ -281,7 +301,7 @@ public final class ValueReader implements HproseTags {
         }
     }
 
-    static final double parseDouble(StringBuilder value) {
+    final static double parseDouble(StringBuilder value) {
         try {
             return Double.parseDouble(value.toString());
         }
@@ -290,7 +310,7 @@ public final class ValueReader implements HproseTags {
         }
     }
 
-    static final StringBuilder readUntil(ByteBuffer buffer, int tag) throws IOException {
+    final static StringBuilder readUntil(ByteBuffer buffer, int tag) throws IOException {
         StringBuilder sb = new StringBuilder();
         int i = buffer.get();
         while (i != tag) {
@@ -300,7 +320,7 @@ public final class ValueReader implements HproseTags {
         return sb;
     }
 
-    static final StringBuilder readUntil(InputStream stream, int tag) throws IOException {
+    final static StringBuilder readUntil(InputStream stream, int tag) throws IOException {
         StringBuilder sb = new StringBuilder();
         int i = stream.read();
         while ((i != tag) && (i != -1)) {
@@ -311,7 +331,7 @@ public final class ValueReader implements HproseTags {
     }
 
     @SuppressWarnings({"fallthrough"})
-    static final char[] readChars(ByteBuffer buffer) throws IOException {
+    final static char[] readChars(ByteBuffer buffer) throws IOException {
         int count = readInt(buffer, TagQuote);
         char[] buf = new char[count];
         int b1, b2, b3, b4;
@@ -366,7 +386,7 @@ public final class ValueReader implements HproseTags {
         return buf;
     }
 
-    static final char[] readChars(InputStream stream) throws IOException {
+    final static char[] readChars(InputStream stream) throws IOException {
         int count = readInt(stream, TagQuote);
         char[] buf = new char[count];
         int b1, b2, b3, b4;
@@ -423,7 +443,7 @@ public final class ValueReader implements HproseTags {
         return buf;
     }
 
-    static final char readUTF8CharAsChar(ByteBuffer buffer) throws IOException {
+    final static char readChar(ByteBuffer buffer) throws IOException {
         char u;
         int b1 = buffer.get(), b2, b3;
         switch ((b1 & 0xff) >>> 4) {
@@ -448,12 +468,12 @@ public final class ValueReader implements HproseTags {
                 u = (char) (((b1 << 12) ^ (b2 << 6) ^ b3) ^ 0x1f80);
                 break;
             default:
-                throw ValueReader.badEncoding(b1);
+                throw badEncoding(b1);
         }
         return u;
     }
 
-    static final char readUTF8CharAsChar(InputStream stream) throws IOException {
+    final static char readChar(InputStream stream) throws IOException {
         char u;
         int b1 = stream.read(), b2, b3;
         switch (b1 >>> 4) {
@@ -481,64 +501,232 @@ public final class ValueReader implements HproseTags {
                              (b3 & 0x3f));
                 break;
             default:
-                throw ValueReader.badEncoding(b1);
+                throw badEncoding(b1);
         }
         return u;
     }
 
-    static final int readIntWithoutTag(ByteBuffer buffer) throws IOException {
+    final static int readInt(ByteBuffer buffer) throws IOException {
         return readInt(buffer, TagSemicolon);
     }
 
-    static final int readIntWithoutTag(InputStream stream) throws IOException {
+    final static int readInt(InputStream stream) throws IOException {
         return readInt(stream, TagSemicolon);
     }
 
-    static final long readLongWithoutTag(ByteBuffer buffer) throws IOException {
+    final static long readLong(ByteBuffer buffer) throws IOException {
         return readLong(buffer, TagSemicolon);
     }
 
-    static final long readLongWithoutTag(InputStream stream) throws IOException {
+    final static long readLong(InputStream stream) throws IOException {
         return readLong(stream, TagSemicolon);
     }
 
-    static final BigInteger readBigIntegerWithoutTag(ByteBuffer buffer) throws IOException {
+    final static BigInteger readBigInteger(ByteBuffer buffer) throws IOException {
         return new BigInteger(readUntil(buffer, TagSemicolon).toString(), 10);
     }
 
-    static final BigInteger readBigIntegerWithoutTag(InputStream stream) throws IOException {
+    final static BigInteger readBigInteger(InputStream stream) throws IOException {
         return new BigInteger(readUntil(stream, TagSemicolon).toString(), 10);
     }
 
-    static final double readDoubleWithoutTag(ByteBuffer buffer) throws IOException {
+    final static float readFloat(ByteBuffer buffer) throws IOException {
+        return parseFloat(readUntil(buffer, TagSemicolon));
+    }
+
+    final static float readFloat(InputStream stream) throws IOException {
+        return parseFloat(readUntil(stream, TagSemicolon));
+    }
+
+    final static double readDouble(ByteBuffer buffer) throws IOException {
         return parseDouble(readUntil(buffer, TagSemicolon));
     }
 
-    static final double readDoubleWithoutTag(InputStream stream) throws IOException {
+    final static double readDouble(InputStream stream) throws IOException {
         return parseDouble(readUntil(stream, TagSemicolon));
     }
 
-    static final double readInfinityWithoutTag(ByteBuffer buffer) throws IOException {
+    final static double readInfinity(ByteBuffer buffer) throws IOException {
         return (buffer.get() == TagNeg) ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
     }
 
-    static final double readInfinityWithoutTag(InputStream stream) throws IOException {
+    final static double readInfinity(InputStream stream) throws IOException {
         return (stream.read() == TagNeg) ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
     }
 
-    static final String readCharsAsString(ByteBuffer buffer) throws IOException {
+    final static String readString(ByteBuffer buffer) throws IOException {
         return new String(readChars(buffer));
     }
 
-    static final String readCharsAsString(InputStream stream) throws IOException {
+    final static String readString(InputStream stream) throws IOException {
         return new String(readChars(stream));
     }
 
-    static final String readUTF8CharWithoutTag(ByteBuffer buffer) throws IOException {
-        return new String(new char[]{ValueReader.readUTF8CharAsChar(buffer)});
+    final static String readUTF8Char(ByteBuffer buffer) throws IOException {
+        return new String(new char[]{readChar(buffer)});
     }
 
-    static final String readUTF8CharWithoutTag(InputStream stream) throws IOException {
-        return new String(new char[]{ValueReader.readUTF8CharAsChar(stream)});
+    final static String readUTF8Char(InputStream stream) throws IOException {
+        return new String(new char[]{readChar(stream)});
     }
+
+    final static byte[] readBytes(ByteBuffer buffer) throws IOException {
+        int len = readInt(buffer, HproseTags.TagQuote);
+        byte[] b = new byte[len];
+        buffer.get(b, 0, len);
+        buffer.get();
+        return b;
+    }
+
+    final static byte[] readBytes(InputStream stream) throws IOException {
+        int len = readInt(stream, HproseTags.TagQuote);
+        int off = 0;
+        byte[] b = new byte[len];
+        while (len > 0) {
+            int size = stream.read(b, off, len);
+            off += size;
+            len -= size;
+        }
+        stream.read();
+        return b;
+    }
+
+    private static int read4Digit(ByteBuffer buffer) throws IOException {
+        int n = buffer.get() - '0';
+        n = n * 10 + buffer.get() - '0';
+        n = n * 10 + buffer.get() - '0';
+        return n * 10 + buffer.get() - '0';
+    }
+
+    private static int read2Digit(ByteBuffer buffer) throws IOException {
+        int n = buffer.get() - '0';
+        return n * 10 + buffer.get() - '0';
+    }
+
+    private static int read4Digit(InputStream stream) throws IOException {
+        int n = stream.read() - '0';
+        n = n * 10 + stream.read() - '0';
+        n = n * 10 + stream.read() - '0';
+        return n * 10 + stream.read() - '0';
+    }
+
+    private static int read2Digit(InputStream stream) throws IOException {
+        int n = stream.read() - '0';
+        return n * 10 + stream.read() - '0';
+    }
+
+    final static int readTime(ByteBuffer buffer, DateTime dt) throws IOException {
+        dt.hour = read2Digit(buffer);
+        dt.minute = read2Digit(buffer);
+        dt.second = read2Digit(buffer);
+        int tag = buffer.get();
+        if (tag == TagPoint) {
+            dt.nanosecond = buffer.get() - '0';
+            dt.nanosecond = dt.nanosecond * 10 + (buffer.get() - '0');
+            dt.nanosecond = dt.nanosecond * 10 + (buffer.get() - '0');
+            dt.nanosecond = dt.nanosecond * 1000000;
+            tag = buffer.get();
+            if (tag >= '0' && tag <= '9') {
+                dt.nanosecond += (tag - '0') * 100000;
+                dt.nanosecond += (buffer.get() - '0') * 10000;
+                dt.nanosecond += (buffer.get() - '0') * 1000;
+                tag = buffer.get();
+                if (tag >= '0' && tag <= '9') {
+                    dt.nanosecond += (tag - '0') * 100;
+                    dt.nanosecond += (buffer.get() - '0') * 10;
+                    dt.nanosecond += buffer.get() - '0';
+                    tag = buffer.get();
+                }
+            }
+        }
+        return tag;
+    }
+
+    final static int readTime(InputStream stream, DateTime dt) throws IOException {
+        dt.hour = read2Digit(stream);
+        dt.minute = read2Digit(stream);
+        dt.second = read2Digit(stream);
+        int tag = stream.read();
+        if (tag == TagPoint) {
+            dt.nanosecond = stream.read() - '0';
+            dt.nanosecond = dt.nanosecond * 10 + (stream.read() - '0');
+            dt.nanosecond = dt.nanosecond * 10 + (stream.read() - '0');
+            dt.nanosecond = dt.nanosecond * 1000000;
+            tag = stream.read();
+            if (tag >= '0' && tag <= '9') {
+                dt.nanosecond += (tag - '0') * 100000;
+                dt.nanosecond += (stream.read() - '0') * 10000;
+                dt.nanosecond += (stream.read() - '0') * 1000;
+                tag = stream.read();
+                if (tag >= '0' && tag <= '9') {
+                    dt.nanosecond += (tag - '0') * 100;
+                    dt.nanosecond += (stream.read() - '0') * 10;
+                    dt.nanosecond += stream.read() - '0';
+                    tag = stream.read();
+                }
+            }
+        }
+        return tag;
+    }
+
+    final static DateTime readDateTime(ByteBuffer buffer) throws IOException {
+        DateTime dt = new DateTime();
+        dt.year = read4Digit(buffer);
+        dt.month = read2Digit(buffer);
+        dt.day = read2Digit(buffer);
+        int tag = buffer.get();
+        if (tag == TagTime) {
+            tag = readTime(buffer, dt);
+        }
+        dt.utc = (tag == TagUTC);
+        return dt;
+    }
+
+    final static DateTime readDateTime(InputStream stream) throws IOException {
+        DateTime dt = new DateTime();
+        dt.year = read4Digit(stream);
+        dt.month = read2Digit(stream);
+        dt.day = read2Digit(stream);
+        int tag = stream.read();
+        if (tag == TagTime) {
+            tag = readTime(stream, dt);
+        }
+        dt.utc = (tag == TagUTC);
+        return dt;
+    }
+
+    final static DateTime readTime(ByteBuffer buffer) throws IOException {
+        DateTime dt = new DateTime();
+        dt.utc = (readTime(buffer, dt) == TagUTC);
+        return dt;
+    }
+
+    final static DateTime readTime(InputStream stream) throws IOException {
+        DateTime dt = new DateTime();
+        dt.utc = (readTime(stream, dt) == TagUTC);
+        return dt;
+    }
+
+    static UUID readUUID(ByteBuffer buffer) {
+        buffer.get();
+        char[] buf = new char[36];
+        for (int i = 0; i < 36; ++i) {
+            buf[i] = (char) buffer.get();
+        }
+        buffer.get();
+        UUID uuid = UUID.fromString(new String(buf));
+        return uuid;
+    }
+
+    static UUID readUUID(InputStream stream) throws IOException {
+        stream.read();
+        char[] buf = new char[36];
+        for (int i = 0; i < 36; ++i) {
+            buf[i] = (char) stream.read();
+        }
+        stream.read();
+        UUID uuid = UUID.fromString(new String(buf));
+        return uuid;
+    }
+
 }

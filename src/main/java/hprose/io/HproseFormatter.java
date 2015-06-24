@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 
 public final class HproseFormatter {
 
-    static final class Cache {
+    final static class Cache {
         final Object obj;
         final HproseMode mode;
         final boolean simple;

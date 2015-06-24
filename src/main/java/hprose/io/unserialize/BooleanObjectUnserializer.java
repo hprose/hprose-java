@@ -12,13 +12,16 @@
  *                                                        *
  * Boolean unserializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -26,14 +29,30 @@ import java.nio.ByteBuffer;
 
 final class BooleanObjectUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new BooleanObjectUnserializer();
+    public final static BooleanObjectUnserializer instance = new BooleanObjectUnserializer();
+
+    final static Boolean read(HproseReader reader, ByteBuffer buffer) throws IOException {
+        int tag = buffer.get();
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return null;
+        return BooleanUnserializer.read(reader, buffer, tag);
+    }
+
+    final static Boolean read(HproseReader reader, InputStream stream) throws IOException {
+        int tag = stream.read();
+        if (tag == TagTrue) return true;
+        if (tag == TagFalse) return false;
+        if (tag == TagNull) return null;
+        return BooleanUnserializer.read(reader, stream, tag);
+    }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return reader.readBooleanObject(buffer);
+        return read(reader, buffer);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return reader.readBooleanObject(stream);
+        return read(reader, stream);
     }
 
 }

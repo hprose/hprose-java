@@ -21,8 +21,8 @@ package hprose.io;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class HproseClassManager {
-    private static final ConcurrentHashMap<Class<?>, String> classCache1 = new ConcurrentHashMap<Class<?>, String>();
-    private static final ConcurrentHashMap<String, Class<?>> classCache2 = new ConcurrentHashMap<String, Class<?>>();
+    private final static ConcurrentHashMap<Class<?>, String> classCache1 = new ConcurrentHashMap<Class<?>, String>();
+    private final static ConcurrentHashMap<String, Class<?>> classCache2 = new ConcurrentHashMap<String, Class<?>>();
 
     private HproseClassManager() {
     }

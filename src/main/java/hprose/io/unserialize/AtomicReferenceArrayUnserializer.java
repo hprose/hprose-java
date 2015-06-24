@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReferenceArray unserializer class for Java.      *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,16 +29,16 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new AtomicReferenceArrayUnserializer();
+    public final static AtomicReferenceArrayUnserializer instance = new AtomicReferenceArrayUnserializer();
 
     @SuppressWarnings({"unchecked"})
     private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
-        return new AtomicReferenceArray<T>(reader.readOtherTypeArray(buffer, componentClass, componentType));
+        return new AtomicReferenceArray<T>(ArrayUnserializer.readArray(reader, buffer, componentClass, componentType));
     }
 
     @SuppressWarnings({"unchecked"})
     private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
-        return new AtomicReferenceArray<T>(reader.readOtherTypeArray(stream, componentClass, componentType));
+        return new AtomicReferenceArray<T>(ArrayUnserializer.readArray(reader, stream, componentClass, componentType));
     }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {

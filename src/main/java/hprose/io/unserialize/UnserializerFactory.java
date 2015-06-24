@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class UnserializerFactory {
-    private static final IdentityMap<Class<?>, HproseUnserializer> unserializers = new IdentityMap<Class<?>, HproseUnserializer>();
+    private final static IdentityMap<Class<?>, HproseUnserializer> unserializers = new IdentityMap<Class<?>, HproseUnserializer>();
     static {
         unserializers.put(void.class, DefaultUnserializer.instance);
         unserializers.put(boolean.class, BooleanUnserializer.instance);
@@ -143,7 +143,7 @@ public final class UnserializerFactory {
                 unserializer = EnumUnserializer.instance;
             }
             else if (type.isArray()) {
-                unserializer = OtherTypeArrayUnserializer.instance;
+                unserializer = ArrayUnserializer.instance;
             }
             else if (Collection.class.isAssignableFrom(type)) {
                 unserializer = CollectionUnserializer.instance;
@@ -152,7 +152,7 @@ public final class UnserializerFactory {
                 unserializer = MapUnserializer.instance;
             }
             else {
-                unserializer = OtherTypeUnserializer.instance;
+                unserializer = ObjectUnserializer.instance;
             }
             unserializers.put(type, unserializer);
         }

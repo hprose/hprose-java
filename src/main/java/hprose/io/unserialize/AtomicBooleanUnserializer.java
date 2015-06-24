@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicBoolean unserializer class for Java.             *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 final class AtomicBooleanUnserializer implements HproseUnserializer {
 
-    public final static HproseUnserializer instance = new AtomicBooleanUnserializer();
+    public final static AtomicBooleanUnserializer instance = new AtomicBooleanUnserializer();
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return new AtomicBoolean(reader.readBoolean(buffer));
+        return new AtomicBoolean(BooleanUnserializer.read(reader, buffer));
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return new AtomicBoolean(reader.readBoolean(stream));
+        return new AtomicBoolean(BooleanUnserializer.read(reader, stream));
     }
 
 }

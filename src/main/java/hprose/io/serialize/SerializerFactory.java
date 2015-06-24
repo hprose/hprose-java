@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Pattern;
 
 public final class SerializerFactory {
-    private static final IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
+    private final static IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
 
     static {
         serializers.put(void.class, NullSerializer.instance);

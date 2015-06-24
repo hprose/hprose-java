@@ -12,7 +12,7 @@
  *                                                        *
  * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Jun 8, 2015                              *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Accessors {
-    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
-    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
-    private static final IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
 
     private static sun.misc.Unsafe getUnsafe() {
         try {
@@ -51,8 +51,8 @@ public final class Accessors {
         }
     }
 
-    static final sun.misc.Unsafe unsafe = getUnsafe();
-    
+    final static sun.misc.Unsafe unsafe = getUnsafe();
+
     public final static boolean isAndroid() {
         String vmName = System.getProperty("java.vm.name");
          if (vmName == null) {

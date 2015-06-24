@@ -47,7 +47,7 @@ public final class ClassUtil {
         }
     }
 
-    public static final String getClassAlias(Class<?> type) {
+    public final static String getClassAlias(Class<?> type) {
         String className = HproseClassManager.getClassAlias(type);
         if (className == null) {
             className = type.getName().replace('.', '_').replace('$', '_');
@@ -79,7 +79,7 @@ public final class ClassUtil {
         }
     }
 
-    public static final Class<?> getClass(String className) {
+    public final static Class<?> getClass(String className) {
         Class<?> type = HproseClassManager.getClass(className);
         if (type == null) {
             StringBuilder cn = new StringBuilder(className);
@@ -120,7 +120,7 @@ public final class ClassUtil {
         return type;
     }
 
-    public static final Class<?> toClass(Type type) {
+    public final static Class<?> toClass(Type type) {
         if (type == null) {
             return null;
         } else if (type instanceof Class<?>) {

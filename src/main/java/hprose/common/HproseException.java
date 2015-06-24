@@ -22,7 +22,7 @@ import java.io.IOException;
 
 public class HproseException extends IOException {
 
-    private static final long serialVersionUID = -6146544906159301857L;
+    private final static long serialVersionUID = -6146544906159301857L;
 
     public HproseException() {
         super();

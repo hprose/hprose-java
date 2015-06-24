@@ -20,7 +20,7 @@ package hprose.util;
 
 public final class ObjectIntMap {
 
-    static final class Entry {
+    final static class Entry {
 
         final Object key;
         int value;
@@ -35,9 +35,9 @@ public final class ObjectIntMap {
         }
     }
 
-    static final int DEFAULT_INITIAL_CAPACITY = 16;
-    static final int MAXIMUM_CAPACITY = 1 << 30;
-    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    final static int DEFAULT_INITIAL_CAPACITY = 16;
+    final static int MAXIMUM_CAPACITY = 1 << 30;
+    final static float DEFAULT_LOAD_FACTOR = 0.75f;
     Entry[] table;
     int size;
     int threshold;

@@ -12,28 +12,70 @@
  *                                                        *
  * BigInteger unserializer class for Java.                *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import hprose.io.HproseTags;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-final class BigIntegerUnserializer implements HproseUnserializer {
+final class BigIntegerUnserializer implements HproseUnserializer, HproseTags {
 
-    public final static HproseUnserializer instance = new BigIntegerUnserializer();
+    public final static BigIntegerUnserializer instance = new BigIntegerUnserializer();
+
+    final static BigInteger read(HproseReader reader, ByteBuffer buffer) throws IOException {
+        int tag = buffer.get();
+        if (tag == TagLong) ValueReader.readBigInteger(buffer);
+        if (tag == TagNull) return null;
+        if (tag == TagInteger) return BigInteger.valueOf(ValueReader.readInt(buffer));
+        if (tag >= '0' && tag <= '9') return BigInteger.valueOf(tag - '0');
+        switch (tag) {
+            case TagDouble: return BigInteger.valueOf(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
+            case TagEmpty: return BigInteger.ZERO;
+            case TagTrue: return BigInteger.ONE;
+            case TagFalse: return BigInteger.ZERO;
+            case TagDate: return BigInteger.valueOf(CalendarUnserializer.readDate(reader, buffer).getTimeInMillis());
+            case TagTime: return BigInteger.valueOf(CalendarUnserializer.readTime(reader, buffer).getTimeInMillis());
+            case TagUTF8Char: return new BigInteger(ValueReader.readUTF8Char(buffer));
+            case TagString: return new BigInteger(StringUnserializer.readString(reader, buffer));
+            case TagRef: return new BigInteger(reader.readRef(buffer, String.class));
+            default: throw ValueReader.castError(reader.tagToString(tag), BigInteger.class);
+        }
+    }
+
+    final static BigInteger read(HproseReader reader, InputStream stream) throws IOException {
+        int tag = stream.read();
+        if (tag == TagLong) ValueReader.readBigInteger(stream);
+        if (tag == TagNull) return null;
+        if (tag == TagInteger) return BigInteger.valueOf(ValueReader.readInt(stream));
+        if (tag >= '0' && tag <= '9') return BigInteger.valueOf(tag - '0');
+        switch (tag) {
+            case TagDouble: return BigInteger.valueOf(Double.valueOf(ValueReader.readDouble(stream)).longValue());
+            case TagEmpty: return BigInteger.ZERO;
+            case TagTrue: return BigInteger.ONE;
+            case TagFalse: return BigInteger.ZERO;
+            case TagDate: return BigInteger.valueOf(CalendarUnserializer.readDate(reader, stream).getTimeInMillis());
+            case TagTime: return BigInteger.valueOf(CalendarUnserializer.readTime(reader, stream).getTimeInMillis());
+            case TagUTF8Char: return new BigInteger(ValueReader.readUTF8Char(stream));
+            case TagString: return new BigInteger(StringUnserializer.readString(reader, stream));
+            case TagRef: return new BigInteger(reader.readRef(stream, String.class));
+            default: throw ValueReader.castError(reader.tagToString(tag), BigInteger.class);
+        }
+    }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return reader.readBigInteger(buffer);
+        return read(reader, buffer);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return reader.readBigInteger(stream);
+        return read(reader, stream);
     }
 
 }

@@ -22,6 +22,7 @@ package hprose.io.unserialize;
 import hprose.util.IdentityMap;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.net.URL;
 import java.sql.Date;
 import java.sql.Time;
@@ -132,6 +133,7 @@ public final class UnserializerFactory {
         unserializers.put(AtomicLongArray.class, AtomicLongArrayUnserializer.instance);
         unserializers.put(AtomicReferenceArray.class, AtomicReferenceArrayUnserializer.instance);
         unserializers.put(URL.class, URLUnserializer.instance);
+        unserializers.put(URI.class, URIUnserializer.instance);
     }
 
     public final static HproseUnserializer get(Class<?> type) {

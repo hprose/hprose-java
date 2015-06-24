@@ -19,6 +19,7 @@
 
 package hprose.io.unserialize;
 
+import hprose.util.IdentityMap;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -43,7 +44,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class UnserializerFactory {
-    private static final ConcurrentHashMap<Class<?>, HproseUnserializer> unserializers = new ConcurrentHashMap<Class<?>, HproseUnserializer>();
+    private static final IdentityMap<Class<?>, HproseUnserializer> unserializers = new IdentityMap<Class<?>, HproseUnserializer>();
     static {
         unserializers.put(void.class, DefaultUnserializer.instance);
         unserializers.put(boolean.class, BooleanUnserializer.instance);
@@ -131,7 +131,7 @@ public final class UnserializerFactory {
         unserializers.put(AtomicLongArray.class, AtomicLongArrayUnserializer.instance);
         unserializers.put(AtomicReferenceArray.class, AtomicReferenceArrayUnserializer.instance);
     }
-    
+
     public final static HproseUnserializer get(Class<?> type) {
         HproseUnserializer unserializer = unserializers.get(type);
         if (unserializer == null) {
@@ -150,7 +150,7 @@ public final class UnserializerFactory {
             else {
                 unserializer = OtherTypeUnserializer.instance;
             }
-            unserializers.putIfAbsent(type, unserializer);
+            unserializers.put(type, unserializer);
         }
         return unserializer;
     }

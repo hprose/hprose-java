@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Apr 22, 2015                             *
+ * LastModified: Jun 24, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,6 +22,7 @@ package hprose.io.unserialize;
 import hprose.util.IdentityMap;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -130,6 +131,7 @@ public final class UnserializerFactory {
         unserializers.put(AtomicIntegerArray.class, AtomicIntegerArrayUnserializer.instance);
         unserializers.put(AtomicLongArray.class, AtomicLongArrayUnserializer.instance);
         unserializers.put(AtomicReferenceArray.class, AtomicReferenceArrayUnserializer.instance);
+        unserializers.put(URL.class, URLUnserializer.instance);
     }
 
     public final static HproseUnserializer get(Class<?> type) {
@@ -154,4 +156,9 @@ public final class UnserializerFactory {
         }
         return unserializer;
     }
+
+    public final static void register(Class<?> type, HproseUnserializer unserializer) {
+        unserializers.put(type, unserializer);
+    }
+
 }

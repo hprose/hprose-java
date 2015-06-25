@@ -12,7 +12,7 @@
  *                                                        *
  * long unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,8 +35,8 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
             case TagEmpty: return 0l;
             case TagTrue: return 1l;
             case TagFalse: return 0l;
-            case TagDate: return CalendarUnserializer.readDate(reader, buffer).getTimeInMillis();
-            case TagTime: return CalendarUnserializer.readTime(reader, buffer).getTimeInMillis();
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toLong();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toLong();
             case TagUTF8Char: return Long.parseLong(ValueReader.readUTF8Char(buffer));
             case TagString: return Long.parseLong(StringUnserializer.readString(reader, buffer));
             case TagRef: return Long.parseLong(reader.readRef(buffer, String.class));
@@ -50,8 +50,8 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
             case TagEmpty: return 0l;
             case TagTrue: return 1l;
             case TagFalse: return 0l;
-            case TagDate: return CalendarUnserializer.readDate(reader, stream).getTimeInMillis();
-            case TagTime: return CalendarUnserializer.readTime(reader, stream).getTimeInMillis();
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toLong();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toLong();
             case TagUTF8Char: return Long.parseLong(ValueReader.readUTF8Char(stream));
             case TagString: return Long.parseLong(StringUnserializer.readString(reader, stream));
             case TagRef: return Long.parseLong(reader.readRef(stream, String.class));

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -219,11 +219,6 @@ public class HproseReader implements HproseTags {
                                  ValueReader.readLong(stream, tag));
     }
 
-    private char readUTF8CharAsChar() throws IOException {
-        return (buffer != null ? ValueReader.readChar(buffer) :
-                                 ValueReader.readChar(stream));
-    }
-
     public final int readIntWithoutTag() throws IOException {
         return readInt(TagSemicolon);
     }
@@ -246,13 +241,13 @@ public class HproseReader implements HproseTags {
     }
 
     public final Calendar readDateWithoutTag()throws IOException {
-        return (buffer != null ? CalendarUnserializer.readDate(this, buffer) :
-                                 CalendarUnserializer.readDate(this, stream));
+        return (buffer != null ? DefaultUnserializer.readDateTime(this, buffer).toCalendar() :
+                                 DefaultUnserializer.readDateTime(this, stream).toCalendar());
     }
 
     public final Calendar readTimeWithoutTag()throws IOException {
-        return (buffer != null ? CalendarUnserializer.readTime(this, buffer) :
-                                 CalendarUnserializer.readTime(this, stream));
+        return (buffer != null ? DefaultUnserializer.readTime(this, buffer).toCalendar() :
+                                 DefaultUnserializer.readTime(this, stream).toCalendar());
     }
 
     public final byte[] readBytesWithoutTag() throws IOException {

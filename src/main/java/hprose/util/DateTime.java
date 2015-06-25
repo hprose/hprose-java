@@ -12,13 +12,18 @@
  *                                                        *
  * DateTime class for Java.                               *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util;
 
 import static hprose.io.HproseTags.TagUTC;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 public class DateTime {
     public int year = 1970;
@@ -29,6 +34,76 @@ public class DateTime {
     public int second = 0;
     public int nanosecond = 0;
     public boolean utc = false;
+
+    public DateTime() {}
+
+    public DateTime(int year, int month, int day) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+    }
+
+    public DateTime(int year, int month, int day, boolean utc) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.utc = utc;
+    }
+
+    public DateTime(int hour, int minute, int second, int nanosecond) {
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.nanosecond = nanosecond;
+    }
+
+    public DateTime(int hour, int minute, int second, int nanosecond, boolean utc) {
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.nanosecond = nanosecond;
+        this.utc = utc;
+    }
+
+    public DateTime(int year, int month, int day, int hour, int minute, int second) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+    }
+
+    public DateTime(int year, int month, int day, int hour, int minute, int second, boolean utc) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.utc = utc;
+    }
+
+    public DateTime(int year, int month, int day, int hour, int minute, int second, int nanosecond) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.nanosecond = nanosecond;
+    }
+
+    public DateTime(int year, int month, int day, int hour, int minute, int second, int nanosecond, boolean utc) {
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.hour = hour;
+        this.minute = minute;
+        this.second = second;
+        this.nanosecond = nanosecond;
+        this.utc = utc;
+    }
 
     @Override
     public String toString() {
@@ -45,7 +120,79 @@ public class DateTime {
                 year, month, day, hour, minute, second);
             if (nanosecond != 0) s = s + String.format(".%09d", nanosecond);
         }
-        if (utc) s = s + TagUTC;
+        if (utc) s = s + (char)TagUTC;
         return s;
     }
+
+    public StringBuilder toStringBuilder() {
+        StringBuilder s = new StringBuilder();
+        if (year == 1970 && month == 1 && day == 1) {
+            s.append(String.format("%02d:%02d:%02d", hour, minute, second));
+            if (nanosecond != 0) s.append(String.format(".%09d", nanosecond));
+        }
+        else if (hour == 0 && minute == 0 && second == 0 && nanosecond == 0) {
+            s.append(String.format("%04d-%02d-%02d", year, month, day));
+        }
+        else {
+            s.append(String.format("%04d-%02d-%02dT%02d:%02d:%02d",
+                year, month, day, hour, minute, second));
+            if (nanosecond != 0) s.append(String.format(".%09d", nanosecond));
+        }
+        if (utc) s.append((char)TagUTC);
+        return s;
+    }
+
+    public StringBuffer toStringBuffer() {
+        StringBuffer s = new StringBuffer();
+        if (year == 1970 && month == 1 && day == 1) {
+            s.append(String.format("%02d:%02d:%02d", hour, minute, second));
+            if (nanosecond != 0) s.append(String.format(".%09d", nanosecond));
+        }
+        else if (hour == 0 && minute == 0 && second == 0 && nanosecond == 0) {
+            s.append(String.format("%04d-%02d-%02d", year, month, day));
+        }
+        else {
+            s.append(String.format("%04d-%02d-%02dT%02d:%02d:%02d",
+                year, month, day, hour, minute, second));
+            if (nanosecond != 0) s.append(String.format(".%09d", nanosecond));
+        }
+        if (utc) s.append((char)TagUTC);
+        return s;
+    }
+
+    public Calendar toCalendar() {
+        Calendar calendar = Calendar.getInstance(utc ?
+                                       TimeZoneUtil.UTC :
+                                       TimeZoneUtil.DefaultTZ);
+        calendar.set(year, month - 1, day, hour, minute, second);
+        calendar.set(Calendar.MILLISECOND, nanosecond / 1000000);
+        return calendar;
+    }
+
+    public Timestamp toTimestamp() {
+        Timestamp timestamp = new Timestamp(toCalendar().getTimeInMillis());
+        timestamp.setNanos(nanosecond);
+        return timestamp;
+    }
+
+    public Date toDate() {
+        return new Date(toCalendar().getTimeInMillis());
+    }
+
+    public Time toTime() {
+        return new Time(toCalendar().getTimeInMillis());
+    }
+
+    public java.util.Date toDateTime() {
+        return new java.util.Date(toCalendar().getTimeInMillis());
+    }
+
+    public BigInteger toBigInteger() {
+        return BigInteger.valueOf(toCalendar().getTimeInMillis());
+    }
+
+    public long toLong() {
+        return toCalendar().getTimeInMillis();
+    }
+
 }

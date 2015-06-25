@@ -12,7 +12,7 @@
  *                                                        *
  * StringBuffer unserializer class for Java.              *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,7 +20,6 @@
 package hprose.io.unserialize;
 
 import hprose.io.HproseTags;
-import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -62,16 +61,8 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
             case TagInfinity: return new StringBuffer(
                                                 (buffer.get() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case TagDate: {
-                DateTime dt = ValueReader.readDateTime(buffer);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return new StringBuffer(dt.toString());
-            }
-            case TagTime: {
-                DateTime dt = ValueReader.readTime(buffer);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return new StringBuffer(dt.toString());
-            }
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toStringBuffer();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toStringBuffer();
             case TagGuid: return new StringBuffer(UUIDUnserializer.readUUID(reader, buffer).toString());
             default: throw ValueReader.castError(reader.tagToString(tag), StringBuffer.class);
         }
@@ -101,16 +92,8 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
             case TagInfinity: return new StringBuffer(
                                                 (stream.read() == TagPos) ?
                                                 "Infinity" : "-Infinity");
-            case TagDate: {
-                DateTime dt = ValueReader.readDateTime(stream);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return new StringBuffer(dt.toString());
-            }
-            case TagTime: {
-                DateTime dt = ValueReader.readTime(stream);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return new StringBuffer(dt.toString());
-            }
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toStringBuffer();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toStringBuffer();
             case TagGuid: return new StringBuffer(UUIDUnserializer.readUUID(reader, stream).toString());
             default: throw ValueReader.castError(reader.tagToString(tag), StringBuffer.class);
         }

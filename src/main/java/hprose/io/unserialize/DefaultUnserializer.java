@@ -22,6 +22,7 @@ package hprose.io.unserialize;
 import hprose.common.HproseException;
 import hprose.io.HproseTags;
 import static hprose.io.HproseTags.TagOpenbrace;
+import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -32,6 +33,30 @@ import java.util.HashMap;
 final class DefaultUnserializer implements HproseUnserializer, HproseTags {
 
     public final static DefaultUnserializer instance = new DefaultUnserializer();
+
+    final static DateTime readDateTime(HproseReader reader, ByteBuffer buffer) throws IOException {
+        DateTime datetime = ValueReader.readDateTime(buffer);
+        reader.refer.set(datetime);
+        return datetime;
+    }
+
+    final static DateTime readDateTime(HproseReader reader, InputStream stream) throws IOException {
+        DateTime datetime = ValueReader.readDateTime(stream);
+        reader.refer.set(datetime);
+        return datetime;
+    }
+
+    final static DateTime readTime(HproseReader reader, ByteBuffer buffer) throws IOException {
+        DateTime datetime = ValueReader.readTime(buffer);
+        reader.refer.set(datetime);
+        return datetime;
+    }
+
+    final static DateTime readTime(HproseReader reader, InputStream stream) throws IOException {
+        DateTime datetime = ValueReader.readTime(stream);
+        reader.refer.set(datetime);
+        return datetime;
+    }
 
     @SuppressWarnings({"unchecked"})
     final static ArrayList readList(HproseReader reader, ByteBuffer buffer) throws IOException {
@@ -106,8 +131,8 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
             case TagFalse: return false;
             case TagNaN: return Double.NaN;
             case TagInfinity: return ValueReader.readInfinity(buffer);
-            case TagDate: return CalendarUnserializer.readDate(reader, buffer);
-            case TagTime: return CalendarUnserializer.readTime(reader, buffer);
+            case TagDate: return readDateTime(reader, buffer).toCalendar();
+            case TagTime: return readTime(reader, buffer).toCalendar();
             case TagBytes: return ByteArrayUnserializer.readBytes(reader, buffer);
             case TagUTF8Char: return ValueReader.readUTF8Char(buffer);
             case TagString: return StringUnserializer.readString(reader, buffer);
@@ -145,8 +170,8 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
             case TagFalse: return false;
             case TagNaN: return Double.NaN;
             case TagInfinity: return ValueReader.readInfinity(stream);
-            case TagDate: return CalendarUnserializer.readDate(reader, stream);
-            case TagTime: return CalendarUnserializer.readTime(reader, stream);
+            case TagDate: return readDateTime(reader, stream).toCalendar();
+            case TagTime: return readTime(reader, stream).toCalendar();
             case TagBytes: return ByteArrayUnserializer.readBytes(reader, stream);
             case TagUTF8Char: return ValueReader.readUTF8Char(stream);
             case TagString: return StringUnserializer.readString(reader, stream);

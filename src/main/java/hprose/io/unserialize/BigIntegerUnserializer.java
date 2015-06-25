@@ -12,7 +12,7 @@
  *                                                        *
  * BigInteger unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,8 +41,8 @@ final class BigIntegerUnserializer implements HproseUnserializer, HproseTags {
             case TagEmpty: return BigInteger.ZERO;
             case TagTrue: return BigInteger.ONE;
             case TagFalse: return BigInteger.ZERO;
-            case TagDate: return BigInteger.valueOf(CalendarUnserializer.readDate(reader, buffer).getTimeInMillis());
-            case TagTime: return BigInteger.valueOf(CalendarUnserializer.readTime(reader, buffer).getTimeInMillis());
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toBigInteger();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toBigInteger();
             case TagUTF8Char: return new BigInteger(ValueReader.readUTF8Char(buffer));
             case TagString: return new BigInteger(StringUnserializer.readString(reader, buffer));
             case TagRef: return new BigInteger(reader.readRef(buffer, String.class));
@@ -61,8 +61,8 @@ final class BigIntegerUnserializer implements HproseUnserializer, HproseTags {
             case TagEmpty: return BigInteger.ZERO;
             case TagTrue: return BigInteger.ONE;
             case TagFalse: return BigInteger.ZERO;
-            case TagDate: return BigInteger.valueOf(CalendarUnserializer.readDate(reader, stream).getTimeInMillis());
-            case TagTime: return BigInteger.valueOf(CalendarUnserializer.readTime(reader, stream).getTimeInMillis());
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toBigInteger();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toBigInteger();
             case TagUTF8Char: return new BigInteger(ValueReader.readUTF8Char(stream));
             case TagString: return new BigInteger(StringUnserializer.readString(reader, stream));
             case TagRef: return new BigInteger(reader.readRef(stream, String.class));

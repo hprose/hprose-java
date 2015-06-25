@@ -25,51 +25,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.Date;
 
 final class DateTimeUnserializer implements HproseUnserializer, HproseTags {
 
     public final static DateTimeUnserializer instance = new DateTimeUnserializer();
 
-    private static Date toDate(Calendar calendar) {
-        return new Date(calendar.getTimeInMillis());
-    }
-
-    final static Date readDate(HproseReader reader, ByteBuffer buffer) throws IOException {
-        return toDate(CalendarUnserializer.readDate(reader, buffer));
-    }
-
-    final static Date readDate(HproseReader reader, InputStream stream) throws IOException {
-        return toDate(CalendarUnserializer.readDate(reader, stream));
-    }
-
-    final static Date readTime(HproseReader reader, ByteBuffer buffer) throws IOException {
-        return toDate(CalendarUnserializer.readTime(reader, buffer));
-    }
-
-    final static Date readTime(HproseReader reader, InputStream stream) throws IOException {
-        return toDate(CalendarUnserializer.readTime(reader, stream));
-    }
-
     private static Date toDate(Object obj) {
-        if (obj instanceof Calendar) {
-            return toDate((Calendar)obj);
-        }
-        if (obj instanceof Timestamp) {
-            return new Date(((Timestamp)obj).getTime());
-        }
         if (obj instanceof DateTime) {
-            return toDate(CalendarUnserializer.toCalendar((DateTime)obj));
+            return ((DateTime)obj).toDateTime();
         }
         return new Date(obj.toString());
     }
 
     final static Date read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return readDate(reader, buffer);
-        if (tag == TagTime) return readTime(reader, buffer);
+        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, buffer).toDateTime();
+        if (tag == TagTime) return DefaultUnserializer.readTime(reader, buffer).toDateTime();
         if (tag == TagNull || tag == TagEmpty) return null;
         if (tag == TagRef) return toDate(reader.readRef(buffer));
         switch (tag) {
@@ -86,14 +58,15 @@ final class DateTimeUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(buffer));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
+            case TagString: return new Date(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Date.class);
         }
     }
 
     final static Date read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return readDate(reader, stream);
-        if (tag == TagTime) return readTime(reader, stream);
+        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, stream).toDateTime();
+        if (tag == TagTime) return DefaultUnserializer.readTime(reader, stream).toDateTime();
         if (tag == TagNull || tag == TagEmpty) return null;
         if (tag == TagRef) return toDate(reader.readRef(stream));
         switch (tag) {
@@ -110,6 +83,7 @@ final class DateTimeUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(stream));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(stream)).longValue());
+            case TagString: return new Date(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Date.class);
         }
     }

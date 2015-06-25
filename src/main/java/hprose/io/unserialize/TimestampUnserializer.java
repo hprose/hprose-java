@@ -26,57 +26,22 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
-import java.util.Calendar;
 
 final class TimestampUnserializer implements HproseUnserializer, HproseTags {
 
     public final static TimestampUnserializer instance = new TimestampUnserializer();
 
-    private static Timestamp toTimestamp(DateTime dt) {
-        Timestamp timestamp = new Timestamp(CalendarUnserializer.toCalendar(dt).getTimeInMillis());
-        timestamp.setNanos(dt.nanosecond);
-        return timestamp;
-    }
-
-    private static Timestamp toTimestamp(HproseReader reader, DateTime dt) {
-        Timestamp timestamp = toTimestamp(dt);
-        reader.refer.set(timestamp);
-        return timestamp;
-    }
-
-    final static Timestamp readDate(HproseReader reader, ByteBuffer buffer) throws IOException {
-        return toTimestamp(reader, ValueReader.readDateTime(buffer));
-    }
-
-    final static Timestamp readDate(HproseReader reader, InputStream stream) throws IOException {
-        return toTimestamp(reader, ValueReader.readDateTime(stream));
-    }
-
-    final static Timestamp readTime(HproseReader reader, ByteBuffer buffer) throws IOException {
-        return toTimestamp(reader, ValueReader.readTime(buffer));
-    }
-
-    final static Timestamp readTime(HproseReader reader, InputStream stream) throws IOException {
-        return toTimestamp(reader, ValueReader.readTime(stream));
-    }
-
     private static Timestamp toTimestamp(Object obj) {
-        if (obj instanceof Calendar) {
-            return new Timestamp(((Calendar)obj).getTimeInMillis());
-        }
-        if (obj instanceof Timestamp) {
-            return (Timestamp)obj;
-        }
         if (obj instanceof DateTime) {
-            return toTimestamp((DateTime)obj);
+            return ((DateTime)obj).toTimestamp();
         }
         return Timestamp.valueOf(obj.toString());
     }
 
     final static Timestamp read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return readDate(reader, buffer);
-        if (tag == TagTime) return readTime(reader, buffer);
+        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, buffer).toTimestamp();
+        if (tag == TagTime) return DefaultUnserializer.readTime(reader, buffer).toTimestamp();
         if (tag == TagNull || tag == TagEmpty) return null;
         if (tag == TagRef) return toTimestamp(reader.readRef(buffer));
         switch (tag) {
@@ -100,8 +65,8 @@ final class TimestampUnserializer implements HproseUnserializer, HproseTags {
 
     final static Timestamp read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return readDate(reader, stream);
-        if (tag == TagTime) return readTime(reader, stream);
+        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, stream).toTimestamp();
+        if (tag == TagTime) return DefaultUnserializer.readTime(reader, stream).toTimestamp();
         if (tag == TagNull || tag == TagEmpty) return null;
         if (tag == TagRef) return toTimestamp(reader.readRef(stream));
         switch (tag) {

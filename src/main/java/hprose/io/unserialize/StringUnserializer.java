@@ -12,7 +12,7 @@
  *                                                        *
  * String unserializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,7 +20,6 @@
 package hprose.io.unserialize;
 
 import hprose.io.HproseTags;
-import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -74,21 +73,9 @@ final class StringUnserializer implements HproseUnserializer, HproseTags {
             case TagNaN: return "NaN";
             case TagInfinity: return (buffer.get() == TagPos) ?
                                                  "Infinity" : "-Infinity";
-            case TagDate: {
-                DateTime dt = ValueReader.readDateTime(buffer);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return dt.toString();
-            }
-            case TagTime: {
-                DateTime dt = ValueReader.readTime(buffer);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return dt.toString();
-            }
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toString();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toString();
             case TagGuid: return UUIDUnserializer.readUUID(reader, buffer).toString();
-//            case TagList: return reader.readListWithoutTag(buffer).toString();
-//            case TagMap: return reader.readMapWithoutTag(buffer).toString();
-//            case TagClass: reader.readClass(buffer); return reader.readObject(buffer, null).toString();
-//            case TagObject: return reader.readObjectWithoutTag(buffer, null).toString();
             default: throw ValueReader.castError(reader.tagToString(tag), String.class);
         }
     }
@@ -125,21 +112,9 @@ final class StringUnserializer implements HproseUnserializer, HproseTags {
             case TagNaN: return "NaN";
             case TagInfinity: return (stream.read() == TagPos) ?
                                                  "Infinity" : "-Infinity";
-            case TagDate: {
-                DateTime dt = ValueReader.readDateTime(stream);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return dt.toString();
-            }
-            case TagTime: {
-                DateTime dt = ValueReader.readTime(stream);
-                CalendarUnserializer.toCalendar(reader, dt);
-                return dt.toString();
-            }
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toString();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toString();
             case TagGuid: return UUIDUnserializer.readUUID(reader, stream).toString();
-//            case TagList: return reader.readListWithoutTag(stream).toString();
-//            case TagMap: return reader.readMapWithoutTag(stream).toString();
-//            case TagClass: reader.readClass(stream); return reader.readObject(stream, null).toString();
-//            case TagObject: return reader.readObjectWithoutTag(stream, null).toString();
             default: throw ValueReader.castError(reader.tagToString(tag), String.class);
         }
     }

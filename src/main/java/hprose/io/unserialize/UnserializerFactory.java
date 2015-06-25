@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.regex.Pattern;
 
 public final class UnserializerFactory {
     private final static IdentityMap<Class<?>, HproseUnserializer> unserializers = new IdentityMap<Class<?>, HproseUnserializer>();
@@ -136,6 +137,7 @@ public final class UnserializerFactory {
         unserializers.put(URL.class, URLUnserializer.instance);
         unserializers.put(URI.class, URIUnserializer.instance);
         unserializers.put(Locale.class, LocaleUnserializer.instance);
+        unserializers.put(Pattern.class, PatternUnserializer.instance);
     }
 
     public final static HproseUnserializer get(Class<?> type) {

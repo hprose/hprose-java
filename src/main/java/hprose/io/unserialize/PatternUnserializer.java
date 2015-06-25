@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * LocaleUnserializer.java                                *
+ * PatternUnserializer.java                               *
  *                                                        *
- * Locale unserializer class for Java.                    *
+ * Pattern unserializer class for Java.                   *
  *                                                        *
  * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *

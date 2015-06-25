@@ -18,14 +18,9 @@
 \**********************************************************/
 package hprose.io.serialize;
 
-import hprose.io.accessor.Accessors;
-import hprose.io.HproseTags;
 import hprose.io.HproseMode;
+import hprose.io.HproseTags;
 import hprose.util.ObjectIntMap;
-import hprose.io.accessor.MemberAccessor;
-import hprose.util.ClassUtil;
-import hprose.util.IdentityMap;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -35,10 +30,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -46,17 +39,11 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class HproseWriter implements HproseTags {
 
-    private final static EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>>(HproseMode.class);
-    static {
-        memberCache.put(HproseMode.FieldMode, new IdentityMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.PropertyMode, new IdentityMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.MemberMode, new IdentityMap<Class<?>, SerializeCache>());
-    }
     public final OutputStream stream;
     final WriterRefer refer;
     final HproseMode mode;
     final ObjectIntMap classref = new ObjectIntMap();
-    private int lastclassref = 0;
+    int lastclassref = 0;
 
     public HproseWriter(OutputStream stream) {
         this(stream, HproseMode.MemberMode, false);
@@ -456,35 +443,6 @@ public class HproseWriter implements HproseTags {
         OtherTypeSerializer.instance.write(this, object);
     }
 
-    final int writeClass(Class<?> type) throws IOException {
-        SerializeCache cache = memberCache.get(mode).get(type);
-        if (cache == null) {
-            cache = new SerializeCache();
-            ByteArrayOutputStream cachestream = new ByteArrayOutputStream();
-            Map<String, MemberAccessor> members = Accessors.getMembers(type, mode);
-            int count = members.size();
-            cachestream.write(TagClass);
-            ValueWriter.write(cachestream, ClassUtil.getClassAlias(type));
-            if (count > 0) {
-                ValueWriter.writeInt(cachestream, count);
-            }
-            cachestream.write(TagOpenbrace);
-            for (Entry<String, MemberAccessor> member : members.entrySet()) {
-                cachestream.write(TagString);
-                ValueWriter.write(cachestream, member.getKey());
-                ++cache.refcount;
-            }
-            cachestream.write(TagClosebrace);
-            cache.data = cachestream.toByteArray();
-            memberCache.get(mode).put(type, cache);
-        }
-        stream.write(cache.data);
-        refer.addCount(cache.refcount);
-        int cr = lastclassref++;
-        classref.put(type, cr);
-        return cr;
-    }
-
     public final void reset() {
         if (refer != null) {
             refer.reset();
@@ -493,8 +451,4 @@ public class HproseWriter implements HproseTags {
         lastclassref = 0;
     }
 
-    final class SerializeCache {
-        byte[] data;
-        int refcount;
-    }
 }

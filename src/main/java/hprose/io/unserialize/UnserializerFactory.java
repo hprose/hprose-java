@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -134,6 +135,7 @@ public final class UnserializerFactory {
         unserializers.put(AtomicReferenceArray.class, AtomicReferenceArrayUnserializer.instance);
         unserializers.put(URL.class, URLUnserializer.instance);
         unserializers.put(URI.class, URIUnserializer.instance);
+        unserializers.put(Locale.class, LocaleUnserializer.instance);
     }
 
     public final static HproseUnserializer get(Class<?> type) {

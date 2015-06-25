@@ -59,7 +59,7 @@ final class URLUnserializer implements HproseUnserializer {
             }
             return toURL(obj.toString(), type);
         }
-        throw ValueReader.castError(reader.tagToString(tag), StringBuffer.class);
+        throw ValueReader.castError(reader.tagToString(tag), URL.class);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
@@ -80,6 +80,6 @@ final class URLUnserializer implements HproseUnserializer {
             }
             return toURL(obj.toString(), type);
         }
-        throw ValueReader.castError(reader.tagToString(tag), StringBuffer.class);
+        throw ValueReader.castError(reader.tagToString(tag), URL.class);
     }
 }

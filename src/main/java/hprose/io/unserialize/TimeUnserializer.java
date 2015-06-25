@@ -12,14 +12,16 @@
  *                                                        *
  * Time unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import hprose.common.HproseException;
 import hprose.io.HproseTags;
+import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -52,22 +54,25 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
         return toTime(CalendarUnserializer.readTime(reader, stream));
     }
 
+    private static Time toTime(Object obj) throws HproseException {
+        if (obj instanceof Calendar) {
+            return toTime((Calendar)obj);
+        }
+        if (obj instanceof Timestamp) {
+            return new Time(((Timestamp)obj).getTime());
+        }
+        if (obj instanceof DateTime) {
+            return toTime(CalendarUnserializer.toCalendar((DateTime)obj));
+        }
+        return Time.valueOf(obj.toString());
+    }
+
     final static Time read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagTime) return readTime(reader, buffer);
         if (tag == TagDate) return readDate(reader, buffer);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof Calendar) {
-                return toTime((Calendar)obj);
-            }
-            if (obj instanceof Timestamp) {
-                return new Time(((Timestamp)obj).getTime());
-            }
-            throw ValueReader.castError(obj, Time.class);
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toTime(reader.readRef(buffer));
         switch (tag) {
             case '0': return new Time(0l);
             case '1': return new Time(1l);
@@ -82,6 +87,7 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Time(ValueReader.readLong(buffer));
             case TagDouble: return new Time(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
+            case TagString: return Time.valueOf(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Time.class);
         }
     }
@@ -90,18 +96,8 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
         int tag = stream.read();
         if (tag == TagTime) return readTime(reader, stream);
         if (tag == TagDate) return readDate(reader, stream);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof Calendar) {
-                return new Time(((Calendar)obj).getTimeInMillis());
-            }
-            if (obj instanceof Timestamp) {
-                return new Time(((Timestamp)obj).getTime());
-            }
-            throw ValueReader.castError(obj, Time.class);
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toTime(reader.readRef(stream));
         switch (tag) {
             case '0': return new Time(0l);
             case '1': return new Time(1l);
@@ -116,6 +112,7 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Time(ValueReader.readLong(stream));
             case TagDouble: return new Time(Double.valueOf(ValueReader.readDouble(stream)).longValue());
+            case TagString: return Time.valueOf(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Time.class);
         }
     }

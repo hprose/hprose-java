@@ -12,13 +12,14 @@
  *                                                        *
  * Calendar unserializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import hprose.common.HproseException;
 import hprose.io.HproseTags;
 import hprose.util.DateTime;
 import hprose.util.TimeZoneUtil;
@@ -64,29 +65,34 @@ final class CalendarUnserializer implements HproseUnserializer, HproseTags {
         return toCalendar(reader, ValueReader.readTime(stream));
     }
 
+    private static Calendar toCalendar(Object obj) throws HproseException {
+        if (obj instanceof Calendar) {
+            return (Calendar)obj;
+        }
+        if (obj instanceof Timestamp) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(((Timestamp)obj).getTime());
+            return calendar;
+        }
+        if (obj instanceof DateTime) {
+            return toCalendar((DateTime)obj);
+        }
+        throw ValueReader.castError(obj, Calendar.class);
+    }
+
+    private static Calendar toCalendar(int tag) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(tag - '0');
+        return calendar;
+    }
+
     final static Calendar read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagDate) return readDate(reader, buffer);
         if (tag == TagTime) return readTime(reader, buffer);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof Calendar) {
-                return (Calendar)obj;
-            }
-            if (obj instanceof Timestamp) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(((Timestamp)obj).getTime());
-                return calendar;
-            }
-            throw ValueReader.castError(obj, Calendar.class);
-        }
-        if (tag >= '0' && tag <= '9') {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(tag - '0');
-            return calendar;
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toCalendar(reader.readRef(buffer));
+        if (tag >= '0' && tag <= '9') return toCalendar(tag);
         switch (tag) {
             case TagInteger:
             case TagLong: {
@@ -107,25 +113,9 @@ final class CalendarUnserializer implements HproseUnserializer, HproseTags {
         int tag = stream.read();
         if (tag == TagDate) return readDate(reader, stream);
         if (tag == TagTime) return readTime(reader, stream);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof Calendar) {
-                return (Calendar)obj;
-            }
-            if (obj instanceof Timestamp) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(((Timestamp)obj).getTime());
-                return calendar;
-            }
-            throw ValueReader.castError(obj, Calendar.class);
-        }
-        if (tag >= '0' && tag <= '9') {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(tag - '0');
-            return calendar;
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toCalendar(reader.readRef(stream));
+        if (tag >= '0' && tag <= '9') return toCalendar(tag);
         switch (tag) {
             case TagInteger:
             case TagLong: {

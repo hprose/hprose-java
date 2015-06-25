@@ -12,7 +12,7 @@
  *                                                        *
  * DateTime unserializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 25, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,7 @@
 package hprose.io.unserialize;
 
 import hprose.io.HproseTags;
+import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -52,22 +53,25 @@ final class DateTimeUnserializer implements HproseUnserializer, HproseTags {
         return toDate(CalendarUnserializer.readTime(reader, stream));
     }
 
+    private static Date toDate(Object obj) {
+        if (obj instanceof Calendar) {
+            return toDate((Calendar)obj);
+        }
+        if (obj instanceof Timestamp) {
+            return new Date(((Timestamp)obj).getTime());
+        }
+        if (obj instanceof DateTime) {
+            return toDate(CalendarUnserializer.toCalendar((DateTime)obj));
+        }
+        return new Date(obj.toString());
+    }
+
     final static Date read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagDate) return readDate(reader, buffer);
         if (tag == TagTime) return readTime(reader, buffer);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof Calendar) {
-                return toDate((Calendar)obj);
-            }
-            if (obj instanceof Timestamp) {
-                return new Date(((Timestamp)obj).getTime());
-            }
-            throw ValueReader.castError(obj, Date.class);
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toDate(reader.readRef(buffer));
         switch (tag) {
             case '0': return new Date(0l);
             case '1': return new Date(1l);
@@ -90,18 +94,8 @@ final class DateTimeUnserializer implements HproseUnserializer, HproseTags {
         int tag = stream.read();
         if (tag == TagDate) return readDate(reader, stream);
         if (tag == TagTime) return readTime(reader, stream);
-        if (tag == TagNull ||
-            tag == TagEmpty) return null;
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof Calendar) {
-                return new Date(((Calendar)obj).getTimeInMillis());
-            }
-            if (obj instanceof Timestamp) {
-                return new Date(((Timestamp)obj).getTime());
-            }
-            throw ValueReader.castError(obj, Date.class);
-        }
+        if (tag == TagNull || tag == TagEmpty) return null;
+        if (tag == TagRef) return toDate(reader.readRef(stream));
         switch (tag) {
             case '0': return new Date(0l);
             case '1': return new Date(1l);

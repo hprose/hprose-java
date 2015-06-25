@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -138,6 +139,7 @@ public final class UnserializerFactory {
         unserializers.put(URI.class, URIUnserializer.instance);
         unserializers.put(Locale.class, LocaleUnserializer.instance);
         unserializers.put(Pattern.class, PatternUnserializer.instance);
+        unserializers.put(TimeZone.class, TimeZoneUnserializer.instance);
     }
 
     public final static HproseUnserializer get(Class<?> type) {

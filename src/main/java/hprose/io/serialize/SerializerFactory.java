@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -140,6 +141,7 @@ public final class SerializerFactory {
         serializers.put(URI.class, ToStringSerializer.instance);
         serializers.put(URL.class, ToStringSerializer.instance);
         serializers.put(Pattern.class, ToStringSerializer.instance);
+        serializers.put(TimeZone.class, TimeZoneSerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
             serializers.put(java.time.LocalTime.class, LocalTimeSerializer.instance);

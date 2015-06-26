@@ -154,6 +154,8 @@ public final class UnserializerFactory {
             unserializers.put(java.time.Period.class, PeriodUnserializer.instance);
             unserializers.put(java.time.Year.class, YearUnserializer.instance);
             unserializers.put(java.time.YearMonth.class, YearMonthUnserializer.instance);
+            unserializers.put(java.time.ZoneId.class, ZoneIdUnserializer.instance);
+            unserializers.put(java.time.ZoneOffset.class, ZoneOffsetUnserializer.instance);
         }
     }
 

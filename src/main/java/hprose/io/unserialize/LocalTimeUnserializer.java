@@ -44,50 +44,38 @@ final class LocalTimeUnserializer implements HproseUnserializer, HproseTags {
 
     final static LocalTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toLocalTime(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toLocalTime(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toLocalTime(reader.readRef(buffer));
         switch (tag) {
-            case '0': return LocalTime.ofNanoOfDay(0l);
-            case '1': return LocalTime.ofNanoOfDay(1l);
-            case '2': return LocalTime.ofNanoOfDay(2l);
-            case '3': return LocalTime.ofNanoOfDay(3l);
-            case '4': return LocalTime.ofNanoOfDay(4l);
-            case '5': return LocalTime.ofNanoOfDay(5l);
-            case '6': return LocalTime.ofNanoOfDay(6l);
-            case '7': return LocalTime.ofNanoOfDay(7l);
-            case '8': return LocalTime.ofNanoOfDay(8l);
-            case '9': return LocalTime.ofNanoOfDay(9l);
+            case TagDate: return toLocalTime(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toLocalTime(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return LocalTime.parse(StringUnserializer.readString(reader, buffer));
+            case TagRef: return toLocalTime(reader.readRef(buffer));
+        }
+        if (tag >= '0' && tag <= '9') return LocalTime.ofNanoOfDay(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return LocalTime.ofNanoOfDay(ValueReader.readLong(buffer));
             case TagDouble: return LocalTime.ofNanoOfDay(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
-            case TagString: return LocalTime.parse(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), LocalTime.class);
         }
     }
 
     final static LocalTime read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toLocalTime(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toLocalTime(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toLocalTime(reader.readRef(stream));
         switch (tag) {
-            case '0': return LocalTime.ofNanoOfDay(0l);
-            case '1': return LocalTime.ofNanoOfDay(1l);
-            case '2': return LocalTime.ofNanoOfDay(2l);
-            case '3': return LocalTime.ofNanoOfDay(3l);
-            case '4': return LocalTime.ofNanoOfDay(4l);
-            case '5': return LocalTime.ofNanoOfDay(5l);
-            case '6': return LocalTime.ofNanoOfDay(6l);
-            case '7': return LocalTime.ofNanoOfDay(7l);
-            case '8': return LocalTime.ofNanoOfDay(8l);
-            case '9': return LocalTime.ofNanoOfDay(9l);
+            case TagDate: return toLocalTime(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toLocalTime(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return LocalTime.parse(StringUnserializer.readString(reader, stream));
+            case TagRef: return toLocalTime(reader.readRef(stream));
+        }
+        if (tag >= '0' && tag <= '9') return LocalTime.ofNanoOfDay(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return LocalTime.ofNanoOfDay(ValueReader.readLong(stream));
             case TagDouble: return LocalTime.ofNanoOfDay(Double.valueOf(ValueReader.readDouble(stream)).longValue());
-            case TagString: return LocalTime.parse(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), LocalTime.class);
         }
     }

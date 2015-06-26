@@ -12,7 +12,7 @@
  *                                                        *
  * StringBuilder unserializer class for Java.             *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -37,18 +37,21 @@ final class StringBuilderUnserializer implements HproseUnserializer, HproseTags 
         return new StringBuilder().append(c);
     }
 
+    private static StringBuilder toStringBuilder(Object obj) {
+        if (obj instanceof char[]) {
+            return getStringBuilder((char[])obj);
+        }
+        return new StringBuilder(obj.toString());
+    }
+
     final static StringBuilder read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagEmpty) return new StringBuilder();
-        if (tag == TagNull) return null;
-        if (tag == TagString) return getStringBuilder(CharArrayUnserializer.readChars(reader, buffer));
-        if (tag == TagUTF8Char) return getStringBuilder(ValueReader.readChar(buffer));
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof char[]) {
-                return getStringBuilder((char[])obj);
-            }
-            return new StringBuilder(obj.toString());
+        switch (tag) {
+            case TagEmpty: return new StringBuilder();
+            case TagNull: return null;
+            case TagString: return getStringBuilder(CharArrayUnserializer.readChars(reader, buffer));
+            case TagUTF8Char: return getStringBuilder(ValueReader.readChar(buffer));
+            case TagRef: return toStringBuilder(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {
@@ -70,16 +73,12 @@ final class StringBuilderUnserializer implements HproseUnserializer, HproseTags 
 
     final static StringBuilder read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagEmpty) return new StringBuilder();
-        if (tag == TagNull) return null;
-        if (tag == TagString) return getStringBuilder(CharArrayUnserializer.readChars(reader, stream));
-        if (tag == TagUTF8Char) return getStringBuilder(ValueReader.readChar(stream));
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof char[]) {
-                return getStringBuilder((char[])obj);
-            }
-            return new StringBuilder(obj.toString());
+        switch (tag) {
+            case TagEmpty: return new StringBuilder();
+            case TagNull: return null;
+            case TagString: return getStringBuilder(CharArrayUnserializer.readChars(reader, stream));
+            case TagUTF8Char: return getStringBuilder(ValueReader.readChar(stream));
+            case TagRef: return toStringBuilder(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {

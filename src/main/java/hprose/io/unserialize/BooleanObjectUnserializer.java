@@ -33,18 +33,22 @@ final class BooleanObjectUnserializer implements HproseUnserializer {
 
     final static Boolean read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagTrue) return true;
-        if (tag == TagFalse) return false;
-        if (tag == TagNull) return null;
-        return BooleanUnserializer.read(reader, buffer, tag);
+        switch (tag) {
+            case TagTrue: return true;
+            case TagFalse: return false;
+            case TagNull: return null;
+            default: return BooleanUnserializer.read(reader, buffer, tag);
+        }
     }
 
     final static Boolean read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagTrue) return true;
-        if (tag == TagFalse) return false;
-        if (tag == TagNull) return null;
-        return BooleanUnserializer.read(reader, stream, tag);
+        switch (tag) {
+            case TagTrue: return true;
+            case TagFalse: return false;
+            case TagNull: return null;
+            default: return BooleanUnserializer.read(reader, stream, tag);
+        }
     }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {

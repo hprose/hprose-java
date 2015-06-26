@@ -82,18 +82,22 @@ public final class BooleanUnserializer implements HproseUnserializer, HproseTags
 
     public final static boolean read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagTrue) return true;
-        if (tag == TagFalse) return false;
-        if (tag == TagNull) return false;
-        return read(reader, buffer, tag);
+        switch (tag) {
+            case TagTrue: return true;
+            case TagFalse:
+            case TagNull: return false;
+            default: return read(reader, buffer, tag);
+        }
     }
 
     public final static boolean read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagTrue) return true;
-        if (tag == TagFalse) return false;
-        if (tag == TagNull) return false;
-        return BooleanUnserializer.read(reader, stream, tag);
+        switch (tag) {
+            case TagTrue: return true;
+            case TagFalse:
+            case TagNull: return false;
+            default: return read(reader, stream, tag);
+        }
     }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {

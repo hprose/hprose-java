@@ -37,18 +37,21 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
         return new StringBuffer().append(c);
     }
 
+    private static StringBuffer toStringBuffer(Object obj) {
+        if (obj instanceof char[]) {
+            return getStringBuffer((char[])obj);
+        }
+        return new StringBuffer(obj.toString());
+    }
+
     final static StringBuffer read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagEmpty) return new StringBuffer();
-        if (tag == TagNull) return null;
-        if (tag == TagString) return getStringBuffer(CharArrayUnserializer.readChars(reader, buffer));
-        if (tag == TagUTF8Char) return getStringBuffer(ValueReader.readChar(buffer));
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof char[]) {
-                return getStringBuffer((char[])obj);
-            }
-            return new StringBuffer(obj.toString());
+        switch (tag) {
+            case TagEmpty: return new StringBuffer();
+            case TagNull: return null;
+            case TagString: return getStringBuffer(CharArrayUnserializer.readChars(reader, buffer));
+            case TagUTF8Char: return getStringBuffer(ValueReader.readChar(buffer));
+            case TagRef: return toStringBuffer(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {
@@ -70,16 +73,12 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
 
     final static StringBuffer read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagEmpty) return new StringBuffer();
-        if (tag == TagNull) return null;
-        if (tag == TagString) return getStringBuffer(CharArrayUnserializer.readChars(reader, stream));
-        if (tag == TagUTF8Char) return getStringBuffer(ValueReader.readChar(stream));
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof char[]) {
-                return getStringBuffer((char[])obj);
-            }
-            return new StringBuffer(obj.toString());
+        switch (tag) {
+            case TagEmpty: return new StringBuffer();
+            case TagNull: return null;
+            case TagString: return getStringBuffer(CharArrayUnserializer.readChars(reader, stream));
+            case TagUTF8Char: return getStringBuffer(ValueReader.readChar(stream));
+            case TagRef: return toStringBuffer(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {

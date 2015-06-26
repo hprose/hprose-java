@@ -12,7 +12,7 @@
  *                                                        *
  * Date unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,6 +34,9 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
     private static Date toDate(Object obj) {
         if (obj instanceof DateTime) {
             return ((DateTime)obj).toDate();
+        }
+        if (obj instanceof char[]) {
+            return Date.valueOf(new String((char[])obj));
         }
         return Date.valueOf(obj.toString());
     }

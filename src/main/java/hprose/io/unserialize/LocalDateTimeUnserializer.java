@@ -44,24 +44,26 @@ final class LocalDateTimeUnserializer implements HproseUnserializer, HproseTags 
 
     final static LocalDateTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toLocalDateTime(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toLocalDateTime(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toLocalDateTime(reader.readRef(buffer));
         switch (tag) {
+            case TagDate: return toLocalDateTime(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toLocalDateTime(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return LocalDateTime.parse(StringUnserializer.readString(reader, buffer));
+            case TagRef: return toLocalDateTime(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), LocalDateTime.class);
         }
     }
 
     final static LocalDateTime read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toLocalDateTime(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toLocalDateTime(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toLocalDateTime(reader.readRef(stream));
         switch (tag) {
+            case TagDate: return toLocalDateTime(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toLocalDateTime(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return LocalDateTime.parse(StringUnserializer.readString(reader, stream));
+            case TagRef: return toLocalDateTime(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), LocalDateTime.class);
         }
     }

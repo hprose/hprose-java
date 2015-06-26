@@ -40,21 +40,15 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
 
     final static Date read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, buffer).toDate();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, buffer).toDate();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toDate(reader.readRef(buffer));
         switch (tag) {
-            case '0': return new Date(0l);
-            case '1': return new Date(1l);
-            case '2': return new Date(2l);
-            case '3': return new Date(3l);
-            case '4': return new Date(4l);
-            case '5': return new Date(5l);
-            case '6': return new Date(6l);
-            case '7': return new Date(7l);
-            case '8': return new Date(8l);
-            case '9': return new Date(9l);
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toDate();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toDate();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toDate(reader.readRef(buffer));
+        }
+        if (tag >= '0' && tag <= '9') return new Date(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(buffer));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
@@ -65,21 +59,15 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
 
     final static Date read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, stream).toDate();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, stream).toDate();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toDate(reader.readRef(stream));
         switch (tag) {
-            case '0': return new Date(0l);
-            case '1': return new Date(1l);
-            case '2': return new Date(2l);
-            case '3': return new Date(3l);
-            case '4': return new Date(4l);
-            case '5': return new Date(5l);
-            case '6': return new Date(6l);
-            case '7': return new Date(7l);
-            case '8': return new Date(8l);
-            case '9': return new Date(9l);
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toDate();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toDate();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toDate(reader.readRef(stream));
+        }
+        if (tag >= '0' && tag <= '9') return new Date(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(stream));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(stream)).longValue());

@@ -12,7 +12,7 @@
  *                                                        *
  * OffsetTime unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -42,6 +42,9 @@ final class OffsetTimeUnserializer implements HproseUnserializer, HproseTags {
     private static OffsetTime toOffsetTime(Object obj) {
         if (obj instanceof DateTime) {
             return toOffsetTime((DateTime)obj);
+        }
+        if (obj instanceof char[]) {
+            return OffsetTime.parse(new String((char[])obj));
         }
         return OffsetTime.parse(obj.toString());
     }

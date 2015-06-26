@@ -143,6 +143,7 @@ public final class UnserializerFactory {
         unserializers.put(TimeZone.class, TimeZoneUnserializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             unserializers.put(java.time.LocalDate.class, LocalDateUnserializer.instance);
+            unserializers.put(java.time.LocalTime.class, LocalTimeUnserializer.instance);
         }
     }
 

@@ -19,6 +19,7 @@
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagEmpty;
 import static hprose.io.HproseTags.TagNull;
 import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagString;
@@ -32,45 +33,50 @@ final class PatternUnserializer implements HproseUnserializer {
 
     public final static PatternUnserializer instance = new PatternUnserializer();
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    private static Object toPattern(HproseReader reader, String s) throws IOException {
+        Pattern pattern = Pattern.compile(s);
+        reader.refer.set(pattern);
+        return pattern;
+    }
+
+    private static Object toPattern(Object obj) {
+        if (obj instanceof Pattern) {
+            return obj;
+        }
+        if (obj instanceof char[]) {
+            return Pattern.compile(new String((char[])obj));
+        }
+        return Pattern.compile(obj.toString());
+    }
+
+    final static Object read(ByteBuffer buffer, HproseReader reader) throws IOException {
         int tag = buffer.get();
-        if (tag == TagNull) return null;
-        if (tag == TagString) {
-            Pattern pattern = Pattern.compile(ValueReader.readString(buffer));
-            reader.refer.set(pattern);
-            return pattern;
+        switch (tag) {
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString:  return toPattern(reader, ValueReader.readString(buffer));
+            case TagRef: return toPattern(reader.readRef(buffer));
+            default: throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
         }
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof Pattern) {
-                return obj;
-            }
-            if (obj instanceof char[]) {
-                return Pattern.compile(new String((char[])obj));
-            }
-            return Pattern.compile(obj.toString());
+    }
+
+    final static Object read(InputStream stream, HproseReader reader) throws IOException {
+        int tag = stream.read();
+        switch (tag) {
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return toPattern(reader, ValueReader.readString(stream));
+            case TagRef: return toPattern(reader.readRef(stream));
+            default: throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
         }
-        throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
+    }
+
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+        return read(buffer, reader);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        int tag = stream.read();
-        if (tag == TagNull) return null;
-        if (tag == TagString) {
-            Pattern pattern = Pattern.compile(ValueReader.readString(stream));
-            reader.refer.set(pattern);
-            return pattern;
-        }
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof Pattern) {
-                return obj;
-            }
-            if (obj instanceof char[]) {
-                return Pattern.compile(new String((char[])obj));
-            }
-            return Pattern.compile(obj.toString());
-        }
-        throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
+        return read(stream, reader);
     }
+
 }

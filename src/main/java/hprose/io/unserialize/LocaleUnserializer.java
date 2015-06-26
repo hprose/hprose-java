@@ -44,51 +44,50 @@ final class LocaleUnserializer implements HproseUnserializer {
         return new Locale(items[0], items[1], items[2]);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    private static Locale toLocale(HproseReader reader, String s) throws IOException {
+        Locale locale = toLocale(s);
+        reader.refer.set(locale);
+        return locale;
+    }
+
+    private static Locale toLocale(Object obj) {
+        if (obj instanceof Locale) {
+            return (Locale)obj;
+        }
+        if (obj instanceof char[]) {
+            return toLocale(new String((char[])obj));
+        }
+        return toLocale(obj.toString());
+    }
+
+    final static Locale read(ByteBuffer buffer, HproseReader reader) throws IOException {
         int tag = buffer.get();
         switch(tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString: {
-                Locale locale = toLocale(ValueReader.readString(buffer));
-                reader.refer.set(locale);
-                return locale;
-            }
-            case TagRef: {
-                Object obj = reader.readRef(buffer);
-                if (obj instanceof Locale) {
-                    return obj;
-                }
-                if (obj instanceof char[]) {
-                    return toLocale(new String((char[])obj));
-                }
-                return toLocale(obj.toString());
-            }
+            case TagString: return toLocale(reader, ValueReader.readString(buffer));
+            case TagRef: return toLocale(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Locale.class);
         }
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    final static Locale read(InputStream stream, HproseReader reader) throws IOException {
         int tag = stream.read();
         switch(tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString: {
-                Locale locale = toLocale(ValueReader.readString(stream));
-                reader.refer.set(locale);
-                return locale;
-            }
-            case TagRef: {
-                Object obj = reader.readRef(stream);
-                if (obj instanceof Locale) {
-                    return obj;
-                }
-                if (obj instanceof char[]) {
-                    return toLocale(new String((char[])obj));
-                }
-                return toLocale(obj.toString());
-            }
+            case TagString: return toLocale(reader, ValueReader.readString(stream));
+            case TagRef: return toLocale(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Locale.class);
         }
     }
+
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+        return read(buffer, reader);
+    }
+
+    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+        return read(stream, reader);
+    }
+
 }

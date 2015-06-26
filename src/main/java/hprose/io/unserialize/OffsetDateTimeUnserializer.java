@@ -49,24 +49,26 @@ final class OffsetDateTimeUnserializer implements HproseUnserializer, HproseTags
 
     final static OffsetDateTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toOffsetDateTime(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toOffsetDateTime(reader.readRef(buffer));
         switch (tag) {
+            case TagDate: return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toOffsetDateTime(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return OffsetDateTime.parse(StringUnserializer.readString(reader, buffer));
+            case TagRef: return toOffsetDateTime(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), OffsetDateTime.class);
         }
     }
 
     final static OffsetDateTime read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toOffsetDateTime(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toOffsetDateTime(reader.readRef(stream));
         switch (tag) {
+            case TagDate: return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toOffsetDateTime(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return OffsetDateTime.parse(StringUnserializer.readString(reader, stream));
+            case TagRef: return toOffsetDateTime(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), OffsetDateTime.class);
         }
     }

@@ -50,21 +50,15 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
 
     final static Instant read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toInstant(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toInstant(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toInstant(reader.readRef(buffer));
         switch (tag) {
-            case '0': return Instant.ofEpochMilli(0l);
-            case '1': return Instant.ofEpochMilli(1l);
-            case '2': return Instant.ofEpochMilli(2l);
-            case '3': return Instant.ofEpochMilli(3l);
-            case '4': return Instant.ofEpochMilli(4l);
-            case '5': return Instant.ofEpochMilli(5l);
-            case '6': return Instant.ofEpochMilli(6l);
-            case '7': return Instant.ofEpochMilli(7l);
-            case '8': return Instant.ofEpochMilli(8l);
-            case '9': return Instant.ofEpochMilli(9l);
+            case TagDate: return toInstant(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toInstant(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toInstant(reader.readRef(buffer));
+        }
+        if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(buffer));
             case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
@@ -75,21 +69,15 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
 
     final static Instant read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toInstant(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toInstant(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toInstant(reader.readRef(stream));
         switch (tag) {
-            case '0': return Instant.ofEpochMilli(0l);
-            case '1': return Instant.ofEpochMilli(1l);
-            case '2': return Instant.ofEpochMilli(2l);
-            case '3': return Instant.ofEpochMilli(3l);
-            case '4': return Instant.ofEpochMilli(4l);
-            case '5': return Instant.ofEpochMilli(5l);
-            case '6': return Instant.ofEpochMilli(6l);
-            case '7': return Instant.ofEpochMilli(7l);
-            case '8': return Instant.ofEpochMilli(8l);
-            case '9': return Instant.ofEpochMilli(9l);
+            case TagDate: return toInstant(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toInstant(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toInstant(reader.readRef(stream));
+        }
+        if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(stream));
             case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(stream)).longValue());

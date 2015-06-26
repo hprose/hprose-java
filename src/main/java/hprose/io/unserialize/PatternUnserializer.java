@@ -33,15 +33,15 @@ final class PatternUnserializer implements HproseUnserializer {
 
     public final static PatternUnserializer instance = new PatternUnserializer();
 
-    private static Object toPattern(HproseReader reader, String s) throws IOException {
+    private static Pattern toPattern(HproseReader reader, String s) throws IOException {
         Pattern pattern = Pattern.compile(s);
         reader.refer.set(pattern);
         return pattern;
     }
 
-    private static Object toPattern(Object obj) {
+    private static Pattern toPattern(Object obj) {
         if (obj instanceof Pattern) {
-            return obj;
+            return (Pattern)obj;
         }
         if (obj instanceof char[]) {
             return Pattern.compile(new String((char[])obj));
@@ -49,7 +49,7 @@ final class PatternUnserializer implements HproseUnserializer {
         return Pattern.compile(obj.toString());
     }
 
-    final static Object read(ByteBuffer buffer, HproseReader reader) throws IOException {
+    final static Pattern read(ByteBuffer buffer, HproseReader reader) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -60,7 +60,7 @@ final class PatternUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Object read(InputStream stream, HproseReader reader) throws IOException {
+    final static Pattern read(InputStream stream, HproseReader reader) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:

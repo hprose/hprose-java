@@ -41,33 +41,27 @@ final class StringUnserializer implements HproseUnserializer, HproseTags {
         return str;
     }
 
+    private static String toString(Object obj) {
+        if (obj instanceof char[]) {
+            return new String((char[])obj);
+        }
+        return obj.toString();
+    }
+
     final static String read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagEmpty) return "";
-        if (tag == TagNull) return null;
-        if (tag == TagString) return readString(reader, buffer);
-        if (tag == TagUTF8Char) return ValueReader.readUTF8Char(buffer);
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof char[]) {
-                return new String((char[])obj);
-            }
-            return obj.toString();
-        }
         switch (tag) {
-            case '0': return "0";
-            case '1': return "1";
-            case '2': return "2";
-            case '3': return "3";
-            case '4': return "4";
-            case '5': return "5";
-            case '6': return "6";
-            case '7': return "7";
-            case '8': return "8";
-            case '9': return "9";
+            case TagEmpty: return "";
+            case TagNull: return null;
+            case TagString: return readString(reader, buffer);
+            case TagUTF8Char: return ValueReader.readUTF8Char(buffer);
             case TagInteger: return ValueReader.readUntil(buffer, TagSemicolon).toString();
             case TagLong: return ValueReader.readUntil(buffer, TagSemicolon).toString();
             case TagDouble: return ValueReader.readUntil(buffer, TagSemicolon).toString();
+            case TagRef: return toString(reader.readRef(buffer));
+        }
+        if (tag >= '0' && tag <= '9') return String.valueOf((char)tag);
+        switch (tag) {
             case TagTrue: return "true";
             case TagFalse: return "false";
             case TagNaN: return "NaN";
@@ -82,31 +76,18 @@ final class StringUnserializer implements HproseUnserializer, HproseTags {
 
     final static String read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagEmpty) return "";
-        if (tag == TagNull) return null;
-        if (tag == TagString) return readString(reader, stream);
-        if (tag == TagUTF8Char) return ValueReader.readUTF8Char(stream);
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof char[]) {
-                return new String((char[])obj);
-            }
-            return obj.toString();
-        }
         switch (tag) {
-            case '0': return "0";
-            case '1': return "1";
-            case '2': return "2";
-            case '3': return "3";
-            case '4': return "4";
-            case '5': return "5";
-            case '6': return "6";
-            case '7': return "7";
-            case '8': return "8";
-            case '9': return "9";
+            case TagEmpty: return "";
+            case TagNull: return null;
+            case TagString: return readString(reader, stream);
+            case TagUTF8Char: return ValueReader.readUTF8Char(stream);
             case TagInteger: return ValueReader.readUntil(stream, TagSemicolon).toString();
             case TagLong: return ValueReader.readUntil(stream, TagSemicolon).toString();
             case TagDouble: return ValueReader.readUntil(stream, TagSemicolon).toString();
+            case TagRef: return toString(reader.readRef(stream));
+        }
+        if (tag >= '0' && tag <= '9') return String.valueOf((char)tag);
+        switch (tag) {
             case TagTrue: return "true";
             case TagFalse: return "false";
             case TagNaN: return "NaN";

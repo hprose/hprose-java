@@ -51,13 +51,13 @@ final class StringBuilderUnserializer implements HproseUnserializer, HproseTags 
             case TagNull: return null;
             case TagString: return getStringBuilder(CharArrayUnserializer.readChars(reader, buffer));
             case TagUTF8Char: return getStringBuilder(ValueReader.readChar(buffer));
+            case TagInteger: return ValueReader.readUntil(buffer, TagSemicolon);
+            case TagLong: return ValueReader.readUntil(buffer, TagSemicolon);
+            case TagDouble: return ValueReader.readUntil(buffer, TagSemicolon);
             case TagRef: return toStringBuilder(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {
-            case TagInteger: return ValueReader.readUntil(buffer, TagSemicolon);
-            case TagLong: return ValueReader.readUntil(buffer, TagSemicolon);
-            case TagDouble: return ValueReader.readUntil(buffer, TagSemicolon);
             case TagTrue: return new StringBuilder("true");
             case TagFalse: return new StringBuilder("false");
             case TagNaN: return new StringBuilder("NaN");
@@ -78,13 +78,13 @@ final class StringBuilderUnserializer implements HproseUnserializer, HproseTags 
             case TagNull: return null;
             case TagString: return getStringBuilder(CharArrayUnserializer.readChars(reader, stream));
             case TagUTF8Char: return getStringBuilder(ValueReader.readChar(stream));
+            case TagInteger: return ValueReader.readUntil(stream, TagSemicolon);
+            case TagLong: return ValueReader.readUntil(stream, TagSemicolon);
+            case TagDouble: return ValueReader.readUntil(stream, TagSemicolon);
             case TagRef: return toStringBuilder(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return getStringBuilder((char)tag);
         switch (tag) {
-            case TagInteger: return ValueReader.readUntil(stream, TagSemicolon);
-            case TagLong: return ValueReader.readUntil(stream, TagSemicolon);
-            case TagDouble: return ValueReader.readUntil(stream, TagSemicolon);
             case TagTrue: return new StringBuilder("true");
             case TagFalse: return new StringBuilder("false");
             case TagNaN: return new StringBuilder("NaN");

@@ -12,7 +12,7 @@
  *                                                        *
  * Locale unserializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 26, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -44,8 +44,14 @@ final class LocaleUnserializer implements HproseUnserializer {
         return new Locale(items[0], items[1], items[2]);
     }
 
-    private static Locale toLocale(HproseReader reader, String s) throws IOException {
-        Locale locale = toLocale(s);
+    final static Locale readLocale(HproseReader reader, ByteBuffer buffer) throws IOException {
+        Locale locale = toLocale(ValueReader.readString(buffer));
+        reader.refer.set(locale);
+        return locale;
+    }
+
+    final static Locale readLocale(HproseReader reader, InputStream stream) throws IOException {
+        Locale locale = toLocale(ValueReader.readString(stream));
         reader.refer.set(locale);
         return locale;
     }
@@ -60,34 +66,34 @@ final class LocaleUnserializer implements HproseUnserializer {
         return toLocale(obj.toString());
     }
 
-    final static Locale read(ByteBuffer buffer, HproseReader reader) throws IOException {
+    final static Locale read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch(tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString: return toLocale(reader, ValueReader.readString(buffer));
+            case TagString: return readLocale(reader, buffer);
             case TagRef: return toLocale(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Locale.class);
         }
     }
 
-    final static Locale read(InputStream stream, HproseReader reader) throws IOException {
+    final static Locale read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch(tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString: return toLocale(reader, ValueReader.readString(stream));
+            case TagString: return readLocale(reader, stream);
             case TagRef: return toLocale(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Locale.class);
         }
     }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(buffer, reader);
+        return read(reader, buffer);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(stream, reader);
+        return read(reader, stream);
     }
 
 }

@@ -55,6 +55,7 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
             case TagTime: return toInstant(DefaultUnserializer.readTime(reader, buffer));
             case TagNull:
             case TagEmpty: return null;
+            case TagString: return Instant.parse(StringUnserializer.readString(reader, buffer));
             case TagRef: return toInstant(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
@@ -62,7 +63,6 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(buffer));
             case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
-            case TagString: return Instant.parse(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Instant.class);
         }
     }
@@ -74,6 +74,7 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
             case TagTime: return toInstant(DefaultUnserializer.readTime(reader, stream));
             case TagNull:
             case TagEmpty: return null;
+            case TagString: return Instant.parse(StringUnserializer.readString(reader, stream));
             case TagRef: return toInstant(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
@@ -81,7 +82,6 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(stream));
             case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(stream)).longValue());
-            case TagString: return Instant.parse(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Instant.class);
         }
     }

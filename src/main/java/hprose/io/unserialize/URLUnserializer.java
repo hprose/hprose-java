@@ -12,13 +12,14 @@
  *                                                        *
  * URL unserializer class for Java.                       *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagEmpty;
 import static hprose.io.HproseTags.TagNull;
 import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagString;
@@ -33,53 +34,64 @@ final class URLUnserializer implements HproseUnserializer {
 
     public final static URLUnserializer instance = new URLUnserializer();
 
-    private static URL toURL(String s, Type type) throws IOException {
+    private static URL toURL(String s) throws IOException {
         try {
             return new URL(s);
         }
         catch (MalformedURLException e) {
-            throw ValueReader.castError("String: '" + s + "'", type);
+            throw ValueReader.castError("String: '" + s + "'", URL.class);
         }
     }
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+
+    final static URL readURL(HproseReader reader, ByteBuffer buffer) throws IOException {
+        URL u = toURL(ValueReader.readString(buffer));
+        reader.refer.set(u);
+        return u;
+    }
+
+    final static URL readURL(HproseReader reader, InputStream stream) throws IOException {
+        URL u = toURL(ValueReader.readString(stream));
+        reader.refer.set(u);
+        return u;
+    }
+
+    private static URL toURL(Object obj) throws IOException {
+        if (obj instanceof URL) {
+            return (URL)obj;
+        }
+        if (obj instanceof char[]) {
+            return toURL(new String((char[])obj));
+        }
+        return toURL(obj.toString());
+    }
+
+    final static URL read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagNull) return null;
-        if (tag == TagString) {
-            URL url = toURL(ValueReader.readString(buffer), type);
-            reader.refer.set(url);
-            return url;
+        switch(tag) {
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return readURL(reader, buffer);
+            case TagRef: return toURL(reader.readRef(buffer));
+            default: throw ValueReader.castError(reader.tagToString(tag), URL.class);
         }
-        if (tag == TagRef) {
-            Object obj = reader.readRef(buffer);
-            if (obj instanceof URL) {
-                return obj;
-            }
-            if (obj instanceof char[]) {
-                return toURL(new String((char[])obj), type);
-            }
-            return toURL(obj.toString(), type);
+    }
+
+    final static URL read(HproseReader reader, InputStream stream) throws IOException {
+        int tag = stream.read();
+        switch(tag) {
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return readURL(reader, stream);
+            case TagRef: return toURL(reader.readRef(stream));
+            default: throw ValueReader.castError(reader.tagToString(tag), URL.class);
         }
-        throw ValueReader.castError(reader.tagToString(tag), URL.class);
+    }
+
+    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+        return read(reader, buffer);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        int tag = stream.read();
-        if (tag == TagNull) return null;
-        if (tag == TagString) {
-            URL url = toURL(ValueReader.readString(stream), type);
-            reader.refer.set(url);
-            return url;
-        }
-        if (tag == TagRef) {
-            Object obj = reader.readRef(stream);
-            if (obj instanceof URL) {
-                return obj;
-            }
-            if (obj instanceof char[]) {
-                return toURL(new String((char[])obj), type);
-            }
-            return toURL(obj.toString(), type);
-        }
-        throw ValueReader.castError(reader.tagToString(tag), URL.class);
+        return read(reader, stream);
     }
 }

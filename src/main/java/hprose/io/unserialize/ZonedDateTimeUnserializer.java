@@ -12,7 +12,7 @@
  *                                                        *
  * ZonedDateTime unserializer class for Java.             *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -44,16 +44,20 @@ final class ZonedDateTimeUnserializer implements HproseUnserializer, HproseTags 
         if (obj instanceof DateTime) {
             return toZonedDateTime((DateTime)obj);
         }
+        if (obj instanceof char[]) {
+            return ZonedDateTime.parse(new String((char[])obj));
+        }
         return ZonedDateTime.parse(obj.toString());
     }
 
     final static ZonedDateTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toZonedDateTime(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toZonedDateTime(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toZonedDateTime(reader.readRef(buffer));
         switch (tag) {
+            case TagDate: return toZonedDateTime(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toZonedDateTime(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toZonedDateTime(reader.readRef(buffer));
             case TagString: return ZonedDateTime.parse(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), ZonedDateTime.class);
         }
@@ -61,11 +65,12 @@ final class ZonedDateTimeUnserializer implements HproseUnserializer, HproseTags 
 
     final static ZonedDateTime read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toZonedDateTime(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toZonedDateTime(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toZonedDateTime(reader.readRef(stream));
         switch (tag) {
+            case TagDate: return toZonedDateTime(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toZonedDateTime(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toZonedDateTime(reader.readRef(stream));
             case TagString: return ZonedDateTime.parse(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), ZonedDateTime.class);
         }

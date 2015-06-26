@@ -45,6 +45,7 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
             case TagTime: return DefaultUnserializer.readTime(reader, buffer).toDate();
             case TagNull:
             case TagEmpty: return null;
+            case TagString: return Date.valueOf(StringUnserializer.readString(reader, buffer));
             case TagRef: return toDate(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return new Date(tag - '0');
@@ -52,7 +53,6 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(buffer));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
-            case TagString: return Date.valueOf(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Date.class);
         }
     }
@@ -64,6 +64,7 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
             case TagTime: return DefaultUnserializer.readTime(reader, stream).toDate();
             case TagNull:
             case TagEmpty: return null;
+            case TagString: return Date.valueOf(StringUnserializer.readString(reader, stream));
             case TagRef: return toDate(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return new Date(tag - '0');
@@ -71,7 +72,6 @@ final class DateUnserializer implements HproseUnserializer, HproseTags {
             case TagInteger:
             case TagLong: return new Date(ValueReader.readLong(stream));
             case TagDouble: return new Date(Double.valueOf(ValueReader.readDouble(stream)).longValue());
-            case TagString: return Date.valueOf(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Date.class);
         }
     }

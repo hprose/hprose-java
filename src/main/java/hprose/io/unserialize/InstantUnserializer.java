@@ -12,7 +12,7 @@
  *                                                        *
  * Instant unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -44,6 +44,9 @@ final class InstantUnserializer implements HproseUnserializer, HproseTags {
     private static Instant toInstant(Object obj) {
         if (obj instanceof DateTime) {
             return toInstant((DateTime)obj);
+        }
+        if (obj instanceof char[]) {
+            return Instant.parse(new String((char[])obj));
         }
         return Instant.parse(obj.toString());
     }

@@ -12,7 +12,7 @@
  *                                                        *
  * Time unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,6 +35,9 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
     private static Time toTime(Object obj) throws HproseException {
         if (obj instanceof DateTime) {
             return ((DateTime)obj).toTime();
+        }
+        if (obj instanceof char[]) {
+            return Time.valueOf(new String((char[])obj));
         }
         return Time.valueOf(obj.toString());
     }

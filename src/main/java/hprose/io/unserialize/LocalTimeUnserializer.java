@@ -12,7 +12,7 @@
  *                                                        *
  * LocalTime unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,6 +38,9 @@ final class LocalTimeUnserializer implements HproseUnserializer, HproseTags {
     private static LocalTime toLocalTime(Object obj) {
         if (obj instanceof DateTime) {
             return toLocalTime((DateTime)obj);
+        }
+        if (obj instanceof char[]) {
+            return LocalTime.parse(new String((char[])obj));
         }
         return LocalTime.parse(obj.toString());
     }

@@ -51,13 +51,13 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
             case TagNull: return null;
             case TagString: return getStringBuffer(CharArrayUnserializer.readChars(reader, buffer));
             case TagUTF8Char: return getStringBuffer(ValueReader.readChar(buffer));
+            case TagInteger: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
+            case TagLong: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
+            case TagDouble: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
             case TagRef: return toStringBuffer(reader.readRef(buffer));
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {
-            case TagInteger: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
-            case TagLong: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
-            case TagDouble: return new StringBuffer(ValueReader.readUntil(buffer, TagSemicolon));
             case TagTrue: return new StringBuffer("true");
             case TagFalse: return new StringBuffer("false");
             case TagNaN: return new StringBuffer("NaN");
@@ -78,13 +78,13 @@ final class StringBufferUnserializer implements HproseUnserializer, HproseTags {
             case TagNull: return null;
             case TagString: return getStringBuffer(CharArrayUnserializer.readChars(reader, stream));
             case TagUTF8Char: return getStringBuffer(ValueReader.readChar(stream));
+            case TagInteger: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
+            case TagLong: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
+            case TagDouble: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
             case TagRef: return toStringBuffer(reader.readRef(stream));
         }
         if (tag >= '0' && tag <= '9') return getStringBuffer((char)tag);
         switch (tag) {
-            case TagInteger: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
-            case TagLong: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
-            case TagDouble: return new StringBuffer(ValueReader.readUntil(stream, TagSemicolon));
             case TagTrue: return new StringBuffer("true");
             case TagFalse: return new StringBuffer("false");
             case TagNaN: return new StringBuffer("NaN");

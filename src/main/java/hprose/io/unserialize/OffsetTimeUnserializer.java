@@ -48,24 +48,26 @@ final class OffsetTimeUnserializer implements HproseUnserializer, HproseTags {
 
     final static OffsetTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return toOffsetTime(DefaultUnserializer.readDateTime(reader, buffer));
-        if (tag == TagTime) return toOffsetTime(DefaultUnserializer.readTime(reader, buffer));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toOffsetTime(reader.readRef(buffer));
         switch (tag) {
+            case TagDate: return toOffsetTime(DefaultUnserializer.readDateTime(reader, buffer));
+            case TagTime: return toOffsetTime(DefaultUnserializer.readTime(reader, buffer));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return OffsetTime.parse(StringUnserializer.readString(reader, buffer));
+            case TagRef: return toOffsetTime(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), OffsetTime.class);
         }
     }
 
     final static OffsetTime read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return toOffsetTime(DefaultUnserializer.readDateTime(reader, stream));
-        if (tag == TagTime) return toOffsetTime(DefaultUnserializer.readTime(reader, stream));
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toOffsetTime(reader.readRef(stream));
         switch (tag) {
+            case TagDate: return toOffsetTime(DefaultUnserializer.readDateTime(reader, stream));
+            case TagTime: return toOffsetTime(DefaultUnserializer.readTime(reader, stream));
+            case TagNull:
+            case TagEmpty: return null;
             case TagString: return OffsetTime.parse(StringUnserializer.readString(reader, stream));
+            case TagRef: return toOffsetTime(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), OffsetTime.class);
         }
     }

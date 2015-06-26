@@ -145,6 +145,7 @@ public final class UnserializerFactory {
             unserializers.put(java.time.LocalDate.class, LocalDateUnserializer.instance);
             unserializers.put(java.time.LocalTime.class, LocalTimeUnserializer.instance);
             unserializers.put(java.time.LocalDateTime.class, LocalDateTimeUnserializer.instance);
+            unserializers.put(java.time.OffsetTime.class, OffsetTimeUnserializer.instance);
         }
     }
 

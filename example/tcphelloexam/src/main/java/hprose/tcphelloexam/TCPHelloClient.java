@@ -1,7 +1,6 @@
 package hprose.tcphelloexam;
 
 import hprose.client.HproseTcpClient;
-import hprose.common.HproseCallback1;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.logging.Level;

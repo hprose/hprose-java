@@ -36,19 +36,11 @@ final class DurationUnserializer implements HproseUnserializer, HproseTags {
 
     final static Duration read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toDuration(reader.readRef(buffer));
+        if (tag >= '0' && tag <= '9') return Duration.ofNanos(tag - '0');
         switch (tag) {
-            case '0': return Duration.ofNanos(0l);
-            case '1': return Duration.ofNanos(1l);
-            case '2': return Duration.ofNanos(2l);
-            case '3': return Duration.ofNanos(3l);
-            case '4': return Duration.ofNanos(4l);
-            case '5': return Duration.ofNanos(5l);
-            case '6': return Duration.ofNanos(6l);
-            case '7': return Duration.ofNanos(7l);
-            case '8': return Duration.ofNanos(8l);
-            case '9': return Duration.ofNanos(9l);
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toDuration(reader.readRef(buffer));
             case TagInteger:
             case TagLong: return Duration.ofNanos(ValueReader.readLong(buffer));
             case TagDouble: return Duration.ofNanos(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
@@ -59,19 +51,11 @@ final class DurationUnserializer implements HproseUnserializer, HproseTags {
 
     final static Duration read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toDuration(reader.readRef(stream));
+        if (tag >= '0' && tag <= '9') return Duration.ofNanos(tag - '0');
         switch (tag) {
-            case '0': return Duration.ofNanos(0l);
-            case '1': return Duration.ofNanos(1l);
-            case '2': return Duration.ofNanos(2l);
-            case '3': return Duration.ofNanos(3l);
-            case '4': return Duration.ofNanos(4l);
-            case '5': return Duration.ofNanos(5l);
-            case '6': return Duration.ofNanos(6l);
-            case '7': return Duration.ofNanos(7l);
-            case '8': return Duration.ofNanos(8l);
-            case '9': return Duration.ofNanos(9l);
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toDuration(reader.readRef(stream));
             case TagInteger:
             case TagLong: return Duration.ofNanos(ValueReader.readLong(stream));
             case TagDouble: return Duration.ofNanos(Double.valueOf(ValueReader.readDouble(stream)).longValue());

@@ -41,50 +41,38 @@ final class TimeUnserializer implements HproseUnserializer, HproseTags {
 
     final static Time read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, buffer).toTime();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, buffer).toTime();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toTime(reader.readRef(buffer));
         switch (tag) {
-            case '0': return new Time(0l);
-            case '1': return new Time(1l);
-            case '2': return new Time(2l);
-            case '3': return new Time(3l);
-            case '4': return new Time(4l);
-            case '5': return new Time(5l);
-            case '6': return new Time(6l);
-            case '7': return new Time(7l);
-            case '8': return new Time(8l);
-            case '9': return new Time(9l);
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toTime();
+            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toTime();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return Time.valueOf(StringUnserializer.readString(reader, buffer));
+            case TagRef: return toTime(reader.readRef(buffer));
+        }
+        if (tag >= '0' && tag <= '9') return new Time(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return new Time(ValueReader.readLong(buffer));
             case TagDouble: return new Time(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
-            case TagString: return Time.valueOf(StringUnserializer.readString(reader, buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Time.class);
         }
     }
 
     final static Time read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, stream).toTime();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, stream).toTime();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toTime(reader.readRef(stream));
         switch (tag) {
-            case '0': return new Time(0l);
-            case '1': return new Time(1l);
-            case '2': return new Time(2l);
-            case '3': return new Time(3l);
-            case '4': return new Time(4l);
-            case '5': return new Time(5l);
-            case '6': return new Time(6l);
-            case '7': return new Time(7l);
-            case '8': return new Time(8l);
-            case '9': return new Time(9l);
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toTime();
+            case TagTime: return DefaultUnserializer.readTime(reader, stream).toTime();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagString: return Time.valueOf(StringUnserializer.readString(reader, stream));
+            case TagRef: return toTime(reader.readRef(stream));
+        }
+        if (tag >= '0' && tag <= '9') return new Time(tag - '0');
+        switch (tag) {
             case TagInteger:
             case TagLong: return new Time(ValueReader.readLong(stream));
             case TagDouble: return new Time(Double.valueOf(ValueReader.readDouble(stream)).longValue());
-            case TagString: return Time.valueOf(StringUnserializer.readString(reader, stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Time.class);
         }
     }

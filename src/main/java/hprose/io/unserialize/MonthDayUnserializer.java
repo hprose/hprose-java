@@ -12,7 +12,7 @@
  *                                                        *
  * MonthDay unserializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,6 +38,9 @@ final class MonthDayUnserializer implements HproseUnserializer, HproseTags {
     private static MonthDay toMonthDay(Object obj) {
         if (obj instanceof DateTime) {
             return toMonthDay((DateTime)obj);
+        }
+        if (obj instanceof char[]) {
+            return MonthDay.parse(new String((char[])obj));
         }
         return MonthDay.parse(obj.toString());
     }

@@ -12,7 +12,7 @@
  *                                                        *
  * Duration unserializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,6 +31,9 @@ final class DurationUnserializer implements HproseUnserializer, HproseTags {
     public final static DurationUnserializer instance = new DurationUnserializer();
 
     private static Duration toDuration(Object obj) {
+        if (obj instanceof char[]) {
+            return Duration.parse(new String((char[])obj));
+        }
         return Duration.parse(obj.toString());
     }
 

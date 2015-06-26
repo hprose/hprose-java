@@ -151,6 +151,7 @@ public final class UnserializerFactory {
             unserializers.put(java.time.Duration.class, DurationUnserializer.instance);
             unserializers.put(java.time.Instant.class, InstantUnserializer.instance);
             unserializers.put(java.time.MonthDay.class, MonthDayUnserializer.instance);
+            unserializers.put(java.time.Period.class, PeriodUnserializer.instance);
         }
     }
 

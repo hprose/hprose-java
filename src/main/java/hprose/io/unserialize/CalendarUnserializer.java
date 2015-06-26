@@ -47,10 +47,13 @@ final class CalendarUnserializer implements HproseUnserializer, HproseTags {
 
     final static Calendar read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, buffer).toCalendar();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, buffer).toCalendar();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toCalendar(reader.readRef(buffer));
+        switch (tag) {
+            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toCalendar();
+            case TagTime:  return DefaultUnserializer.readTime(reader, buffer).toCalendar();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toCalendar(reader.readRef(buffer));
+        }
         if (tag >= '0' && tag <= '9') return toCalendar(tag);
         switch (tag) {
             case TagInteger:
@@ -70,10 +73,13 @@ final class CalendarUnserializer implements HproseUnserializer, HproseTags {
 
     final static Calendar read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
-        if (tag == TagDate) return DefaultUnserializer.readDateTime(reader, stream).toCalendar();
-        if (tag == TagTime) return DefaultUnserializer.readTime(reader, stream).toCalendar();
-        if (tag == TagNull || tag == TagEmpty) return null;
-        if (tag == TagRef) return toCalendar(reader.readRef(stream));
+        switch (tag) {
+            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toCalendar();
+            case TagTime:  return DefaultUnserializer.readTime(reader, stream).toCalendar();
+            case TagNull:
+            case TagEmpty: return null;
+            case TagRef: return toCalendar(reader.readRef(stream));
+        }
         if (tag >= '0' && tag <= '9') return toCalendar(tag);
         switch (tag) {
             case TagInteger:

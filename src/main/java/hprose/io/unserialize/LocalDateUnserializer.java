@@ -12,7 +12,7 @@
  *                                                        *
  * LocalDate unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,6 +38,9 @@ final class LocalDateUnserializer implements HproseUnserializer, HproseTags {
     private static LocalDate toLocalDate(Object obj) {
         if (obj instanceof DateTime) {
             return toLocalDate((DateTime)obj);
+        }
+        if (obj instanceof char[]) {
+            return LocalDate.parse(new String((char[])obj));
         }
         return LocalDate.parse(obj.toString());
     }

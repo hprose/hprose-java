@@ -12,7 +12,7 @@
  *                                                        *
  * Pattern unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,8 +33,14 @@ final class PatternUnserializer implements HproseUnserializer {
 
     public final static PatternUnserializer instance = new PatternUnserializer();
 
-    private static Pattern toPattern(HproseReader reader, String s) throws IOException {
-        Pattern pattern = Pattern.compile(s);
+    final static Pattern readPattern(HproseReader reader, ByteBuffer buffer) throws IOException {
+        Pattern pattern = Pattern.compile(ValueReader.readString(buffer));
+        reader.refer.set(pattern);
+        return pattern;
+    }
+
+    final static Pattern readPattern(HproseReader reader, InputStream stream) throws IOException {
+        Pattern pattern = Pattern.compile(ValueReader.readString(stream));
         reader.refer.set(pattern);
         return pattern;
     }
@@ -49,34 +55,34 @@ final class PatternUnserializer implements HproseUnserializer {
         return Pattern.compile(obj.toString());
     }
 
-    final static Pattern read(ByteBuffer buffer, HproseReader reader) throws IOException {
+    final static Pattern read(HproseReader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString:  return toPattern(reader, ValueReader.readString(buffer));
+            case TagString: return readPattern(reader, buffer);
             case TagRef: return toPattern(reader.readRef(buffer));
             default: throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
         }
     }
 
-    final static Pattern read(InputStream stream, HproseReader reader) throws IOException {
+    final static Pattern read(HproseReader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
             case TagEmpty: return null;
-            case TagString: return toPattern(reader, ValueReader.readString(stream));
+            case TagString:return readPattern(reader, stream);
             case TagRef: return toPattern(reader.readRef(stream));
             default: throw ValueReader.castError(reader.tagToString(tag), Pattern.class);
         }
     }
 
     public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(buffer, reader);
+        return read(reader, buffer);
     }
 
     public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(stream, reader);
+        return read(reader, stream);
     }
 
 }

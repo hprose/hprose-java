@@ -149,6 +149,7 @@ public final class UnserializerFactory {
             unserializers.put(java.time.OffsetDateTime.class, OffsetDateTimeUnserializer.instance);
             unserializers.put(java.time.ZonedDateTime.class, ZonedDateTimeUnserializer.instance);
             unserializers.put(java.time.Duration.class, DurationUnserializer.instance);
+            unserializers.put(java.time.Instant.class, InstantUnserializer.instance);
         }
     }
 

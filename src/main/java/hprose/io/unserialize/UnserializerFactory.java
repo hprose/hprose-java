@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -142,20 +142,23 @@ public final class UnserializerFactory {
         unserializers.put(Pattern.class, PatternUnserializer.instance);
         unserializers.put(TimeZone.class, TimeZoneUnserializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
-            unserializers.put(java.time.LocalDate.class, LocalDateUnserializer.instance);
-            unserializers.put(java.time.LocalTime.class, LocalTimeUnserializer.instance);
-            unserializers.put(java.time.LocalDateTime.class, LocalDateTimeUnserializer.instance);
-            unserializers.put(java.time.OffsetTime.class, OffsetTimeUnserializer.instance);
-            unserializers.put(java.time.OffsetDateTime.class, OffsetDateTimeUnserializer.instance);
-            unserializers.put(java.time.ZonedDateTime.class, ZonedDateTimeUnserializer.instance);
-            unserializers.put(java.time.Duration.class, DurationUnserializer.instance);
-            unserializers.put(java.time.Instant.class, InstantUnserializer.instance);
-            unserializers.put(java.time.MonthDay.class, MonthDayUnserializer.instance);
-            unserializers.put(java.time.Period.class, PeriodUnserializer.instance);
-            unserializers.put(java.time.Year.class, YearUnserializer.instance);
-            unserializers.put(java.time.YearMonth.class, YearMonthUnserializer.instance);
-            unserializers.put(java.time.ZoneId.class, ZoneIdUnserializer.instance);
-            unserializers.put(java.time.ZoneOffset.class, ZoneOffsetUnserializer.instance);
+            try {
+                unserializers.put(Class.forName("java.time.LocalDate"), LocalDateUnserializer.instance);
+                unserializers.put(Class.forName("java.time.LocalTime"), LocalTimeUnserializer.instance);
+                unserializers.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeUnserializer.instance);
+                unserializers.put(Class.forName("java.time.OffsetTime"), OffsetTimeUnserializer.instance);
+                unserializers.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeUnserializer.instance);
+                unserializers.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeUnserializer.instance);
+                unserializers.put(Class.forName("java.time.Duration"), DurationUnserializer.instance);
+                unserializers.put(Class.forName("java.time.Instant"), InstantUnserializer.instance);
+                unserializers.put(Class.forName("java.time.MonthDay"), MonthDayUnserializer.instance);
+                unserializers.put(Class.forName("java.time.Period"), PeriodUnserializer.instance);
+                unserializers.put(Class.forName("java.time.Year"), YearUnserializer.instance);
+                unserializers.put(Class.forName("java.time.YearMonth"), YearMonthUnserializer.instance);
+                unserializers.put(Class.forName("java.time.ZoneId"), ZoneIdUnserializer.instance);
+                unserializers.put(Class.forName("java.time.ZoneOffset"), ZoneOffsetUnserializer.instance);
+            }
+            catch (Throwable e) {}
         }
     }
 
@@ -173,6 +176,12 @@ public final class UnserializerFactory {
             }
             else if (Map.class.isAssignableFrom(type)) {
                 unserializer = MapUnserializer.instance;
+            }
+            else if (TimeZone.class.isAssignableFrom(type)) {
+                unserializer = TimeZoneUnserializer.instance;
+            }
+            else if (Calendar.class.isAssignableFrom(type)) {
+                unserializer = CalendarUnserializer.instance;
             }
             else {
                 unserializer = ObjectUnserializer.instance;

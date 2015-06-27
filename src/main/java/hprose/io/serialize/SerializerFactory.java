@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Jun 23, 2015                             *
+ * LastModified: Jun 27, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -143,20 +143,23 @@ public final class SerializerFactory {
         serializers.put(Pattern.class, ToStringSerializer.instance);
         serializers.put(TimeZone.class, TimeZoneSerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
-            serializers.put(java.time.LocalDate.class, LocalDateSerializer.instance);
-            serializers.put(java.time.LocalTime.class, LocalTimeSerializer.instance);
-            serializers.put(java.time.LocalDateTime.class, LocalDateTimeSerializer.instance);
-            serializers.put(java.time.OffsetTime.class, OffsetTimeSerializer.instance);
-            serializers.put(java.time.OffsetDateTime.class, OffsetDateTimeSerializer.instance);
-            serializers.put(java.time.ZonedDateTime.class, ZonedDateTimeSerializer.instance);
-            serializers.put(java.time.Duration.class, ToStringSerializer.instance);
-            serializers.put(java.time.Instant.class, ToStringSerializer.instance);
-            serializers.put(java.time.MonthDay.class, ToStringSerializer.instance);
-            serializers.put(java.time.Period.class, ToStringSerializer.instance);
-            serializers.put(java.time.Year.class, ToStringSerializer.instance);
-            serializers.put(java.time.YearMonth.class, ToStringSerializer.instance);
-            serializers.put(java.time.ZoneId.class, ToStringSerializer.instance);
-            serializers.put(java.time.ZoneOffset.class, ToStringSerializer.instance);
+            try {
+                serializers.put(Class.forName("java.time.LocalDate"), LocalDateSerializer.instance);
+                serializers.put(Class.forName("java.time.LocalTime"), LocalTimeSerializer.instance);
+                serializers.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeSerializer.instance);
+                serializers.put(Class.forName("java.time.OffsetTime"), OffsetTimeSerializer.instance);
+                serializers.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeSerializer.instance);
+                serializers.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeSerializer.instance);
+                serializers.put(Class.forName("java.time.Duration"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.Instant"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.MonthDay"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.Period"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.Year"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.YearMonth"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.ZoneId"), ToStringSerializer.instance);
+                serializers.put(Class.forName("java.time.ZoneOffset"), ToStringSerializer.instance);
+            }
+            catch (Throwable e) {}
         }
     }
 
@@ -169,11 +172,17 @@ public final class SerializerFactory {
             else if (type.isArray()) {
                 serializer = OtherTypeArraySerializer.instance;
             }
+            else if (Map.class.isAssignableFrom(type)) {
+                serializer = MapSerializer.instance;
+            }
             else if (Collection.class.isAssignableFrom(type)) {
                 serializer = CollectionSerializer.instance;
             }
-            else if (Map.class.isAssignableFrom(type)) {
-                serializer = MapSerializer.instance;
+            else if (TimeZone.class.isAssignableFrom(type)) {
+                serializer = TimeZoneSerializer.instance;
+            }
+            else if (Calendar.class.isAssignableFrom(type)) {
+                serializer = CalendarSerializer.instance;
             }
             else {
                 serializer = OtherTypeSerializer.instance;

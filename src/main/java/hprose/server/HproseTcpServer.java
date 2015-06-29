@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Jun 29, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,6 @@ package hprose.server;
 import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
-import hprose.util.TcpUtil;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
@@ -29,140 +28,30 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class HproseTcpServer extends HproseService {
+
     private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
-    
-    public static TcpContext getCurrentContext() {
-        return currentContext.get();
-    }
-
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
-
-    class HandlerThread extends Thread {
-        private final Selector selector;
-        private final HproseTcpServer server;
-        public HandlerThread(HproseTcpServer server, Selector selector) {
-            this.server = server;
-            this.selector = selector;
-        }
-        @Override
-        public void run() {
-            while (!interrupted()) {
-                try {
-                    int n = selector.select();
-                    if (n == 0) {
-                        continue;
-                    }
-                    Iterator<SelectionKey> it = selector.selectedKeys().iterator();
-                    while (it.hasNext()) {
-                        SelectionKey key = it.next();
-                        it.remove();
-                        if (key.isAcceptable()) {
-                            doAccept((ServerSocketChannel) key.channel());
-                        }
-                        else if (key.isReadable()) {
-                            doRead((SocketChannel) key.channel());
-                        }
-                    }
-                }
-                catch (IOException ex) {
-                    server.fireErrorEvent(ex, null);
-                }
-            }
-        }
-
-        private void doAccept(ServerSocketChannel serverChannel) throws IOException {
-            SocketChannel channel = serverChannel.accept();
-            if (channel != null) {
-                channel.configureBlocking(false);
-                channel.register(selector, SelectionKey.OP_READ);
-            }
-        }
-
-        private void doRead(final SocketChannel socketChannel) throws IOException {
-            if (server.isEnabledThreadPool()) {
-                execInThreadPool(socketChannel);
-            }
-            else {
-                execDirectly(socketChannel);
-            }
-        }
-
-        private void execDirectly(final SocketChannel socketChannel) throws IOException {
-            ByteBufferStream istream = null;
-            ByteBufferStream ostream = null;
-            final TcpContext context = new TcpContext(socketChannel);
-            try {
-                currentContext.set(context);
-                istream = TcpUtil.receiveDataOverTcp(socketChannel);
-                ostream = server.handle(istream, context);
-                TcpUtil.sendDataOverTcp(socketChannel, ostream);
-                socketChannel.register(selector, SelectionKey.OP_READ);
-            }
-            catch (IOException e) {
-                server.fireErrorEvent(e, context);
-                socketChannel.close();
-            }
-            finally {
-                currentContext.remove();
-                if (istream != null) istream.close();
-                if (ostream != null) ostream.close();
-            }
-        }
-
-        private void execInThreadPool(final SocketChannel socketChannel) throws IOException {
-            final TcpContext context = new TcpContext(socketChannel);
-            try {
-                final ByteBufferStream istream = TcpUtil.receiveDataOverTcp(socketChannel);
-                socketChannel.register(selector, SelectionKey.OP_READ);
-                threadPool.execute(new Runnable() {
-                    public void run() {
-                        ByteBufferStream ostream = null;
-                        try {
-                            currentContext.set(context);
-                            ostream = server.handle(istream, context);
-                            TcpUtil.sendDataOverTcp(socketChannel, ostream);
-                        }
-                        catch (IOException e) {
-                            server.fireErrorEvent(e, context);
-                            try {
-                                socketChannel.close();
-                            }
-                            catch (IOException ex) {
-                                server.fireErrorEvent(ex, context);
-                            }
-                        }
-                        finally {
-                            currentContext.remove();
-                            if (istream != null) istream.close();
-                            if (ostream != null) ostream.close();
-                        }
-                    }
-                });
-            }
-            catch (IOException e) {
-                server.fireErrorEvent(e, context);
-                socketChannel.close();
-            }
-        }
-    }
-    private ServerSocketChannel serverChannel = null;
-    private ArrayList<Selector> selectors = null;
-    private ArrayList<HandlerThread> handlerThreads = null;
+    private int threadCount = Runtime.getRuntime().availableProcessors() + 2;
+    private ExecutorService threadPool = null;
+    private boolean enabledThreadPool = false;
+    private Acceptor acceptor = null;
     private String host = null;
     private int port = 0;
-    private int tCount = Runtime.getRuntime().availableProcessors() + 2;
-    private boolean started = false;
-    private boolean enabledThreadPool = false;
 
     public HproseTcpServer(String uri) throws URISyntaxException {
         URI u = new URI(uri);
@@ -173,24 +62,6 @@ public class HproseTcpServer extends HproseService {
     public HproseTcpServer(String host, int port) {
         this.host = host;
         this.port = port;
-    }
-
-    @Override
-    public HproseMethods getGlobalMethods() {
-        if (globalMethods == null) {
-            globalMethods = new HproseTcpMethods();
-        }
-        return globalMethods;
-    }
-
-    @Override
-    public void setGlobalMethods(HproseMethods methods) {
-        if (methods instanceof HproseTcpMethods) {
-            this.globalMethods = methods;
-        }
-        else {
-            throw new ClassCastException("methods must be a HproseTcpMethods instance");
-        }
     }
 
     public String getHost() {
@@ -209,41 +80,48 @@ public class HproseTcpServer extends HproseService {
         port = value;
     }
 
-    /**
-     * Get the service thread count.
-     * The default value is availableProcessors + 2.
-     * @return count of service threads.
-     */
-    public int getThreadCount() {
-        return tCount;
+    public boolean isStarted() {
+        return (acceptor != null);
     }
 
-    /**
-     * Set the service thread count.
-     * @param value is the count of service threads.
-     */
-    public void setThreadCount(int value) {
-        tCount = value;
+    public void start() throws IOException {
+        if (!isStarted()) {
+            acceptor = new Acceptor(host, port);
+            new Thread(acceptor).start();
+        }
     }
 
-    /**
-     * Is enabled thread pool.
-     * This thread pool is not for the service threads, it is for the user service method.
-     * The default value is false.
-     * @return is enabled thread pool
-     */
-    public boolean isEnabledThreadPool() {
-        return enabledThreadPool;
+    public void stop() {
+        if (isStarted()) {
+            acceptor.stop();
+            if (threadPool != null && !threadPool.isShutdown()) {
+                try {
+                    threadPool.shutdown();
+                }
+                catch (SecurityException e) {
+                    fireErrorEvent(e, null);
+                }
+            }
+            acceptor = null;
+        }
     }
 
-    /**
-     * Set enabled thread pool.
-     * This thread pool is not for the service threads, it is for the user service method.
-     * If your service method takes a long time, or will be blocked, please set this property to be true.
-     * @param value is enabled thread pool
-     */
-    public void setEnabledThreadPool(boolean value) {
-        enabledThreadPool = value;
+    @Override
+    public HproseMethods getGlobalMethods() {
+        if (globalMethods == null) {
+            globalMethods = new HproseTcpMethods();
+        }
+        return globalMethods;
+    }
+
+    @Override
+    public void setGlobalMethods(HproseMethods methods) {
+        if (methods instanceof HproseTcpMethods) {
+            this.globalMethods = methods;
+        }
+        else {
+            throw new ClassCastException("methods must be a HproseTcpMethods instance");
+        }
     }
 
     @Override
@@ -271,12 +149,90 @@ public class HproseTcpServer extends HproseService {
         return arguments;
     }
 
-    public boolean isStarted() {
-        return started;
+    public static TcpContext getCurrentContext() {
+        return currentContext.get();
     }
 
-    public void start() throws IOException {
-        if (!isStarted()) {
+    /**
+     * Get the service thread count.
+     * The default value is availableProcessors + 2.
+     * @return count of service threads.
+     */
+    public int getThreadCount() {
+        return threadCount;
+    }
+
+    /**
+     * Set the service thread count.
+     * @param value is the count of service threads.
+     */
+    public void setThreadCount(int value) {
+        threadCount = value;
+    }
+
+    /**
+     * Is enabled thread pool.
+     * This thread pool is not for the service threads, it is for the user service method.
+     * The default value is false.
+     * @return is enabled thread pool
+     */
+    public boolean isEnabledThreadPool() {
+        return enabledThreadPool;
+    }
+
+    /**
+     * Set enabled thread pool.
+     * This thread pool is not for the service threads, it is for the user service method.
+     * If your service method takes a long time, or will be blocked, please set this property to be true.
+     * @param value is enabled thread pool
+     */
+    public void setEnabledThreadPool(boolean value) {
+        if (value && (threadPool == null)) {
+            threadPool = Executors.newCachedThreadPool();
+        }
+        enabledThreadPool = value;
+    }
+
+    /**
+     * get the thread pool.
+     * This thread pool is not for the service threads, it is for the user service method.
+     * The default value is null.
+     * @return the thread pool
+     */
+    public ExecutorService getThreadPool() {
+        return threadPool;
+    }
+
+    /**
+     * set the thread pool.
+     * This thread pool is not for the service threads, it is for the user service method.
+     * Set it to null will disable thread pool.
+     * @param value is the thread pool
+     */
+    public void setThreadPool(ExecutorService value) {
+        threadPool = value;
+        enabledThreadPool = (value != null);
+    }
+
+    protected void fireAcceptEvent(SocketChannel channel) {
+        if (event != null && HproseTcpServiceEvent.class.isInstance(event)) {
+            ((HproseTcpServiceEvent)event).onAccept(new TcpContext(channel));
+        }
+    }
+
+    protected void fireCloseEvent(SocketChannel channel) {
+        if (event != null && HproseTcpServiceEvent.class.isInstance(event)) {
+            ((HproseTcpServiceEvent)event).onClose(new TcpContext(channel));
+        }
+    }
+
+    private final class Acceptor implements Runnable {
+        private final Selector selector;
+        private final ServerSocketChannel serverChannel;
+        private final Pool pool;
+
+        public Acceptor(String host, int port) throws IOException {
+            selector = Selector.open();
             serverChannel = ServerSocketChannel.open();
             ServerSocket serverSocket = serverChannel.socket();
             InetSocketAddress address = (host == null) ?
@@ -284,44 +240,384 @@ public class HproseTcpServer extends HproseService {
                     new InetSocketAddress(host, port);
             serverSocket.bind(address);
             serverChannel.configureBlocking(false);
-            selectors = new ArrayList<Selector>(tCount);
-            handlerThreads = new ArrayList<HandlerThread>(tCount);
-            for (int i = 0; i < tCount; i++) {
-                Selector selector = Selector.open();
-                serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-                HandlerThread handlerThread = new HandlerThread(this, selector);
-                handlerThread.start();
-                selectors.add(selector);
-                handlerThreads.add(handlerThread);
-            }
-            started = true;
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+            pool = new Pool(threadCount);
         }
-    }
 
-    public void stop() {
-        if (isStarted()) {
-            for (int i = selectors.size() - 1; i >= 0; --i) {
-                Selector selector = selectors.remove(i);
-                HandlerThread handlerThread = handlerThreads.remove(i);
-                handlerThread.interrupt();
+        @Override
+        public void run() {
+            pool.start();
+            while (!Thread.interrupted()) {
                 try {
-                    selector.close();
-                    serverChannel.close();
+                    process();
                 }
                 catch (IOException ex) {
                     fireErrorEvent(ex, null);
                 }
-            }
-            try {
-                if (!threadPool.isShutdown()) {
-                    threadPool.shutdown();
+                catch (ClosedSelectorException e) {
+                    break;
                 }
             }
-            catch (SecurityException e) {
+            pool.stop();
+        }
+
+        private void process() throws IOException {
+            int n = selector.select();
+            if (n == 0) return;
+            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            while (it.hasNext()) {
+                SelectionKey key = it.next();
+                it.remove();
+                if (key.isAcceptable()) {
+                    accept(key);
+                }
+            }
+        }
+
+        private void accept(SelectionKey key) throws IOException {
+            final SocketChannel channel = ((ServerSocketChannel) key.channel()).accept();
+            if (channel != null) {
+                channel.configureBlocking(false);
+                channel.socket().setReuseAddress(true);
+                fireAcceptEvent(channel);
+                pool.register(channel);
+            }
+        }
+
+        public void stop() {
+            try {
+                selector.close();
+            }
+            catch (IOException e) {
                 fireErrorEvent(e, null);
             }
-            selectors = null;
-            handlerThreads = null;
+            try {
+                serverChannel.close();
+            }
+            catch (IOException e) {
+                fireErrorEvent(e, null);
+            }
+        }
+    }
+
+    private final class Pool {
+        private final Poller[] pollers;
+        private final AtomicInteger[] counters;
+
+        public Pool(int count) throws IOException {
+            counters = new AtomicInteger[count];
+            pollers = new Poller[count];
+            for (int i = 0; i < count; ++i) {
+                counters[i] = new AtomicInteger(0);
+                pollers[i] = new Poller(counters[i]);
+            }
+        }
+
+        public void start() {
+            int n = pollers.length;
+            for (int i = 0; i < n; ++i) {
+                new Thread(pollers[i]).start();
+            }
+        }
+
+        public void register(SocketChannel channel) {
+            int n = pollers.length;
+            int p = 0;
+            int min = counters[0].get();
+            for (int i = 1; i < n; ++i) {
+                int size = counters[i].get();
+                if (min > size) {
+                    min = size;
+                    p = i;
+                }
+            }
+            pollers[p].register(channel);
+        }
+
+        public void stop() {
+            for (int i = pollers.length - 1; i >= 0; --i) {
+                try {
+                    pollers[i].selector.close();
+                }
+                catch (IOException e) {
+                    fireErrorEvent(e, null);
+                }
+            }
+        }
+    }
+
+    private final class Poller implements Runnable {
+
+        private final Selector selector;
+        private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
+        private final AtomicInteger counter;
+
+        public Poller(AtomicInteger counter) throws IOException {
+            selector = Selector.open();
+            this.counter = counter;
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.interrupted()) {
+                try {
+                    process();
+                    dispatch(selector);
+                }
+                catch (IOException ex) {
+                    fireErrorEvent(ex, null);
+                }
+                catch (ClosedSelectorException e) {
+                    break;
+                }
+            }
+        }
+
+        private void process() {
+            for (;;) {
+                final SocketChannel channel = queue.poll();
+                if (channel == null) {
+                    break;
+                }
+                try {
+                    channel.register(selector, SelectionKey.OP_READ, new Worker(counter));
+                }
+                catch (ClosedChannelException e) {}
+            }
+        }
+
+        private void dispatch(Selector selector) throws IOException {
+            int n = selector.select();
+            if (n == 0) return;
+            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            while (it.hasNext()) {
+                SelectionKey key = it.next();
+                it.remove();
+                int readyOps = key.readyOps();
+                if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
+                    if (!receive(key)) continue;
+                }
+                if ((readyOps & SelectionKey.OP_WRITE) != 0) {
+                    send(key);
+                }
+            }
+        }
+
+        private boolean receive(SelectionKey key) {
+            return ((Worker) key.attachment()).receive(key);
+        }
+
+        private void send(SelectionKey key) throws IOException {
+            ((Worker) key.attachment()).send(key);
+        }
+
+        public void register(SocketChannel channel) {
+            counter.getAndIncrement();
+            queue.add(channel);
+            selector.wakeup();
+        }
+    }
+
+    private final class OutBuffer {
+        public ByteBuffer[] buffers = new ByteBuffer[2];
+        public int writeLength = 0;
+        public int totalLength;
+        public OutBuffer(ByteBuffer buffer, Integer id) {
+            if (id == null) {
+                buffers[0] = ByteBuffer.allocate(4);
+                buffers[0].putInt(buffer.limit());
+                totalLength = buffer.limit() + 4;
+            }
+            else {
+                buffers[0] = ByteBuffer.allocate(8);
+                buffers[0].putInt(buffer.limit() | 0x80000000);
+                buffers[0].putInt(id);
+                totalLength = buffer.limit() + 8;
+            }
+            buffers[0].flip();
+            buffers[1] = buffer;
+        }
+    }
+
+    private final class Worker {
+        private final Queue<OutBuffer> outqueue = new ConcurrentLinkedQueue<OutBuffer>();
+        private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
+        private int headerLength = 4;
+        private int dataLength = -1;
+        private Integer id = null;
+        private OutBuffer outbuf = null;
+        private final AtomicInteger counter;
+
+        public Worker(AtomicInteger counter) {
+            this.counter = counter;
+        }
+
+        public void close(SelectionKey key) {
+            try {
+                counter.getAndDecrement();
+                SocketChannel channel = (SocketChannel) key.channel();
+                fireCloseEvent(channel);
+                channel.close();
+                key.cancel();
+            }
+            catch (IOException e) {}
+        }
+
+        private final class Handler implements Runnable {
+            private final SelectionKey key;
+            private final ByteBuffer data;
+            private final Integer id;
+
+            public Handler(SelectionKey key, ByteBuffer data, Integer id) {
+                this.key = key;
+                this.data = data;
+                this.id = id;
+            }
+
+            public final void run() {
+                TcpContext context = new TcpContext((SocketChannel) key.channel());
+                ByteBufferStream istream = new ByteBufferStream(data);
+                try {
+                    currentContext.set(context);
+                    final OutBuffer outbuf = new OutBuffer(
+                        HproseTcpServer.this.handle(
+                            istream,
+                            context
+                        ).buffer,
+                        id
+                    );
+                    outqueue.add(outbuf);
+                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                    key.selector().wakeup();
+                }
+                catch (Exception e) {
+                    close(key);
+                }
+                finally {
+                    currentContext.remove();
+                    istream.close();
+                }
+            }
+        }
+
+        private void handle(final SelectionKey key, final ByteBuffer data, final Integer id) {
+            Handler handler = new Handler(key, data, id);
+            if (threadPool != null) {
+                try {
+                    threadPool.execute(handler);
+                }
+                catch (RejectedExecutionException e) {
+                    close(key);
+                }
+            }
+            else {
+                handler.run();
+            }
+        }
+
+        public final boolean receive(SelectionKey key) {
+            SocketChannel channel = (SocketChannel) key.channel();
+            if (!channel.isOpen()) {
+                close(key);
+                return false;
+            }
+            try {
+                int n = channel.read(inbuf);
+                if (n < 0) {
+                    close(key);
+                    return false;
+                }
+                if (n == 0) return true;
+                for (;;) {
+                    if ((dataLength < 0) &&
+                        (inbuf.position() >= headerLength)) {
+                        dataLength = inbuf.getInt(0);
+                        if (dataLength < 0) {
+                            dataLength &= 0x7fffffff;
+                            headerLength = 8;
+                        }
+                        if (headerLength + dataLength > inbuf.capacity()) {
+                            ByteBuffer buf = ByteBufferStream.allocate(headerLength + dataLength);
+                            inbuf.flip();
+                            buf.put(inbuf);
+                            ByteBufferStream.free(inbuf);
+                            inbuf = buf;
+                        }
+                        if (channel.read(inbuf) < 0) {
+                            close(key);
+                            return false;
+                        }
+                    }
+                    if ((headerLength == 8) && (id == null)
+                        && (inbuf.position() >= headerLength)) {
+                        id = inbuf.getInt(4);
+                    }
+                    if ((dataLength >= 0) &&
+                        ((inbuf.position() - headerLength) >= dataLength)) {
+                        ByteBuffer data = ByteBufferStream.allocate(dataLength);
+                        inbuf.flip();
+                        inbuf.position(headerLength);
+                        int bufLen = inbuf.limit();
+                        inbuf.limit(headerLength + dataLength);
+                        data.put(inbuf);
+                        inbuf.limit(bufLen);
+                        inbuf.compact();
+                        handle(key, data, id);
+                        headerLength = 4;
+                        dataLength = -1;
+                        id = null;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            catch (Exception e) {
+                close(key);
+                return false;
+            }
+            return true;
+        }
+
+        public final void send(SelectionKey key) {
+            SocketChannel channel = (SocketChannel) key.channel();
+            if (!channel.isOpen()) {
+                close(key);
+                return;
+            }
+            if (outbuf == null) {
+                outbuf = outqueue.poll();
+                if (outbuf == null) {
+                    key.interestOps(SelectionKey.OP_READ);
+                    return;
+                }
+            }
+            try {
+                for (;;) {
+                    while (outbuf.writeLength < outbuf.totalLength) {
+                        long n = channel.write(outbuf.buffers);
+                        if (n < 0) {
+                            close(key);
+                            return;
+                        }
+                        if (n == 0) {
+                            key.interestOps(SelectionKey.OP_READ |
+                                            SelectionKey.OP_WRITE);
+                            return;
+                        }
+                        outbuf.writeLength += n;
+                    }
+                    ByteBufferStream.free(outbuf.buffers[1]);
+                    outbuf = outqueue.poll();
+                    if (outbuf == null) {
+                        key.interestOps(SelectionKey.OP_READ);
+                        return;
+                    }
+                }
+            }
+            catch (Exception e) {
+                close(key);
+            }
         }
     }
 }

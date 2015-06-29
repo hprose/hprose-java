@@ -27,7 +27,7 @@ public class TCPHelloClient {
             };
             threads[i].start();
         }
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 10; i++) {
             threads[i].join();
         }
         long end = System.currentTimeMillis();

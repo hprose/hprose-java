@@ -477,7 +477,7 @@ public abstract class HproseService implements HproseTags {
         getGlobalMethods().addMissingMethod(methodName, type, mode, simple);
     }
 
-    private ByteBufferStream responseEnd(ByteBufferStream data, HproseContext context) throws IOException {
+    private ByteBufferStream responseEnd(ByteBufferStream data, HproseContext context) {
         data.flip();
         for (int i = 0, n = filters.size(); i < n; ++i) {
             data.buffer = filters.get(i).outputFilter(data.buffer, context);

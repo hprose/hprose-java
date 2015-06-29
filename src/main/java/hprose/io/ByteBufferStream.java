@@ -29,8 +29,10 @@ import java.nio.channels.ByteChannel;
 public final class ByteBufferStream {
 
     final static class ByteBufferPool {
-        private final ByteBuffer[][] pool = new ByteBuffer[12][];
-        private final int[] position = new int[12];
+        private final int POOLNUM = 12;
+        private final int POOLSIZE = 32;
+        private final ByteBuffer[][] pool = new ByteBuffer[POOLNUM][];
+        private final int[] position = new int[POOLNUM];
         private final static int[] debruijn = new int[] {
             0,  1,  28,  2, 29, 14, 24,  3,
             30, 22, 20, 15, 25, 17,  4,  8,
@@ -41,8 +43,8 @@ public final class ByteBufferStream {
             return debruijn[(x & -x) * 0x077CB531 >>> 27];
         }
         private ByteBufferPool() {
-            for (int i = 0; i < 12; ++i) {
-                pool[i] = new ByteBuffer[8];
+            for (int i = 0; i < POOLNUM; ++i) {
+                pool[i] = new ByteBuffer[POOLSIZE];
                 position[i] = -1;
             }
         }
@@ -52,7 +54,7 @@ public final class ByteBufferStream {
                 return ByteBuffer.allocate(capacity);
             }
             int index = log2(capacity) - 10;
-            if (index < 12 && position[index] >= 0) {
+            if (index < POOLNUM && position[index] >= 0) {
                 int pos = position[index];
                 ByteBuffer byteBuffer = pool[index][pos];
                 pool[index][pos] = null;
@@ -68,9 +70,9 @@ public final class ByteBufferStream {
                 if (capacity == pow2roundup(capacity)) {
                     buffer.clear();
                     int index = log2(capacity) - 10;
-                    if (index >= 0 && index < 12) {
+                    if (index >= 0 && index < POOLNUM) {
                         int pos = position[index];
-                        if (pos < 7) {
+                        if (pos < POOLSIZE - 1) {
                             pool[index][++pos] = buffer;
                             position[index] = pos;
                         }

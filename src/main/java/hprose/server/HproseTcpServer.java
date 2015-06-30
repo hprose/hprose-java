@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Jun 29, 2015                             *
+ * LastModified: Jun 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -301,27 +301,27 @@ public class HproseTcpServer extends HproseService {
     }
 
     private final class Pool {
-        private final Poller[] pollers;
+        private final Reactor[] reactors;
         private final AtomicInteger[] counters;
 
         public Pool(int count) throws IOException {
             counters = new AtomicInteger[count];
-            pollers = new Poller[count];
+            reactors = new Reactor[count];
             for (int i = 0; i < count; ++i) {
                 counters[i] = new AtomicInteger(0);
-                pollers[i] = new Poller(counters[i]);
+                reactors[i] = new Reactor(counters[i]);
             }
         }
 
         public void start() {
-            int n = pollers.length;
+            int n = reactors.length;
             for (int i = 0; i < n; ++i) {
-                new Thread(pollers[i]).start();
+                new Thread(reactors[i]).start();
             }
         }
 
         public void register(SocketChannel channel) {
-            int n = pollers.length;
+            int n = reactors.length;
             int p = 0;
             int min = counters[0].get();
             for (int i = 1; i < n; ++i) {
@@ -331,13 +331,13 @@ public class HproseTcpServer extends HproseService {
                     p = i;
                 }
             }
-            pollers[p].register(channel);
+            reactors[p].register(channel);
         }
 
         public void stop() {
-            for (int i = pollers.length - 1; i >= 0; --i) {
+            for (int i = reactors.length - 1; i >= 0; --i) {
                 try {
-                    pollers[i].selector.close();
+                    reactors[i].selector.close();
                 }
                 catch (IOException e) {
                     fireErrorEvent(e, null);
@@ -346,13 +346,13 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
-    private final class Poller implements Runnable {
+    private final class Reactor implements Runnable {
 
         private final Selector selector;
         private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
         private final AtomicInteger counter;
 
-        public Poller(AtomicInteger counter) throws IOException {
+        public Reactor(AtomicInteger counter) throws IOException {
             selector = Selector.open();
             this.counter = counter;
         }

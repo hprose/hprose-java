@@ -75,7 +75,6 @@ interface ConnectionEvent {
 final class Connection {
     private final SelectionKey key;
     private final SocketChannel channel;
-    private final AtomicInteger counter;
     private final ConnectionEvent event;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
     private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
@@ -84,10 +83,9 @@ final class Connection {
     private Integer id = null;
     private OutPacket packet = null;
 
-    public Connection(SelectionKey key, AtomicInteger counter, ConnectionEvent event) {
+    public Connection(SelectionKey key, ConnectionEvent event) {
         this.key = key;
         this.channel = (SocketChannel) key.channel();
-        this.counter = counter;
         this.event = event;
     }
 
@@ -101,7 +99,6 @@ final class Connection {
 
     public void close() {
         try {
-            counter.getAndDecrement();
             event.onClose(this);
             channel.close();
             key.cancel();
@@ -217,6 +214,77 @@ final class Connection {
         catch (Exception e) {
             close();
         }
+    }
+}
+
+final class Reactor implements Runnable {
+
+    private final Selector selector;
+    private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
+    private final ConnectionEvent event;
+
+    public Reactor(ConnectionEvent event) throws IOException {
+        selector = Selector.open();
+        this.event = event;
+    }
+
+    @Override
+    public void run() {
+        while (!Thread.interrupted()) {
+            try {
+                process();
+                dispatch(selector);
+            }
+            catch (IOException e) {}
+            catch (ClosedSelectorException e) {
+                break;
+            }
+        }
+    }
+
+    public void close() {
+        try {
+            selector.close();
+        }
+        catch (IOException e) {}
+    }
+
+    private void process() {
+        for (;;) {
+            final SocketChannel channel = queue.poll();
+            if (channel == null) {
+                break;
+            }
+            try {
+                SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
+                Connection conn = new Connection(key, event);
+                key.attach(conn);
+            }
+            catch (ClosedChannelException e) {}
+        }
+    }
+
+    private void dispatch(Selector selector) throws IOException {
+        int n = selector.select();
+        if (n == 0) return;
+        Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+        while (it.hasNext()) {
+            SelectionKey key = it.next();
+            Connection conn = (Connection) key.attachment();
+            it.remove();
+            int readyOps = key.readyOps();
+            if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
+                if (!conn.receive()) continue;
+            }
+            if ((readyOps & SelectionKey.OP_WRITE) != 0) {
+                conn.send();
+            }
+        }
+    }
+
+    public void register(SocketChannel channel) {
+        queue.offer(channel);
+        selector.wakeup();
     }
 }
 
@@ -428,8 +496,8 @@ public class HproseTcpServer extends HproseService {
                 try {
                     process();
                 }
-                catch (IOException ex) {
-                    fireErrorEvent(ex, null);
+                catch (IOException e) {
+                    fireErrorEvent(e, null);
                 }
                 catch (ClosedSelectorException e) {
                     break;
@@ -456,6 +524,7 @@ public class HproseTcpServer extends HproseService {
             if (channel != null) {
                 channel.configureBlocking(false);
                 channel.socket().setReuseAddress(true);
+                channel.socket().setKeepAlive(true);
                 fireAcceptEvent(channel);
                 reactors.register(channel);
             }
@@ -465,15 +534,11 @@ public class HproseTcpServer extends HproseService {
             try {
                 selector.close();
             }
-            catch (IOException e) {
-                fireErrorEvent(e, null);
-            }
+            catch (IOException e) {}
             try {
                 serverChannel.close();
             }
-            catch (IOException e) {
-                fireErrorEvent(e, null);
-            }
+            catch (IOException e) {}
         }
     }
 
@@ -511,6 +576,37 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
+    private final class ReactorEvent implements ConnectionEvent {
+        private final AtomicInteger counter;
+
+        public ReactorEvent(AtomicInteger counter) {
+            this.counter = counter;
+        }
+
+        public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
+            Handler handler = new Handler(conn, data, id);
+            if (threadPool != null) {
+                try {
+                    threadPool.execute(handler);
+                }
+                catch (RejectedExecutionException e) {
+                    conn.close();
+                }
+            }
+            else {
+                handler.run();
+            }
+        }
+
+        public final void onSended(Connection conn, Integer id) {
+        }
+
+        public final void onClose(Connection conn) {
+            counter.getAndDecrement();
+            fireCloseEvent(conn.socketChannel());
+        }
+    }
+
     private final class Reactors {
         private final Reactor[] reactors;
         private final AtomicInteger[] counters;
@@ -518,30 +614,9 @@ public class HproseTcpServer extends HproseService {
         public Reactors(int count) throws IOException {
             counters = new AtomicInteger[count];
             reactors = new Reactor[count];
-            ConnectionEvent event = new ConnectionEvent() {
-                public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
-                    Handler handler = new Handler(conn, data, id);
-                    if (threadPool != null) {
-                        try {
-                            threadPool.execute(handler);
-                        }
-                        catch (RejectedExecutionException e) {
-                            conn.close();
-                        }
-                    }
-                    else {
-                        handler.run();
-                    }
-                }
-                public final void onSended(Connection conn, Integer id) {
-                }
-                public final void onClose(Connection conn) {
-                    fireCloseEvent(conn.socketChannel());
-                }
-            };
             for (int i = 0; i < count; ++i) {
                 counters[i] = new AtomicInteger(0);
-                reactors[i] = new Reactor(counters[i], event);
+                reactors[i] = new Reactor(new ReactorEvent(counters[i]));
             }
         }
 
@@ -563,6 +638,7 @@ public class HproseTcpServer extends HproseService {
                     p = i;
                 }
             }
+            counters[p].getAndIncrement();
             reactors[p].register(channel);
         }
 
@@ -570,84 +646,6 @@ public class HproseTcpServer extends HproseService {
             for (int i = reactors.length - 1; i >= 0; --i) {
                 reactors[i].close();
             }
-        }
-    }
-
-    private final class Reactor implements Runnable {
-
-        private final Selector selector;
-        private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
-        private final AtomicInteger counter;
-        private final ConnectionEvent event;
-
-        public Reactor(AtomicInteger counter, ConnectionEvent event) throws IOException {
-            selector = Selector.open();
-            this.counter = counter;
-            this.event = event;
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.interrupted()) {
-                try {
-                    process();
-                    dispatch(selector);
-                }
-                catch (IOException ex) {
-                    fireErrorEvent(ex, null);
-                }
-                catch (ClosedSelectorException e) {
-                    break;
-                }
-            }
-        }
-
-        public void close() {
-            try {
-                selector.close();
-            }
-            catch (IOException e) {
-                fireErrorEvent(e, null);
-            }
-        }
-
-        private void process() {
-            for (;;) {
-                final SocketChannel channel = queue.poll();
-                if (channel == null) {
-                    break;
-                }
-                try {
-                    SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
-                    Connection conn = new Connection(key, counter, event);
-                    key.attach(conn);
-                }
-                catch (ClosedChannelException e) {}
-            }
-        }
-
-        private void dispatch(Selector selector) throws IOException {
-            int n = selector.select();
-            if (n == 0) return;
-            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
-            while (it.hasNext()) {
-                SelectionKey key = it.next();
-                Connection conn = (Connection) key.attachment();
-                it.remove();
-                int readyOps = key.readyOps();
-                if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
-                    if (!conn.receive()) continue;
-                }
-                if ((readyOps & SelectionKey.OP_WRITE) != 0) {
-                    conn.send();
-                }
-            }
-        }
-
-        public void register(SocketChannel channel) {
-            counter.getAndIncrement();
-            queue.offer(channel);
-            selector.wakeup();
         }
     }
 }

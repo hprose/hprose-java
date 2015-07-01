@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Jun 30, 2015                             *
+ * LastModified: Jul 1, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -413,7 +413,7 @@ public class HproseTcpServer extends HproseService {
 
         public void register(SocketChannel channel) {
             counter.getAndIncrement();
-            queue.add(channel);
+            queue.offer(channel);
             selector.wakeup();
         }
     }
@@ -486,7 +486,7 @@ public class HproseTcpServer extends HproseService {
                         ).buffer,
                         id
                     );
-                    outqueue.add(outbuf);
+                    outqueue.offer(outbuf);
                     key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                     key.selector().wakeup();
                 }

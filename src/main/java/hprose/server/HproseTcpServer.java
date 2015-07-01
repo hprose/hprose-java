@@ -632,23 +632,16 @@ public class HproseTcpServer extends HproseService {
             Iterator<SelectionKey> it = selector.selectedKeys().iterator();
             while (it.hasNext()) {
                 SelectionKey key = it.next();
+                Connection conn = (Connection) key.attachment();
                 it.remove();
                 int readyOps = key.readyOps();
                 if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
-                    if (!receive(key)) continue;
+                    if (!conn.receive()) continue;
                 }
                 if ((readyOps & SelectionKey.OP_WRITE) != 0) {
-                    send(key);
+                    conn.send();
                 }
             }
-        }
-
-        private boolean receive(SelectionKey key) {
-            return ((Connection) key.attachment()).receive();
-        }
-
-        private void send(SelectionKey key) throws IOException {
-            ((Connection) key.attachment()).send();
         }
 
         public void register(SocketChannel channel) {

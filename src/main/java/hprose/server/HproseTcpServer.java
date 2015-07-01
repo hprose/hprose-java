@@ -229,7 +229,7 @@ public class HproseTcpServer extends HproseService {
     private final class Acceptor implements Runnable {
         private final Selector selector;
         private final ServerSocketChannel serverChannel;
-        private final Pool pool;
+        private final Reactors reactors;
 
         public Acceptor(String host, int port) throws IOException {
             selector = Selector.open();
@@ -241,12 +241,12 @@ public class HproseTcpServer extends HproseService {
             serverSocket.bind(address);
             serverChannel.configureBlocking(false);
             serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-            pool = new Pool(threadCount);
+            reactors = new Reactors(threadCount);
         }
 
         @Override
         public void run() {
-            pool.start();
+            reactors.start();
             while (!Thread.interrupted()) {
                 try {
                     process();
@@ -258,7 +258,7 @@ public class HproseTcpServer extends HproseService {
                     break;
                 }
             }
-            pool.stop();
+            reactors.stop();
         }
 
         private void process() throws IOException {
@@ -280,7 +280,7 @@ public class HproseTcpServer extends HproseService {
                 channel.configureBlocking(false);
                 channel.socket().setReuseAddress(true);
                 fireAcceptEvent(channel);
-                pool.register(channel);
+                reactors.register(channel);
             }
         }
 
@@ -300,11 +300,11 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
-    private final class Pool {
+    private final class Reactors {
         private final Reactor[] reactors;
         private final AtomicInteger[] counters;
 
-        public Pool(int count) throws IOException {
+        public Reactors(int count) throws IOException {
             counters = new AtomicInteger[count];
             reactors = new Reactor[count];
             for (int i = 0; i < count; ++i) {

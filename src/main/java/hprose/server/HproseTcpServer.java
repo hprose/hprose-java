@@ -43,6 +43,183 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+final class OutPacket {
+    public final ByteBuffer[] buffers = new ByteBuffer[2];
+    public final Integer id;
+    public final int totalLength;
+    public int writeLength = 0;
+    public OutPacket(ByteBuffer buffer, Integer id) {
+        if (id == null) {
+            buffers[0] = ByteBuffer.allocate(4);
+            buffers[0].putInt(buffer.limit());
+            totalLength = buffer.limit() + 4;
+        }
+        else {
+            buffers[0] = ByteBuffer.allocate(8);
+            buffers[0].putInt(buffer.limit() | 0x80000000);
+            buffers[0].putInt(id);
+            totalLength = buffer.limit() + 8;
+        }
+        buffers[0].flip();
+        buffers[1] = buffer;
+        this.id = id;
+    }
+}
+
+interface ConnectionEvent {
+    void onReceived(Connection conn, ByteBuffer data, Integer id);
+    void onSended(Connection conn, Integer id);
+    void onClose(Connection conn);
+}
+
+final class Connection {
+    private final SelectionKey key;
+    private final SocketChannel channel;
+    private final AtomicInteger counter;
+    private final ConnectionEvent event;
+    private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
+    private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
+    private int headerLength = 4;
+    private int dataLength = -1;
+    private Integer id = null;
+    private OutPacket packet = null;
+
+    public Connection(SelectionKey key, AtomicInteger counter, ConnectionEvent event) {
+        this.key = key;
+        this.channel = (SocketChannel) key.channel();
+        this.counter = counter;
+        this.event = event;
+    }
+
+    public SelectionKey selectionKey() {
+        return key;
+    }
+
+    public SocketChannel socketChannel() {
+        return channel;
+    }
+
+    public void close() {
+        try {
+            counter.getAndDecrement();
+            event.onClose(this);
+            channel.close();
+            key.cancel();
+        }
+        catch (IOException e) {}
+    }
+
+    public final boolean receive() {
+        if (!channel.isOpen()) {
+            close();
+            return false;
+        }
+        try {
+            int n = channel.read(inbuf);
+            if (n < 0) {
+                close();
+                return false;
+            }
+            if (n == 0) return true;
+            for (;;) {
+                if ((dataLength < 0) &&
+                    (inbuf.position() >= headerLength)) {
+                    dataLength = inbuf.getInt(0);
+                    if (dataLength < 0) {
+                        dataLength &= 0x7fffffff;
+                        headerLength = 8;
+                    }
+                    if (headerLength + dataLength > inbuf.capacity()) {
+                        ByteBuffer buf = ByteBufferStream.allocate(headerLength + dataLength);
+                        inbuf.flip();
+                        buf.put(inbuf);
+                        ByteBufferStream.free(inbuf);
+                        inbuf = buf;
+                    }
+                    if (channel.read(inbuf) < 0) {
+                        close();
+                        return false;
+                    }
+                }
+                if ((headerLength == 8) && (id == null)
+                    && (inbuf.position() >= headerLength)) {
+                    id = inbuf.getInt(4);
+                }
+                if ((dataLength >= 0) &&
+                    ((inbuf.position() - headerLength) >= dataLength)) {
+                    ByteBuffer data = ByteBufferStream.allocate(dataLength);
+                    inbuf.flip();
+                    inbuf.position(headerLength);
+                    int bufLen = inbuf.limit();
+                    inbuf.limit(headerLength + dataLength);
+                    data.put(inbuf);
+                    inbuf.limit(bufLen);
+                    inbuf.compact();
+                    event.onReceived(this, data, id);
+                    headerLength = 4;
+                    dataLength = -1;
+                    id = null;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        catch (Exception e) {
+            close();
+            return false;
+        }
+        return true;
+    }
+
+    public final void send(ByteBuffer buffer, Integer id) {
+        outqueue.offer(new OutPacket(buffer, id));
+        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        key.selector().wakeup();
+    }
+
+    public final void send() {
+        if (!channel.isOpen()) {
+            close();
+            return;
+        }
+        if (packet == null) {
+            packet = outqueue.poll();
+            if (packet == null) {
+                key.interestOps(SelectionKey.OP_READ);
+                return;
+            }
+        }
+        try {
+            for (;;) {
+                while (packet.writeLength < packet.totalLength) {
+                    long n = channel.write(packet.buffers);
+                    if (n < 0) {
+                        close();
+                        return;
+                    }
+                    if (n == 0) {
+                        key.interestOps(SelectionKey.OP_READ |
+                                        SelectionKey.OP_WRITE);
+                        return;
+                    }
+                    packet.writeLength += n;
+                }
+                ByteBufferStream.free(packet.buffers[1]);
+                event.onSended(this, packet.id);
+                packet = outqueue.poll();
+                if (packet == null) {
+                    key.interestOps(SelectionKey.OP_READ);
+                    return;
+                }
+            }
+        }
+        catch (Exception e) {
+            close();
+        }
+    }
+}
+
 public class HproseTcpServer extends HproseService {
 
     private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
@@ -300,6 +477,40 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
+    private final class Handler implements Runnable {
+        private final Connection conn;
+        private final ByteBuffer data;
+        private final Integer id;
+
+        public Handler(Connection conn, ByteBuffer data, Integer id) {
+            this.conn = conn;
+            this.data = data;
+            this.id = id;
+        }
+
+        public final void run() {
+            TcpContext context = new TcpContext(conn.socketChannel());
+            ByteBufferStream istream = new ByteBufferStream(data);
+            try {
+                currentContext.set(context);
+                conn.send(
+                    HproseTcpServer.this.handle(
+                        istream,
+                        context
+                    ).buffer,
+                    id
+                );
+            }
+            catch (Exception e) {
+                conn.close();
+            }
+            finally {
+                currentContext.remove();
+                istream.close();
+            }
+        }
+    }
+
     private final class Reactors {
         private final Reactor[] reactors;
         private final AtomicInteger[] counters;
@@ -307,9 +518,30 @@ public class HproseTcpServer extends HproseService {
         public Reactors(int count) throws IOException {
             counters = new AtomicInteger[count];
             reactors = new Reactor[count];
+            ConnectionEvent event = new ConnectionEvent() {
+                public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
+                    Handler handler = new Handler(conn, data, id);
+                    if (threadPool != null) {
+                        try {
+                            threadPool.execute(handler);
+                        }
+                        catch (RejectedExecutionException e) {
+                            conn.close();
+                        }
+                    }
+                    else {
+                        handler.run();
+                    }
+                }
+                public final void onSended(Connection conn, Integer id) {
+                }
+                public final void onClose(Connection conn) {
+                    fireCloseEvent(conn.socketChannel());
+                }
+            };
             for (int i = 0; i < count; ++i) {
                 counters[i] = new AtomicInteger(0);
-                reactors[i] = new Reactor(counters[i]);
+                reactors[i] = new Reactor(counters[i], event);
             }
         }
 
@@ -336,12 +568,7 @@ public class HproseTcpServer extends HproseService {
 
         public void stop() {
             for (int i = reactors.length - 1; i >= 0; --i) {
-                try {
-                    reactors[i].selector.close();
-                }
-                catch (IOException e) {
-                    fireErrorEvent(e, null);
-                }
+                reactors[i].close();
             }
         }
     }
@@ -351,10 +578,12 @@ public class HproseTcpServer extends HproseService {
         private final Selector selector;
         private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
         private final AtomicInteger counter;
+        private final ConnectionEvent event;
 
-        public Reactor(AtomicInteger counter) throws IOException {
+        public Reactor(AtomicInteger counter, ConnectionEvent event) throws IOException {
             selector = Selector.open();
             this.counter = counter;
+            this.event = event;
         }
 
         @Override
@@ -373,6 +602,15 @@ public class HproseTcpServer extends HproseService {
             }
         }
 
+        public void close() {
+            try {
+                selector.close();
+            }
+            catch (IOException e) {
+                fireErrorEvent(e, null);
+            }
+        }
+
         private void process() {
             for (;;) {
                 final SocketChannel channel = queue.poll();
@@ -380,7 +618,9 @@ public class HproseTcpServer extends HproseService {
                     break;
                 }
                 try {
-                    channel.register(selector, SelectionKey.OP_READ, new Worker(counter));
+                    SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
+                    Connection conn = new Connection(key, counter, event);
+                    key.attach(conn);
                 }
                 catch (ClosedChannelException e) {}
             }
@@ -404,220 +644,17 @@ public class HproseTcpServer extends HproseService {
         }
 
         private boolean receive(SelectionKey key) {
-            return ((Worker) key.attachment()).receive(key);
+            return ((Connection) key.attachment()).receive();
         }
 
         private void send(SelectionKey key) throws IOException {
-            ((Worker) key.attachment()).send(key);
+            ((Connection) key.attachment()).send();
         }
 
         public void register(SocketChannel channel) {
             counter.getAndIncrement();
             queue.offer(channel);
             selector.wakeup();
-        }
-    }
-
-    private final class OutBuffer {
-        public ByteBuffer[] buffers = new ByteBuffer[2];
-        public int writeLength = 0;
-        public int totalLength;
-        public OutBuffer(ByteBuffer buffer, Integer id) {
-            if (id == null) {
-                buffers[0] = ByteBuffer.allocate(4);
-                buffers[0].putInt(buffer.limit());
-                totalLength = buffer.limit() + 4;
-            }
-            else {
-                buffers[0] = ByteBuffer.allocate(8);
-                buffers[0].putInt(buffer.limit() | 0x80000000);
-                buffers[0].putInt(id);
-                totalLength = buffer.limit() + 8;
-            }
-            buffers[0].flip();
-            buffers[1] = buffer;
-        }
-    }
-
-    private final class Worker {
-        private final Queue<OutBuffer> outqueue = new ConcurrentLinkedQueue<OutBuffer>();
-        private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
-        private int headerLength = 4;
-        private int dataLength = -1;
-        private Integer id = null;
-        private OutBuffer outbuf = null;
-        private final AtomicInteger counter;
-
-        public Worker(AtomicInteger counter) {
-            this.counter = counter;
-        }
-
-        public void close(SelectionKey key) {
-            try {
-                counter.getAndDecrement();
-                SocketChannel channel = (SocketChannel) key.channel();
-                fireCloseEvent(channel);
-                channel.close();
-                key.cancel();
-            }
-            catch (IOException e) {}
-        }
-
-        private final class Handler implements Runnable {
-            private final SelectionKey key;
-            private final ByteBuffer data;
-            private final Integer id;
-
-            public Handler(SelectionKey key, ByteBuffer data, Integer id) {
-                this.key = key;
-                this.data = data;
-                this.id = id;
-            }
-
-            public final void run() {
-                TcpContext context = new TcpContext((SocketChannel) key.channel());
-                ByteBufferStream istream = new ByteBufferStream(data);
-                try {
-                    currentContext.set(context);
-                    final OutBuffer outbuf = new OutBuffer(
-                        HproseTcpServer.this.handle(
-                            istream,
-                            context
-                        ).buffer,
-                        id
-                    );
-                    outqueue.offer(outbuf);
-                    key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                    key.selector().wakeup();
-                }
-                catch (Exception e) {
-                    close(key);
-                }
-                finally {
-                    currentContext.remove();
-                    istream.close();
-                }
-            }
-        }
-
-        private void handle(final SelectionKey key, final ByteBuffer data, final Integer id) {
-            Handler handler = new Handler(key, data, id);
-            if (threadPool != null) {
-                try {
-                    threadPool.execute(handler);
-                }
-                catch (RejectedExecutionException e) {
-                    close(key);
-                }
-            }
-            else {
-                handler.run();
-            }
-        }
-
-        public final boolean receive(SelectionKey key) {
-            SocketChannel channel = (SocketChannel) key.channel();
-            if (!channel.isOpen()) {
-                close(key);
-                return false;
-            }
-            try {
-                int n = channel.read(inbuf);
-                if (n < 0) {
-                    close(key);
-                    return false;
-                }
-                if (n == 0) return true;
-                for (;;) {
-                    if ((dataLength < 0) &&
-                        (inbuf.position() >= headerLength)) {
-                        dataLength = inbuf.getInt(0);
-                        if (dataLength < 0) {
-                            dataLength &= 0x7fffffff;
-                            headerLength = 8;
-                        }
-                        if (headerLength + dataLength > inbuf.capacity()) {
-                            ByteBuffer buf = ByteBufferStream.allocate(headerLength + dataLength);
-                            inbuf.flip();
-                            buf.put(inbuf);
-                            ByteBufferStream.free(inbuf);
-                            inbuf = buf;
-                        }
-                        if (channel.read(inbuf) < 0) {
-                            close(key);
-                            return false;
-                        }
-                    }
-                    if ((headerLength == 8) && (id == null)
-                        && (inbuf.position() >= headerLength)) {
-                        id = inbuf.getInt(4);
-                    }
-                    if ((dataLength >= 0) &&
-                        ((inbuf.position() - headerLength) >= dataLength)) {
-                        ByteBuffer data = ByteBufferStream.allocate(dataLength);
-                        inbuf.flip();
-                        inbuf.position(headerLength);
-                        int bufLen = inbuf.limit();
-                        inbuf.limit(headerLength + dataLength);
-                        data.put(inbuf);
-                        inbuf.limit(bufLen);
-                        inbuf.compact();
-                        handle(key, data, id);
-                        headerLength = 4;
-                        dataLength = -1;
-                        id = null;
-                    }
-                    else {
-                        break;
-                    }
-                }
-            }
-            catch (Exception e) {
-                close(key);
-                return false;
-            }
-            return true;
-        }
-
-        public final void send(SelectionKey key) {
-            SocketChannel channel = (SocketChannel) key.channel();
-            if (!channel.isOpen()) {
-                close(key);
-                return;
-            }
-            if (outbuf == null) {
-                outbuf = outqueue.poll();
-                if (outbuf == null) {
-                    key.interestOps(SelectionKey.OP_READ);
-                    return;
-                }
-            }
-            try {
-                for (;;) {
-                    while (outbuf.writeLength < outbuf.totalLength) {
-                        long n = channel.write(outbuf.buffers);
-                        if (n < 0) {
-                            close(key);
-                            return;
-                        }
-                        if (n == 0) {
-                            key.interestOps(SelectionKey.OP_READ |
-                                            SelectionKey.OP_WRITE);
-                            return;
-                        }
-                        outbuf.writeLength += n;
-                    }
-                    ByteBufferStream.free(outbuf.buffers[1]);
-                    outbuf = outqueue.poll();
-                    if (outbuf == null) {
-                        key.interestOps(SelectionKey.OP_READ);
-                        return;
-                    }
-                }
-            }
-            catch (Exception e) {
-                close(key);
-            }
         }
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 18, 2015                             *
+ * LastModified: Jul 2, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -83,7 +83,9 @@ final class OtherTypeSerializer implements HproseSerializer {
             memberCache.get(writer.mode).put(type, cache);
         }
         writer.stream.write(cache.data);
-        writer.refer.addCount(cache.refcount);
+        if (writer.refer != null) {
+            writer.refer.addCount(cache.refcount);
+        }
         int cr = writer.lastclassref++;
         writer.classref.put(type, cr);
         return cr;

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Jul 2, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -45,26 +45,28 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class HproseReader implements HproseTags {
+interface ReaderRefer {
+    void set(Object obj);
+    Object read(int index);
+    void reset();
+}
 
-    interface ReaderRefer {
-        void set(Object obj);
-        Object read(int index);
-        void reset();
+final class FakeReaderRefer implements ReaderRefer {
+    public final void set(Object obj) {}
+    public final Object read(int index) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
-    final class FakeReaderRefer implements ReaderRefer {
-        public final void set(Object obj) {}
-        public final Object read(int index) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        public final void reset() {}
-    }
-    final class RealReaderRefer implements ReaderRefer {
-        private final ArrayList<Object> ref = new ArrayList<Object>();
-        public final void set(Object obj) { ref.add(obj); }
-        public final Object read(int index) { return ref.get(index); }
-        public final void reset() { ref.clear(); }
-    }
+    public final void reset() {}
+}
+
+final class RealReaderRefer implements ReaderRefer {
+    private final ArrayList<Object> ref = new ArrayList<Object>();
+    public final void set(Object obj) { ref.add(obj); }
+    public final Object read(int index) { return ref.get(index); }
+    public final void reset() { ref.clear(); }
+}
+
+public class HproseReader implements HproseTags {
 
     public final InputStream stream;
     private final ByteBuffer buffer;

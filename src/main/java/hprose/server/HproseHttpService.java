@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Jun 8, 2015                              *
+ * LastModified: Jul 15, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -94,7 +94,7 @@ public class HproseHttpService extends HproseService {
     public void removeAccessControlAllowOrigin(String origin) {
         origins.remove(origin);
     }
-    
+
     public void setTimeout(long value) {
         timeout = value;
     }
@@ -176,6 +176,7 @@ public class HproseHttpService extends HproseService {
                 ByteBufferStream ostream = null;
                 try {
                     ostream = doFunctionList(methods, httpContext);
+                    httpContext.getResponse().setContentLength(ostream.available());
                     ostream.writeTo(httpContext.getResponse().getOutputStream());
                 }
                 finally {
@@ -206,6 +207,7 @@ public class HproseHttpService extends HproseService {
             }
             public void onTimeout(AsyncEvent ae) throws IOException {
                 ByteBufferStream ostream = sendError(ae.getThrowable(), httpContext);
+                ae.getSuppliedResponse().setContentLength(ostream.available());
                 ostream.writeTo(ae.getSuppliedResponse().getOutputStream());
             }
             public void onError(AsyncEvent ae) throws IOException {
@@ -222,6 +224,7 @@ public class HproseHttpService extends HproseService {
                     istream = new ByteBufferStream();
                     istream.readFrom(async.getRequest().getInputStream());
                     ostream = handle(istream, methods, httpContext);
+                    async.getResponse().setContentLength(ostream.available());
                     ostream.writeTo(async.getResponse().getOutputStream());
                 }
                 catch (IOException ex) {
@@ -249,6 +252,7 @@ public class HproseHttpService extends HproseService {
             istream = new ByteBufferStream();
             istream.readFrom(httpContext.getRequest().getInputStream());
             ostream = handle(istream, methods, httpContext);
+            httpContext.getResponse().setContentLength(ostream.available());
             ostream.writeTo(httpContext.getResponse().getOutputStream());
         }
         finally {

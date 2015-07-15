@@ -12,7 +12,7 @@
  *                                                        *
  * ByteBuffer Stream for Java.                            *
  *                                                        *
- * LastModified: Apr 23, 2015                             *
+ * LastModified: Jul 15, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -299,7 +299,7 @@ public final class ByteBufferStream {
 
     public final void writeTo(OutputStream ostream) throws IOException {
         if (buffer.hasArray()) {
-            ostream.write(buffer.array(), buffer.arrayOffset(), buffer.limit());
+            ostream.write(buffer.array(), buffer.arrayOffset() + buffer.position(), buffer.remaining());
         }
         else {
             byte[] b = new byte[8192];

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 28, 2015                             *
+ * LastModified: Jul 15, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -201,7 +201,11 @@ public class HproseHttpClient extends HproseClient {
                                                                   url.getFile(),
                                                                   url.getProtocol().equals("https")));
         if (keepAlive) {
+            conn.setRequestProperty("Connection", "keep-alive");
             conn.setRequestProperty("Keep-Alive", Integer.toString(keepAliveTimeout));
+        }
+        else {
+            conn.setRequestProperty("Connection", "close");
         }
         if (proxyUser != null && proxyPass != null) {
             conn.setRequestProperty("Proxy-Authorization",
@@ -214,7 +218,7 @@ public class HproseHttpClient extends HproseClient {
         conn.setDoOutput(true);
         conn.setUseCaches(false);
         conn.setRequestProperty("Content-Type", "application/hprose");
-        conn.setFixedLengthStreamingMode(stream.buffer.limit());
+        conn.setRequestProperty("Content-Length", Integer.toString(stream.available()));
         OutputStream ostream = null;
         try {
             ostream = conn.getOutputStream();

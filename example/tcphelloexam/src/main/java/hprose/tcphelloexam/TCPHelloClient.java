@@ -9,17 +9,18 @@ import java.util.logging.Logger;
 public class TCPHelloClient {
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         System.out.println("START");
-        final HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
         long start = System.currentTimeMillis();
-        Thread[] threads = new Thread[10];
-        for (int i = 0; i < 10; i++) {
+        Thread[] threads = new Thread[20];
+        for (int i = 0; i < 20; i++) {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
                     try {
-                        for (int i = 0; i < 100000; i++) {
+                        HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
+                        for (int i = 0; i < 300000; i++) {
                             client.invoke("hello", new Object[] {"World"});
                         }
+                        client.close();
                     } catch (IOException ex) {
                         Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -27,7 +28,7 @@ public class TCPHelloClient {
             };
             threads[i].start();
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
             threads[i].join();
         }
         long end = System.currentTimeMillis();
@@ -43,6 +44,5 @@ public class TCPHelloClient {
 //        end = System.currentTimeMillis();
 //        System.out.println(end - start);
         System.out.println("END");
-        client.close();
     }
 }

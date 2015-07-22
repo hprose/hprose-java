@@ -229,9 +229,8 @@ public class HproseTcpClient extends HproseClient {
         try {
             URI u = new URI(uri);
             SocketChannel channel = SocketChannel.open();
-            channel.configureBlocking(false);
+            channel.configureBlocking(true);
             channel.connect(new InetSocketAddress(u.getHost(), u.getPort()));
-            while (!channel.finishConnect()) {}
             return channel;
         }
         catch (URISyntaxException e) {

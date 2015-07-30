@@ -42,9 +42,9 @@ public final class HproseFormatter {
             buffer = b;
         }
     }
-    
-    public static ThreadLocal<Cache> cache = new ThreadLocal<Cache>();
-            
+
+    private static final ThreadLocal<Cache> cache = new ThreadLocal<Cache>();
+
     private HproseFormatter() {
     }
 
@@ -96,7 +96,7 @@ public final class HproseFormatter {
         ValueWriter.write(stream, bi);
         return stream;
     }
-    
+
     public final static OutputStream serialize(BigDecimal bd, OutputStream stream) throws IOException {
         ValueWriter.write(stream, bd);
         return stream;

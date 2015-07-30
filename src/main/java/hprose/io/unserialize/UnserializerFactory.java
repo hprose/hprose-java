@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Jul 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -171,11 +171,11 @@ public final class UnserializerFactory {
             else if (type.isArray()) {
                 unserializer = ArrayUnserializer.instance;
             }
-            else if (Collection.class.isAssignableFrom(type)) {
-                unserializer = CollectionUnserializer.instance;
-            }
             else if (Map.class.isAssignableFrom(type)) {
                 unserializer = MapUnserializer.instance;
+            }
+            else if (Collection.class.isAssignableFrom(type)) {
+                unserializer = CollectionUnserializer.instance;
             }
             else if (TimeZone.class.isAssignableFrom(type)) {
                 unserializer = TimeZoneUnserializer.instance;

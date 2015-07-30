@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Jul 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -114,12 +114,12 @@ public final class SerializerFactory {
         serializers.put(char[][].class, CharsArraySerializer.instance);
         serializers.put(byte[][].class, BytesArraySerializer.instance);
         serializers.put(ArrayList.class, ListSerializer.instance);
-        serializers.put(AbstractList.class, CollectionSerializer.instance);
+        serializers.put(AbstractList.class, ListSerializer.instance);
         serializers.put(AbstractCollection.class, CollectionSerializer.instance);
-        serializers.put(List.class, CollectionSerializer.instance);
+        serializers.put(List.class, ListSerializer.instance);
         serializers.put(Collection.class, CollectionSerializer.instance);
-        serializers.put(LinkedList.class, CollectionSerializer.instance);
-        serializers.put(AbstractSequentialList.class, CollectionSerializer.instance);
+        serializers.put(LinkedList.class, ListSerializer.instance);
+        serializers.put(AbstractSequentialList.class, ListSerializer.instance);
         serializers.put(HashSet.class, CollectionSerializer.instance);
         serializers.put(AbstractSet.class, CollectionSerializer.instance);
         serializers.put(Set.class, CollectionSerializer.instance);
@@ -174,6 +174,9 @@ public final class SerializerFactory {
             }
             else if (Map.class.isAssignableFrom(type)) {
                 serializer = MapSerializer.instance;
+            }
+            else if (List.class.isAssignableFrom(type)) {
+                serializer = ListSerializer.instance;
             }
             else if (Collection.class.isAssignableFrom(type)) {
                 serializer = CollectionSerializer.instance;

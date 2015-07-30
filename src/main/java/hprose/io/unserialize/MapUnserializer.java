@@ -12,7 +12,7 @@
  *                                                        *
  * Map unserializer class for Java.                       *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Jul 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,10 +41,10 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
         Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
         if (count > 0) {
-            if (keyClass.equals(int.class) &&
-                keyClass.equals(Integer.class) &&
-                keyClass.equals(String.class) &&
-                keyClass.equals(Object.class)) {
+            if (!keyClass.equals(int.class) &&
+                !keyClass.equals(Integer.class) &&
+                !keyClass.equals(String.class) &&
+                !keyClass.equals(Object.class)) {
                 throw ValueReader.castError(reader.tagToString(TagList), cls);
             }
             HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
@@ -64,10 +64,10 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
         Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
         if (count > 0) {
-            if (keyClass.equals(int.class) &&
-                keyClass.equals(Integer.class) &&
-                keyClass.equals(String.class) &&
-                keyClass.equals(Object.class)) {
+            if (!keyClass.equals(int.class) &&
+                !keyClass.equals(Integer.class) &&
+                !keyClass.equals(String.class) &&
+                !keyClass.equals(Object.class)) {
                 throw ValueReader.castError(reader.tagToString(TagList), cls);
             }
             HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);

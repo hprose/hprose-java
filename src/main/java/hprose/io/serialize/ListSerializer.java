@@ -12,7 +12,7 @@
  *                                                        *
  * List serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Jul 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,9 @@ import static hprose.io.HproseTags.TagList;
 import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.List;
+import java.util.RandomAccess;
 
 final class ListSerializer implements HproseSerializer<List> {
 
@@ -38,10 +40,17 @@ final class ListSerializer implements HproseSerializer<List> {
             ValueWriter.writeInt(stream, count);
         }
         stream.write(TagOpenbrace);
-        for (Object item : list) {
-            writer.serialize(item);
+        if (list instanceof RandomAccess) {
+            for (int i = 0; i < count; ++i) {
+                writer.serialize(list.get(i));
+            }
         }
-        stream.write(TagClosebrace);        
+        else {
+            for (Iterator i = list.iterator(); i.hasNext();) {
+                writer.serialize(i.next());
+            }
+        }
+        stream.write(TagClosebrace);
     }
 
     public final void write(HproseWriter writer, List obj) throws IOException {

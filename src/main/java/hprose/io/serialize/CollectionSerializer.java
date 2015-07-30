@@ -12,7 +12,7 @@
  *                                                        *
  * Collection serializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 23, 2015                             *
+ * LastModified: Jul 30, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,6 +25,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Iterator;
 
 final class CollectionSerializer implements HproseSerializer<Collection> {
 
@@ -38,8 +39,8 @@ final class CollectionSerializer implements HproseSerializer<Collection> {
             ValueWriter.writeInt(stream, count);
         }
         stream.write(TagOpenbrace);
-        for (Object item : collection) {
-            writer.serialize(item);
+        for (Iterator i = collection.iterator(); i.hasNext();) {
+            writer.serialize(i.next());
         }
         stream.write(TagClosebrace);
     }

@@ -6,14 +6,14 @@ import hprose.client.HproseTcpClient;
 import hprose.common.HproseContext;
 import hprose.common.HproseFilter;
 import hprose.io.ByteBufferStream;
-import hprose.util.ObjectIntMap;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.IdentityHashMap;
 
 public class TCPSessionClient {
     static class MyClientFilter implements HproseFilter {
-        private final ObjectIntMap sidMap = new ObjectIntMap();
+        private final IdentityHashMap<HproseClient, Integer> sidMap = new IdentityHashMap<HproseClient, Integer>();
         @Override
         public ByteBuffer inputFilter(ByteBuffer istream, HproseContext context) {
             HproseClient client = ((ClientContext)context).getClient();

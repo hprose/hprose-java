@@ -12,22 +12,22 @@
  *                                                        *
  * ConstructorAccessor class for Java.                    *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.accessor;
 
-import hprose.util.IdentityMap;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ConstructorAccessor {
-    private final static IdentityMap<Class<?>, Constructor<?>> ctorCache = new IdentityMap<Class<?>, Constructor<?>>();
-    private final static IdentityMap<Constructor<?>, Object[]> argsCache = new IdentityMap<Constructor<?>, Object[]>();
+    private final static ConcurrentHashMap<Class<?>, Constructor<?>> ctorCache = new ConcurrentHashMap<Class<?>, Constructor<?>>();
+    private final static ConcurrentHashMap<Constructor<?>, Object[]> argsCache = new ConcurrentHashMap<Constructor<?>, Object[]>();
     private final static Long longZero = (long) 0;
     private final static Object[] nullArgs = new Object[0];
     private final static Short shortZero = (short) 0;

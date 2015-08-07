@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Jul 2, 2015                              *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,23 +28,23 @@ import static hprose.io.HproseTags.TagString;
 import hprose.io.accessor.Accessors;
 import hprose.io.accessor.MemberAccessor;
 import hprose.util.ClassUtil;
-import hprose.util.IdentityMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class OtherTypeSerializer implements HproseSerializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
-    private final static EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, IdentityMap<Class<?>, SerializeCache>>(HproseMode.class);
+    private final static EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>> memberCache = new EnumMap<HproseMode, ConcurrentHashMap<Class<?>, SerializeCache>>(HproseMode.class);
 
     static {
-        memberCache.put(HproseMode.FieldMode, new IdentityMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.PropertyMode, new IdentityMap<Class<?>, SerializeCache>());
-        memberCache.put(HproseMode.MemberMode, new IdentityMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.FieldMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.PropertyMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
+        memberCache.put(HproseMode.MemberMode, new ConcurrentHashMap<Class<?>, SerializeCache>());
     }
 
     final static class SerializeCache {
@@ -94,8 +94,8 @@ final class OtherTypeSerializer implements HproseSerializer {
     @SuppressWarnings({"unchecked"})
     public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
         Class<?> type = object.getClass();
-        int cr = writer.classref.get(type);
-        if (cr < 0) {
+        Integer cr = writer.classref.get(type);
+        if (cr == null) {
             cr = writeClass(writer, type);
         }
         if (refer != null) refer.set(object);

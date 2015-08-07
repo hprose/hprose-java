@@ -12,7 +12,7 @@
  *                                                        *
  * writer refer class for Java.                           *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,12 +20,12 @@ package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagSemicolon;
-import hprose.util.ObjectIntMap;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.IdentityHashMap;
 
 final class WriterRefer {
-    private final ObjectIntMap ref = new ObjectIntMap();
+    private final IdentityHashMap<Object, Integer> ref = new IdentityHashMap<Object, Integer>();
     private int lastref = 0;
     public final void addCount(int count) {
         lastref += count;
@@ -34,9 +34,10 @@ final class WriterRefer {
         ref.put(obj, lastref++);
     }
     public final boolean write(OutputStream stream, Object obj) throws IOException {
-        if (ref.containsKey(obj)) {
+        Integer r = ref.get(obj);
+        if (r != null) {
             stream.write(TagRef);
-            ValueWriter.writeInt(stream, ref.get(obj));
+            ValueWriter.writeInt(stream, r);
             stream.write(TagSemicolon);
             return true;
         }

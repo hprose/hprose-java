@@ -12,14 +12,13 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
-import hprose.util.IdentityMap;
 import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -49,6 +48,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -59,7 +59,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Pattern;
 
 public final class SerializerFactory {
-    private final static IdentityMap<Class<?>, HproseSerializer> serializers = new IdentityMap<Class<?>, HproseSerializer>();
+    private final static ConcurrentHashMap<Class<?>, HproseSerializer> serializers = new ConcurrentHashMap<Class<?>, HproseSerializer>();
 
     static {
         serializers.put(void.class, NullSerializer.instance);

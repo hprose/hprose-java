@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,7 +20,6 @@ package hprose.io.serialize;
 
 import hprose.io.HproseMode;
 import hprose.io.HproseTags;
-import hprose.util.ObjectIntMap;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -30,6 +29,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class HproseWriter implements HproseTags {
     public final OutputStream stream;
     final WriterRefer refer;
     final HproseMode mode;
-    final ObjectIntMap classref = new ObjectIntMap();
+    final HashMap<Class<?>, Integer> classref = new HashMap<Class<?>, Integer>();
     int lastclassref = 0;
 
     public HproseWriter(OutputStream stream) {

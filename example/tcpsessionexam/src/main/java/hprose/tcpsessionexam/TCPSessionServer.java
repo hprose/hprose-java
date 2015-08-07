@@ -3,7 +3,6 @@ package hprose.tcpsessionexam;
 import hprose.common.HproseContext;
 import hprose.common.HproseFilter;
 import hprose.io.ByteBufferStream;
-import hprose.util.ObjectIntMap;
 import hprose.server.HproseService;
 import hprose.server.HproseTcpServer;
 import java.io.IOException;
@@ -11,12 +10,13 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 public class TCPSessionServer {
     static class Session {
-        final static ObjectIntMap sidMap = new ObjectIntMap();
+        final static IdentityHashMap<HproseContext, Integer> sidMap = new IdentityHashMap<HproseContext, Integer>();
         final static ArrayList<HashMap<String, Object>> sessions = new ArrayList<HashMap<String, Object>>();
-        public static HashMap<String, Object> getSession(Object context) {
+        public static HashMap<String, Object> getSession(HproseContext context) {
             return sessions.get(sidMap.get(context));
         }
     }

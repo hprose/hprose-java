@@ -12,25 +12,25 @@
  *                                                        *
  * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.accessor;
 
 import hprose.io.HproseMode;
-import hprose.util.IdentityMap;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class Accessors {
-    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
-    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
-    private final static IdentityMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new IdentityMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>> propertiesCache = new ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>> membersCache = new ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>> fieldsCache = new ConcurrentHashMap<Class<?>, HashMap<String, MemberAccessor>>();
 
     private static sun.misc.Unsafe getUnsafe() {
         try {

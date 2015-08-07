@@ -12,14 +12,13 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Aug 7, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.util.IdentityMap;
 import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -49,6 +48,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -59,7 +59,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Pattern;
 
 public final class UnserializerFactory {
-    private final static IdentityMap<Class<?>, HproseUnserializer> unserializers = new IdentityMap<Class<?>, HproseUnserializer>();
+    private final static ConcurrentHashMap<Class<?>, HproseUnserializer> unserializers = new ConcurrentHashMap<Class<?>, HproseUnserializer>();
     static {
         unserializers.put(void.class, DefaultUnserializer.instance);
         unserializers.put(boolean.class, BooleanUnserializer.instance);

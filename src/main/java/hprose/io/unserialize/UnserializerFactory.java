@@ -12,13 +12,14 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Aug 7, 2015                              *
+ * LastModified: Aug 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import hprose.util.DateTime;
 import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -141,6 +142,7 @@ public final class UnserializerFactory {
         unserializers.put(Locale.class, LocaleUnserializer.instance);
         unserializers.put(Pattern.class, PatternUnserializer.instance);
         unserializers.put(TimeZone.class, TimeZoneUnserializer.instance);
+        unserializers.put(DateTime.class, HproseDateTimeUnserializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             try {
                 unserializers.put(Class.forName("java.time.LocalDate"), LocalDateUnserializer.instance);

@@ -12,7 +12,7 @@
  *                                                        *
  * Date serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Aug 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,7 +20,7 @@
 package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagSemicolon;
-import hprose.util.TimeZoneUtil;
+import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Date;
@@ -32,8 +32,7 @@ final class DateSerializer implements HproseSerializer<Date> {
 
     public final static void write(OutputStream stream, WriterRefer refer, Date date) throws IOException {
         if (refer != null) refer.set(date);
-        Calendar calendar = Calendar.getInstance(TimeZoneUtil.DefaultTZ);
-        calendar.setTime(date);
+        Calendar calendar = DateTime.toCalendar(date);
         ValueWriter.writeDateOfCalendar(stream, calendar);
         stream.write(TagSemicolon);
     }

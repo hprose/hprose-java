@@ -12,13 +12,14 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Aug 7, 2015                              *
+ * LastModified: Aug 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.serialize;
 
+import hprose.util.DateTime;
 import hprose.util.JdkVersion;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -142,6 +143,7 @@ public final class SerializerFactory {
         serializers.put(URL.class, ToStringSerializer.instance);
         serializers.put(Pattern.class, ToStringSerializer.instance);
         serializers.put(TimeZone.class, TimeZoneSerializer.instance);
+        serializers.put(DateTime.class, HproseDateTimeSerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             try {
                 serializers.put(Class.forName("java.time.LocalDate"), LocalDateSerializer.instance);

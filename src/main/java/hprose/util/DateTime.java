@@ -24,6 +24,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class DateTime {
     public int year = 1970;
@@ -35,7 +36,39 @@ public class DateTime {
     public int nanosecond = 0;
     public boolean utc = false;
 
+    public final static Calendar toCalendar(java.util.Date date) {
+        Calendar calendar = Calendar.getInstance(TimeZoneUtil.DefaultTZ);
+        calendar.setTime(date);
+        return calendar;
+    }
+
+    private void init(Calendar calendar) {
+        TimeZone tz = calendar.getTimeZone();
+        if (!(tz.hasSameRules(TimeZoneUtil.DefaultTZ) || tz.hasSameRules(TimeZoneUtil.UTC))) {
+            tz = TimeZoneUtil.UTC;
+            Calendar c = (Calendar) calendar.clone();
+            c.setTimeZone(tz);
+            calendar = c;
+        }
+        this.year = calendar.get(Calendar.YEAR);
+        this.month = calendar.get(Calendar.MONTH) + 1;
+        this.day = calendar.get(Calendar.DAY_OF_MONTH);
+        this.hour = calendar.get(Calendar.HOUR_OF_DAY);
+        this.minute = calendar.get(Calendar.MINUTE);
+        this.second = calendar.get(Calendar.SECOND);
+        this.nanosecond = calendar.get(Calendar.MILLISECOND) * 1000000;
+        this.utc = tz.hasSameRules(TimeZoneUtil.UTC);
+    }
+
     public DateTime() {}
+
+    public DateTime(Calendar calendar) {
+        init(calendar);
+    }
+
+    public DateTime(java.util.Date date) {
+        init(toCalendar(date));
+    }
 
     public DateTime(int year, int month, int day) {
         this.year = year;

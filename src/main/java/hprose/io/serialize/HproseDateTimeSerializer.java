@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * DateTimeSerializer.java                                *
+ * HproseDateTimeSerializer.java                          *
  *                                                        *
- * DateTime serializer class for Java.                    *
+ * Hprose DateTime serializer class for Java.             *
  *                                                        *
  * LastModified: Aug 8, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
@@ -20,25 +20,35 @@
 package hprose.io.serialize;
 
 import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagUTC;
 import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Calendar;
-import java.util.Date;
 
-final class DateTimeSerializer implements HproseSerializer<Date> {
+final class HproseDateTimeSerializer implements HproseSerializer<DateTime> {
 
-    public final static DateTimeSerializer instance = new DateTimeSerializer();
+    public final static HproseDateTimeSerializer instance = new HproseDateTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Date date) throws IOException {
-        if (refer != null) refer.set(date);
-        Calendar calendar = DateTime.toCalendar(date);
-        ValueWriter.writeDateOfCalendar(stream, calendar);
-        ValueWriter.writeTimeOfCalendar(stream, calendar, true, false);
-        stream.write(TagSemicolon);
+    public final static void write(OutputStream stream, WriterRefer refer, DateTime dt) throws IOException {
+        if (refer != null) refer.set(dt);
+        if (dt.year == 1970 && dt.month == 1 && dt.day == 1) {
+            ValueWriter.writeTime(stream, dt.hour, dt.minute, dt.second, 0, false, true);
+            ValueWriter.writeNano(stream, dt.nanosecond);
+        }
+        else {
+            ValueWriter.writeDate(stream, dt.year, dt.month, dt.day);
+            if (dt.nanosecond == 0) {
+                ValueWriter.writeTime(stream, dt.hour, dt.minute, dt.second, 0, true, true);
+            }
+            else {
+                ValueWriter.writeTime(stream, dt.hour, dt.minute, dt.second, 0, false, true);
+                ValueWriter.writeNano(stream, dt.nanosecond);
+            }
+        }
+        stream.write(dt.utc ? TagUTC : TagSemicolon);
     }
 
-    public final void write(HproseWriter writer, Date obj) throws IOException {
+    public final void write(HproseWriter writer, DateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

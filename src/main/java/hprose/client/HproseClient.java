@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Aug 13, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -50,10 +50,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public abstract class HproseClient implements HproseInvoker, HproseTags {
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
-
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
+    protected final ExecutorService threadPool = Executors.newCachedThreadPool();
     private HproseMode mode;
     protected String uri;
     public HproseErrorEvent onError = null;
@@ -290,23 +289,38 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
 
     @SuppressWarnings("unchecked")
     public void invoke(final String functionName, final Object[] arguments, final HproseCallback1 callback, final HproseErrorEvent errorEvent, final Type returnType, final HproseResultMode resultMode, final boolean simple) {
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Object result = invoke(functionName, arguments, returnType, false, resultMode, simple);
-                    callback.handler(result);
-                }
-                catch (Exception ex) {
-                    if (errorEvent != null) {
-                        errorEvent.handler(functionName, ex);
+        try {
+            final HproseContext context = new ClientContext(this);
+            final ByteBufferStream ostream = doOutput(functionName, arguments, false, simple, context);
+            send(ostream, new ReceiveCallback() {
+                public void handler(ByteBufferStream istream, Exception e) {
+                    if (e != null) {
+                        if (istream != null) istream.close();
+                        fireErrorEvent(errorEvent, functionName, e);
+                        return;
                     }
-                    else if (onError != null) {
-                        onError.handler(functionName, ex);
+                    try {
+                        Object result = doInput(istream, arguments, returnType, resultMode, context);
+                        if (result instanceof HproseException) {
+                            fireErrorEvent(errorEvent, functionName, (HproseException) result);
+                        }
+                        else {
+                            callback.handler(result);
+                        }
+                    }
+                    catch (Exception ex) {
+                        fireErrorEvent(errorEvent, functionName, ex);
+                    }
+                    finally {
+                        if (istream != null) istream.close();
+                        if (ostream != null) ostream.close();
                     }
                 }
-            }
-        });
+            });
+        }
+        catch (IOException ex) {
+            fireErrorEvent(errorEvent, functionName, ex);
+        }
     }
 
     public final void invoke(String functionName, Object[] arguments, HproseCallback<?> callback) {
@@ -403,23 +417,47 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
 
     @SuppressWarnings("unchecked")
     public void invoke(final String functionName, final Object[] arguments, final HproseCallback callback, final HproseErrorEvent errorEvent, final Type returnType, final boolean byRef, final HproseResultMode resultMode, final boolean simple) {
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Object result = invoke(functionName, arguments, returnType, byRef, resultMode, simple);
-                    callback.handler(result, arguments);
-                }
-                catch (Exception ex) {
-                    if (errorEvent != null) {
-                        errorEvent.handler(functionName, ex);
+        try {
+            final HproseContext context = new ClientContext(this);
+            final ByteBufferStream ostream = doOutput(functionName, arguments, byRef, simple, context);
+            send(ostream, new ReceiveCallback() {
+                public void handler(ByteBufferStream istream, Exception e) {
+                    if (e != null) {
+                        if (istream != null) istream.close();
+                        fireErrorEvent(errorEvent, functionName, e);
+                        return;
                     }
-                    else if (onError != null) {
-                        onError.handler(functionName, ex);
+                    try {
+                        Object result = doInput(istream, arguments, returnType, resultMode, context);
+                        if (result instanceof HproseException) {
+                            fireErrorEvent(errorEvent, functionName, (HproseException) result);
+                        }
+                        else {
+                            callback.handler(result, arguments);
+                        }
+                    }
+                    catch (Exception ex) {
+                        fireErrorEvent(errorEvent, functionName, ex);
+                    }
+                    finally {
+                        if (istream != null) istream.close();
+                        if (ostream != null) ostream.close();
                     }
                 }
-            }
-        }.start();
+            });
+        }
+        catch (IOException ex) {
+            fireErrorEvent(errorEvent, functionName, ex);
+        }
+    }
+
+    private void fireErrorEvent(final HproseErrorEvent errorEvent, final String functionName, Throwable ex) {
+        if (errorEvent != null) {
+            errorEvent.handler(functionName, ex);
+        }
+        else if (onError != null) {
+            onError.handler(functionName, ex);
+        }
     }
 
     public final Object invoke(String functionName) throws IOException {
@@ -635,4 +673,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
     }
 
     protected abstract ByteBufferStream sendAndReceive(ByteBufferStream buffer) throws IOException;
+
+    protected abstract void send(ByteBufferStream buffer, ReceiveCallback callback) throws IOException;
+
 }

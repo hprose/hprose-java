@@ -10,14 +10,16 @@ public class TCPHelloClient {
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         System.out.println("START");
         long start = System.currentTimeMillis();
-        Thread[] threads = new Thread[20];
-        for (int i = 0; i < 20; i++) {
+        Thread[] threads = new Thread[5];
+        for (int i = 0; i < 5; i++) {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
                     try {
                         HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
-                        for (int i = 0; i < 300000; i++) {
+                        client.setFullDuplex(true);
+                        client.setMaxPoolSize(1);
+                        for (int i = 0; i < 30000; i++) {
                             client.invoke("hello", new Object[] {"World"});
                         }
                         client.close();
@@ -28,7 +30,7 @@ public class TCPHelloClient {
             };
             threads[i].start();
         }
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 5; i++) {
             threads[i].join();
         }
         long end = System.currentTimeMillis();

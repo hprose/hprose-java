@@ -15,7 +15,7 @@
         <dependency>
             <groupId>org.hprose</groupId>
             <artifactId>hprose-java</artifactId>
-            <version>[1.5,]</version>
+            <version>1.6.0-beta5</version>
         </dependency>
     </dependencies>
 </project>

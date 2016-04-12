@@ -87,13 +87,13 @@ public class HproseTcpServer extends HproseService {
     public void start() throws IOException {
         if (!isStarted()) {
             acceptor = new Acceptor(host, port);
-            new Thread(acceptor).start();
+            acceptor.start();
         }
     }
 
     public void stop() {
         if (isStarted()) {
-            acceptor.stop();
+            acceptor.close();
             if (threadPool != null && !threadPool.isShutdown()) {
                 try {
                     threadPool.shutdown();
@@ -226,7 +226,7 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
-    private final class Acceptor implements Runnable {
+    private final class Acceptor extends Thread {
         private final Selector selector;
         private final ServerSocketChannel serverChannel;
         private final Reactors reactors;
@@ -247,7 +247,7 @@ public class HproseTcpServer extends HproseService {
         @Override
         public void run() {
             reactors.start();
-            while (!Thread.interrupted()) {
+            while (!isInterrupted()) {
                 try {
                     process();
                 }
@@ -285,7 +285,7 @@ public class HproseTcpServer extends HproseService {
             }
         }
 
-        public void stop() {
+        public void close() {
             try {
                 selector.close();
             }
@@ -381,7 +381,7 @@ public class HproseTcpServer extends HproseService {
         public void start() {
             int n = reactors.length;
             for (int i = 0; i < n; ++i) {
-                new Thread(reactors[i]).start();
+                reactors[i].start();
             }
         }
 

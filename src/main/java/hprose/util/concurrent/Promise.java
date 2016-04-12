@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Apr 12, 2016                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,11 +22,16 @@ import hprose.util.JdkVersion;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
+    private final static ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
 
     public enum State {
         PENDING, FULFILLED, REJECTED
@@ -51,7 +56,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     public Promise() {}
 
     public Promise(final Callable<V> computation) {
-        Global.setImmediate(new Runnable() {
+        timer.execute(new Runnable() {
             public void run() {
                 try {
                     Promise.this.resolve(computation.call());
@@ -79,9 +84,9 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static Promise<?> delayed(long duration, final Object value) {
+    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Object value) {
         final Promise<?> promise = new Promise<Object>();
-        Global.setTimeout(new Runnable() {
+        timer.schedule(new Runnable() {
             public void run() {
                 try {
                     if (value instanceof Callable) {
@@ -95,8 +100,12 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
                     promise.reject(e);
                 }
             }
-        }, duration);
+        }, duration, timeunit);
         return promise;
+    }
+
+    public final static Promise<?> delayed(long duration, Object value) {
+        return delayed(duration, TimeUnit.MILLISECONDS, value);
     }
 
     public final static Promise<?> sync(Callable<?> computation) {
@@ -513,7 +522,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     }
 
     private <V> void call(final Callback<V> callback, final Promise<?> next, final V x) {
-        Global.setImmediate(new Runnable() {
+        timer.execute(new Runnable() {
             public void run() {
                 try {
                     if (callback instanceof Action) {
@@ -654,7 +663,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     public final void done(Callback<V> onfulfill, Callback<Throwable> onreject) {
         then(onfulfill, onreject).then(null, new Action<Throwable>() {
             public void call(final Throwable e) {
-                Global.setImmediate(new Runnable() {
+                timer.execute(new Runnable() {
                     public void run() {
                         throw new RuntimeException(e);
                     }
@@ -764,9 +773,9 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         );
     }
 
-    public final Promise<V> timeout(long duration, final Throwable reason) {
+    public final Promise<V> timeout(long duration, TimeUnit timeunit, final Throwable reason) {
         final Promise<V> promise = new Promise<V>();
-        final Object timeoutID = Global.setTimeout(new Runnable() {
+        final Future<?> timeoutID = timer.schedule(new Runnable() {
             public void run() {
                 if (reason == null) {
                     promise.reject(new TimeoutException("timeout"));
@@ -775,29 +784,32 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
                     promise.reject(reason);
                 }
             }
-        }, duration);
+        }, duration, timeunit);
         whenComplete(new Runnable() {
             public void run() {
-                Global.clearTimeout(timeoutID);
+                timeoutID.cancel(true);
             }
         }).fill(promise);
         return promise;
     }
 
-    public final Promise<V> timeout(long duration) {
-        return timeout(duration, null);
+    public final Promise<V> timeout(long duration, Throwable reason) {
+        return timeout(duration, TimeUnit.MILLISECONDS, reason);
     }
 
-    public final Promise<V> delay(final long duration) {
+    public final Promise<V> timeout(long duration) {
+        return timeout(duration, TimeUnit.MILLISECONDS, null);
+    }
+
+    public final Promise<V> delay(final long duration, final TimeUnit timeunit) {
         final Promise<V> promise = new Promise<V>();
-        then(
-            new Action<V>() {
+        then(new Action<V>() {
                 public void call(final V value) throws Throwable {
-                    Global.setTimeout(new Runnable() {
+                    timer.schedule(new Runnable() {
                         public void run() {
                             promise.resolve(value);
                         }
-                    }, duration);
+                    }, duration, timeunit);
                 }
             },
             new Action<Throwable>() {
@@ -807,6 +819,10 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             }
         );
         return promise;
+    }
+
+    public final Promise<V> delay(long duration) {
+        return delay(duration, TimeUnit.MILLISECONDS);
     }
 
     public final Promise<V> tap(final Action<V> onfulfilledSideEffect) {

@@ -38,23 +38,21 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class HproseTcpClient extends HproseClient {
-//    private final static ScheduledExecutorService scheduledThreadPool = Executors.newSingleThreadScheduledExecutor();
     private final static AtomicInteger nextId = new AtomicInteger(0);
-    private boolean fullDuplex = false;
-    private boolean noDelay = false;
-    private int maxPoolSize = 10;
-    private long poolTimeout = 30000;
-    private long timeout = 30000;
-    private boolean keepAlive = true;
-    private SocketTransporter fdTrans = null;
-    private SocketTransporter hdTrans = null;
+    private volatile boolean fullDuplex = false;
+    private volatile boolean noDelay = false;
+    private volatile int maxPoolSize = 10;
+    private volatile long poolTimeout = 30000;
+    private volatile long timeout = 30000;
+    private volatile boolean keepAlive = true;
+    private volatile SocketTransporter fdTrans = null;
+    private volatile SocketTransporter hdTrans = null;
 
-    private abstract class SocketTransporter implements ConnectionEvent, Runnable {
+    private abstract class SocketTransporter extends Thread implements ConnectionEvent {
         private final Selector selector;
         private final Reactor reactor;
         private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
@@ -69,8 +67,8 @@ public class HproseTcpClient extends HproseClient {
 
         @Override
         public void run() {
-            new Thread(reactor).start();
-            while (!Thread.interrupted()) {
+            reactor.start();
+            while (!isInterrupted()) {
                 try {
                     process();
                     dispatch();
@@ -344,9 +342,6 @@ public class HproseTcpClient extends HproseClient {
     public void close() {
         if (fdTrans != null) fdTrans.close();
         if (hdTrans != null) hdTrans.close();
-//        if (!scheduledThreadPool.isShutdown()) {
-//            scheduledThreadPool.shutdown();
-//        }
         super.close();
     }
 
@@ -403,12 +398,10 @@ public class HproseTcpClient extends HproseClient {
         IOException ex;
     }
 
-    private final ReentrantLock lock = new ReentrantLock();
-
     @Override
     protected ByteBufferStream sendAndReceive(ByteBufferStream buffer) throws IOException {
         final Result result = new Result();
-        final Condition condition = lock.newCondition();
+        final Semaphore sem = new Semaphore(0);
         send(buffer, new ReceiveCallback() {
             public void handler(ByteBufferStream istream, Exception e) {
                 result.stream = istream;
@@ -420,29 +413,19 @@ public class HproseTcpClient extends HproseClient {
                         result.ex = new HproseException(e.getMessage());
                     }
                 }
-                lock.lock();
-                try {
-                    condition.signal();
-                }
-                finally {
-                    lock.unlock();
-                }
+                sem.release();
             }
         });
-        lock.lock();
         try {
-            condition.await();
-            if (result.ex == null) {
-                return result.stream;
-            }
-            throw result.ex;
+            sem.acquire();
         }
-        catch (InterruptedException e) {
-            throw new HproseException(e.getMessage());
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
-        finally {
-            lock.unlock();
+        if (result.ex == null) {
+            return result.stream;
         }
+        throw result.ex;
     }
 
     @Override
@@ -452,14 +435,14 @@ public class HproseTcpClient extends HproseClient {
             trans = fdTrans;
             if ((trans == null) || !trans.uri.equals(this.uri)) {
                 trans = fdTrans = new FullDuplexSocketTransporter();
-                new Thread(trans).start();
+                trans.start();
             }
         }
         else {
             trans = hdTrans;
             if ((trans == null) || !trans.uri.equals(this.uri)) {
                 trans = hdTrans = new HalfDuplexSocketTransporter();
-                new Thread(trans).start();
+                trans.start();
             }
         }
         trans.send(buffer, callback);

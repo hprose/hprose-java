@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 12, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,9 +25,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class Connection {
-    //private final static ScheduledExecutorService scheduledThreadPool = Executors.newSingleThreadScheduledExecutor();
+    private final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final SelectionKey key;
     private final SocketChannel channel;
     private final ConnectionEvent event;
@@ -37,8 +41,7 @@ public final class Connection {
     private int dataLength = -1;
     private Integer id = null;
     private OutPacket packet = null;
-    //private ScheduledFuture<?> timer = null;
-
+    private Future<?> timeoutID = null;
     public Connection(SelectionKey key, ConnectionEvent event) {
         this.key = key;
         this.channel = (SocketChannel) key.channel();
@@ -53,26 +56,21 @@ public final class Connection {
         return channel;
     }
 
-//    public boolean clearTimeout() {
-//        boolean result = (timer == null) ? true : timer.cancel(false);
-//        timer = null;
-//        return result;
-//    }
-//
-//    public boolean setTimeout(long timeout) {
-//        if (timer != null) {
-//            if (!timer.cancel(false)) {
-//                timer = null;
-//                return false;
-//            }
-//        }
-//        timer = scheduledThreadPool.schedule(new Runnable() {
-//            public void run() {
-//                close();
-//            }
-//        }, timeout, TimeUnit.MILLISECONDS);
-//        return true;
-//    }
+    public void clearTimeout() {
+        if (timeoutID != null) {
+            timeoutID.cancel(true);
+            timeoutID = null;
+        }
+    }
+
+    public void setTimeout(long timeout) {
+        clearTimeout();
+        timeoutID = executor.schedule(new Runnable() {
+            public void run() {
+                close();
+            }
+        }, timeout, TimeUnit.MILLISECONDS);
+    }
 
     public void close() {
         try {

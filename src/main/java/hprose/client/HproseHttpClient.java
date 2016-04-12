@@ -270,7 +270,7 @@ public class HproseHttpClient extends HproseClient {
 
     @Override
     protected void send(final ByteBufferStream buffer, final ReceiveCallback callback) throws IOException {
-        threadPool.execute(new Runnable() {
+        executor.execute(new Runnable() {
             public void run() {
                 ByteBufferStream istream = null;
                 Exception e = null;

@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public final class Reactor implements Runnable {
+public final class Reactor extends Thread {
 
     private final Selector selector;
     private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
@@ -41,7 +41,7 @@ public final class Reactor implements Runnable {
 
     @Override
     public void run() {
-        while (!Thread.interrupted()) {
+        while (!isInterrupted()) {
             try {
                 process();
                 dispatch();

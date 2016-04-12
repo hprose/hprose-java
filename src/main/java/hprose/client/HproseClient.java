@@ -45,14 +45,14 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class HproseClient implements HproseInvoker, HproseTags {
+    protected final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
-    protected final ExecutorService threadPool = Executors.newCachedThreadPool();
     private HproseMode mode;
     protected String uri;
     public HproseErrorEvent onError = null;
@@ -75,15 +75,9 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
     }
 
     public void close() {
-        if (!threadPool.isShutdown()) {
-            threadPool.shutdown();
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        close();
-        super.finalize();
+//        if (!executor.isShutdown()) {
+//            executor.shutdown();
+//        }
     }
 
     private final static HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
@@ -557,7 +551,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
                 returnType = null;
             }
             final Type _returnType = returnType;
-            return threadPool.submit(new Callable<Object>() {
+            return executor.submit(new Callable<Object>() {
                 public Object call() throws Exception {
                     return invoke(functionName, arguments, _returnType, byRef, resultMode, simple);
                 }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Aug 11, 2015                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -46,12 +46,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HproseTcpServer extends HproseService {
 
     private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
-    private int threadCount = Runtime.getRuntime().availableProcessors() + 2;
+    private int threadCount = Runtime.getRuntime().availableProcessors();
     private ExecutorService threadPool = null;
     private boolean enabledThreadPool = false;
     private Acceptor acceptor = null;
     private String host = null;
     private int port = 0;
+    private long readTimeout = 30000;
+    private long writeTimeout = 30000;
 
     public HproseTcpServer(String uri) throws URISyntaxException {
         URI u = new URI(uri);
@@ -155,7 +157,7 @@ public class HproseTcpServer extends HproseService {
 
     /**
      * Get the service thread count.
-     * The default value is availableProcessors + 2.
+     * The default value is availableProcessors.
      * @return count of service threads.
      */
     public int getThreadCount() {
@@ -224,6 +226,22 @@ public class HproseTcpServer extends HproseService {
         if (event != null && HproseTcpServiceEvent.class.isInstance(event)) {
             ((HproseTcpServiceEvent)event).onClose(new TcpContext(channel));
         }
+    }
+
+    public long getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(long readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public long getWriteTimeout() {
+        return writeTimeout;
+    }
+
+    public void setWriteTimeout(long writeTimeout) {
+        this.writeTimeout = writeTimeout;
     }
 
     private final class Acceptor extends Thread {
@@ -375,6 +393,8 @@ public class HproseTcpServer extends HproseService {
             for (int i = 0; i < count; ++i) {
                 counters[i] = new AtomicInteger(0);
                 reactors[i] = new Reactor(new ReactorEvent(counters[i]));
+                reactors[i].setReadTimeout(readTimeout);
+                reactors[i].setWriteTimeout(writeTimeout);
             }
         }
 

@@ -12,17 +12,19 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 12, 2016                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.net;
 
 import hprose.io.ByteBufferStream;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -36,12 +38,29 @@ public final class Connection {
     private final SocketChannel channel;
     private final ConnectionEvent event;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
+    private final Runnable timeoutCallback = new Runnable() {
+        public void run() {
+            close();
+        }
+    };
+    static {
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                List<Runnable> tasks = executor.shutdownNow();
+                for (Runnable task: tasks) {
+                    task.run();
+                }
+            }
+        });
+    }
     private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
     private int headerLength = 4;
     private int dataLength = -1;
     private Integer id = null;
     private OutPacket packet = null;
     private Future<?> timeoutID = null;
+    private long readTimeout = 30000;
+    private long writeTimeout = 30000;
     public Connection(SelectionKey key, ConnectionEvent event) {
         this.key = key;
         this.channel = (SocketChannel) key.channel();
@@ -58,22 +77,37 @@ public final class Connection {
 
     public void clearTimeout() {
         if (timeoutID != null) {
-            timeoutID.cancel(true);
+            timeoutID.cancel(false);
             timeoutID = null;
         }
     }
 
     public void setTimeout(long timeout) {
         clearTimeout();
-        timeoutID = executor.schedule(new Runnable() {
-            public void run() {
-                close();
-            }
-        }, timeout, TimeUnit.MILLISECONDS);
+        if (timeout > 0) {
+            timeoutID = executor.schedule(timeoutCallback, timeout, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    public long getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(long readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public long getWriteTimeout() {
+        return writeTimeout;
+    }
+
+    public void setWriteTimeout(long writeTimeout) {
+        this.writeTimeout = writeTimeout;
     }
 
     public void close() {
         try {
+            clearTimeout();
             event.onClose(this);
             channel.close();
             key.cancel();
@@ -87,6 +121,7 @@ public final class Connection {
             return false;
         }
         try {
+            setTimeout(readTimeout);
             int n = channel.read(inbuf);
             if (n < 0) {
                 close();
@@ -108,6 +143,7 @@ public final class Connection {
                         ByteBufferStream.free(inbuf);
                         inbuf = buf;
                     }
+                    setTimeout(readTimeout);
                     if (channel.read(inbuf) < 0) {
                         close();
                         return false;
@@ -127,6 +163,7 @@ public final class Connection {
                     data.put(inbuf);
                     inbuf.limit(bufLen);
                     inbuf.compact();
+                    clearTimeout();
                     event.onReceived(this, data, id);
                     headerLength = 4;
                     dataLength = -1;
@@ -166,6 +203,7 @@ public final class Connection {
         try {
             for (;;) {
                 while (packet.writeLength < packet.totalLength) {
+                    setTimeout(writeTimeout);
                     long n = channel.write(packet.buffers);
                     if (n < 0) {
                         close();
@@ -179,6 +217,7 @@ public final class Connection {
                     packet.writeLength += n;
                 }
                 ByteBufferStream.free(packet.buffers[1]);
+                clearTimeout();
                 event.onSended(this, packet.id);
                 packet = outqueue.poll();
                 if (packet == null) {

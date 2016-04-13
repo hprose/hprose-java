@@ -12,13 +12,14 @@
  *                                                        *
  * hprose Reactor class for Java.                         *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.net;
 
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
@@ -26,6 +27,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public final class Reactor extends Thread {
@@ -33,10 +35,29 @@ public final class Reactor extends Thread {
     private final Selector selector;
     private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
     private final ConnectionEvent event;
+    private long readTimeout = 30000;
+    private long writeTimeout = 30000;
 
     public Reactor(ConnectionEvent event) throws IOException {
+        super();
         selector = Selector.open();
         this.event = event;
+    }
+
+    public long getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(long readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public long getWriteTimeout() {
+        return writeTimeout;
+    }
+
+    public void setWriteTimeout(long writeTimeout) {
+        this.writeTimeout = writeTimeout;
     }
 
     @Override
@@ -55,6 +76,11 @@ public final class Reactor extends Thread {
 
     public void close() {
         try {
+            Set<SelectionKey> keys = selector.keys();
+            for (SelectionKey key: keys.toArray(new SelectionKey[0])) {
+                Connection conn = (Connection) key.attachment();
+                conn.close();
+            }
             selector.close();
         }
         catch (IOException e) {}
@@ -69,6 +95,8 @@ public final class Reactor extends Thread {
             try {
                 SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
                 Connection conn = new Connection(key, event);
+                conn.setReadTimeout(readTimeout);
+                conn.setWriteTimeout(writeTimeout);
                 key.attach(conn);
                 event.onConnected(conn);
             }
@@ -84,12 +112,17 @@ public final class Reactor extends Thread {
             SelectionKey key = it.next();
             Connection conn = (Connection) key.attachment();
             it.remove();
-            int readyOps = key.readyOps();
-            if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
-                if (!conn.receive()) continue;
+            try {
+                int readyOps = key.readyOps();
+                if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
+                    if (!conn.receive()) continue;
+                }
+                if ((readyOps & SelectionKey.OP_WRITE) != 0) {
+                    conn.send();
+                }
             }
-            if ((readyOps & SelectionKey.OP_WRITE) != 0) {
-                conn.send();
+            catch (CancelledKeyException e) {
+                conn.close();
             }
         }
     }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,6 +34,7 @@ import hprose.io.serialize.HproseWriter;
 import hprose.io.unserialize.HproseReader;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -50,12 +51,22 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class HproseClient implements HproseInvoker, HproseTags {
-    protected final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    protected final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode;
     protected String uri;
     public HproseErrorEvent onError = null;
+
+    static {
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                if (!executor.isShutdown()) {
+                    executor.shutdown();
+                }
+            }
+        });
+    }
 
     protected HproseClient() {
         this(null, HproseMode.MemberMode);
@@ -74,11 +85,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
         this.uri = uri;
     }
 
-    public void close() {
-//        if (!executor.isShutdown()) {
-//            executor.shutdown();
-//        }
-    }
+    public void close() {}
 
     private final static HashMap<String, Class<? extends HproseClient>> clientFactories = new HashMap<String, Class<? extends HproseClient>>();
 

@@ -47,7 +47,13 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             this.next = next;
         }
     }
-
+    static {
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                timer.shutdown();
+            }
+        });
+    }
     private final ConcurrentLinkedQueue<Subscriber> subscribers = new ConcurrentLinkedQueue<Subscriber>();
     private volatile State state = State.PENDING;
     private volatile Object value;

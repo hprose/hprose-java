@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Aug 12, 2015                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,6 +24,7 @@ import hprose.io.HproseMode;
 import hprose.net.Connection;
 import hprose.net.ConnectionEvent;
 import hprose.net.Reactor;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -67,6 +68,13 @@ public class HproseTcpClient extends HproseClient {
 
         @Override
         public void run() {
+            Threads.registerShutdownHandler(new Runnable() {
+                public void run() {
+                    if (SocketTransporter.this != null) {
+                        SocketTransporter.this.close();
+                    }
+                }
+            });
             reactor.start();
             while (!isInterrupted()) {
                 try {

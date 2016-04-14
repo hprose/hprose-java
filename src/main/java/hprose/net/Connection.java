@@ -12,103 +12,65 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 13, 2016                             *
+ * LastModified: Apr 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.net;
 
 import hprose.io.ByteBufferStream;
-import hprose.util.concurrent.Threads;
+import hprose.util.concurrent.Timer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public final class Connection {
-    private final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private final SelectionKey key;
     private final SocketChannel channel;
-    private final ConnectionEvent event;
+    private final ConnectionHandler handler;
+    private volatile SelectionKey key;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
-    private final Runnable timeoutCallback = new Runnable() {
+    private volatile String timeoutType;
+    private final Timer timer = new Timer(new Runnable() {
         public void run() {
             close();
+            handler.onTimeout(Connection.this, timeoutType);
         }
-    };
-    static {
-        Threads.registerShutdownHandler(new Runnable() {
-            public void run() {
-                List<Runnable> tasks = executor.shutdownNow();
-                for (Runnable task: tasks) {
-                    task.run();
-                }
-            }
-        });
-    }
+    });
     private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
     private int headerLength = 4;
     private int dataLength = -1;
     private Integer id = null;
     private OutPacket packet = null;
-    private Future<?> timeoutID = null;
-    private long readTimeout = 30000;
-    private long writeTimeout = 30000;
-    public Connection(SelectionKey key, ConnectionEvent event) {
-        this.key = key;
-        this.channel = (SocketChannel) key.channel();
-        this.event = event;
+    public Connection(SocketChannel channel, ConnectionHandler handler) {
+        this.channel = channel;
+        this.handler = handler;
     }
 
-    public SelectionKey selectionKey() {
-        return key;
+    public void connect(Selector selector) throws ClosedChannelException {
+        key = channel.register(selector, SelectionKey.OP_CONNECT, this);
+        timeoutType = ConnectionHandler.CONNECT_TIMEOUT;
+        timer.setTimeout(handler.getConnectTimeout());
+    }
+
+    public void connected(Selector selector) throws ClosedChannelException {
+        timer.clearTimeout();
+        key = channel.register(selector, SelectionKey.OP_READ, this);
+        handler.onConnected(this);
     }
 
     public SocketChannel socketChannel() {
         return channel;
     }
 
-    public void clearTimeout() {
-        if (timeoutID != null) {
-            timeoutID.cancel(false);
-            timeoutID = null;
-        }
-    }
-
-    public void setTimeout(long timeout) {
-        clearTimeout();
-        if (timeout > 0) {
-            timeoutID = executor.schedule(timeoutCallback, timeout, TimeUnit.MILLISECONDS);
-        }
-    }
-
-    public long getReadTimeout() {
-        return readTimeout;
-    }
-
-    public void setReadTimeout(long readTimeout) {
-        this.readTimeout = readTimeout;
-    }
-
-    public long getWriteTimeout() {
-        return writeTimeout;
-    }
-
-    public void setWriteTimeout(long writeTimeout) {
-        this.writeTimeout = writeTimeout;
-    }
-
     public void close() {
         try {
-            clearTimeout();
-            event.onClose(this);
+            timer.clearTimeout();
+            handler.onClose(this);
             channel.close();
             key.cancel();
         }
@@ -121,7 +83,8 @@ public final class Connection {
             return false;
         }
         try {
-            setTimeout(readTimeout);
+            timeoutType = ConnectionHandler.READ_TIMEOUT;
+            timer.setTimeout(handler.getReadTimeout());
             int n = channel.read(inbuf);
             if (n < 0) {
                 close();
@@ -143,7 +106,8 @@ public final class Connection {
                         ByteBufferStream.free(inbuf);
                         inbuf = buf;
                     }
-                    setTimeout(readTimeout);
+                    timeoutType = ConnectionHandler.READ_TIMEOUT;
+                    timer.setTimeout(handler.getReadTimeout());
                     if (channel.read(inbuf) < 0) {
                         close();
                         return false;
@@ -163,8 +127,8 @@ public final class Connection {
                     data.put(inbuf);
                     inbuf.limit(bufLen);
                     inbuf.compact();
-                    clearTimeout();
-                    event.onReceived(this, data, id);
+                    timer.clearTimeout();
+                    handler.onReceived(this, data, id);
                     headerLength = 4;
                     dataLength = -1;
                     id = null;
@@ -175,7 +139,7 @@ public final class Connection {
             }
         }
         catch (Exception e) {
-            event.onError(this, e);
+            handler.onError(this, e);
             close();
             return false;
         }
@@ -203,7 +167,8 @@ public final class Connection {
         try {
             for (;;) {
                 while (packet.writeLength < packet.totalLength) {
-                    setTimeout(writeTimeout);
+                    timeoutType = ConnectionHandler.WRITE_TIMEOUT;
+                    timer.setTimeout(handler.getWriteTimeout());
                     long n = channel.write(packet.buffers);
                     if (n < 0) {
                         close();
@@ -217,8 +182,8 @@ public final class Connection {
                     packet.writeLength += n;
                 }
                 ByteBufferStream.free(packet.buffers[1]);
-                clearTimeout();
-                event.onSended(this, packet.id);
+                timer.clearTimeout();
+                handler.onSended(this, packet.id);
                 packet = outqueue.poll();
                 if (packet == null) {
                     key.interestOps(SelectionKey.OP_READ);

@@ -22,7 +22,7 @@ import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import hprose.net.Connection;
-import hprose.net.ConnectionEvent;
+import hprose.net.ConnectionHandler;
 import hprose.net.Reactor;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -41,19 +41,17 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class HproseTcpServer extends HproseService {
 
     private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
-    private int threadCount = Runtime.getRuntime().availableProcessors();
-    private ExecutorService threadPool = null;
+    private volatile ExecutorService threadPool = null;
+    private volatile long readTimeout = 30000;
+    private volatile long writeTimeout = 30000;
     private boolean enabledThreadPool = false;
     private Acceptor acceptor = null;
     private String host = null;
     private int port = 0;
-    private long readTimeout = 30000;
-    private long writeTimeout = 30000;
 
     public HproseTcpServer(String uri) throws URISyntaxException {
         URI u = new URI(uri);
@@ -156,23 +154,6 @@ public class HproseTcpServer extends HproseService {
     }
 
     /**
-     * Get the service thread count.
-     * The default value is availableProcessors.
-     * @return count of service threads.
-     */
-    public int getThreadCount() {
-        return threadCount;
-    }
-
-    /**
-     * Set the service thread count.
-     * @param value is the count of service threads.
-     */
-    public void setThreadCount(int value) {
-        threadCount = value;
-    }
-
-    /**
      * Is enabled thread pool.
      * This thread pool is not for the service threads, it is for the user service method.
      * The default value is false.
@@ -244,77 +225,6 @@ public class HproseTcpServer extends HproseService {
         this.writeTimeout = writeTimeout;
     }
 
-    private final class Acceptor extends Thread {
-        private final Selector selector;
-        private final ServerSocketChannel serverChannel;
-        private final Reactors reactors;
-
-        public Acceptor(String host, int port) throws IOException {
-            selector = Selector.open();
-            serverChannel = ServerSocketChannel.open();
-            ServerSocket serverSocket = serverChannel.socket();
-            InetSocketAddress address = (host == null) ?
-                    new InetSocketAddress(port) :
-                    new InetSocketAddress(host, port);
-            serverSocket.bind(address);
-            serverChannel.configureBlocking(false);
-            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-            reactors = new Reactors(threadCount);
-        }
-
-        @Override
-        public void run() {
-            reactors.start();
-            while (!isInterrupted()) {
-                try {
-                    process();
-                }
-                catch (IOException e) {
-                    fireErrorEvent(e, null);
-                }
-                catch (ClosedSelectorException e) {
-                    break;
-                }
-            }
-            reactors.stop();
-        }
-
-        private void process() throws IOException {
-            int n = selector.select();
-            if (n == 0) return;
-            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
-            while (it.hasNext()) {
-                SelectionKey key = it.next();
-                it.remove();
-                if (key.isAcceptable()) {
-                    accept(key);
-                }
-            }
-        }
-
-        private void accept(SelectionKey key) throws IOException {
-            final SocketChannel channel = ((ServerSocketChannel) key.channel()).accept();
-            if (channel != null) {
-                channel.configureBlocking(false);
-                channel.socket().setReuseAddress(true);
-                channel.socket().setKeepAlive(true);
-                fireAcceptEvent(channel);
-                reactors.register(channel);
-            }
-        }
-
-        public void close() {
-            try {
-                selector.close();
-            }
-            catch (IOException e) {}
-            try {
-                serverChannel.close();
-            }
-            catch (IOException e) {}
-        }
-    }
-
     private final class Handler implements Runnable {
         private final Connection conn;
         private final ByteBuffer data;
@@ -349,12 +259,7 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
-    private final class ReactorEvent implements ConnectionEvent {
-        private final AtomicInteger counter;
-
-        public ReactorEvent(AtomicInteger counter) {
-            this.counter = counter;
-        }
+    private final class ServerConnectionHandler implements ConnectionHandler {
 
         public void onConnected(Connection conn) {}
 
@@ -376,54 +281,96 @@ public class HproseTcpServer extends HproseService {
         public final void onSended(Connection conn, Integer id) {}
 
         public final void onClose(Connection conn) {
-            counter.getAndDecrement();
             fireCloseEvent(conn.socketChannel());
         }
 
         public void onError(Connection conn, Exception e) {}
+
+        public void onTimeout(Connection conn, String type) {}
+
+        public long getReadTimeout() {
+            return readTimeout;
+        }
+
+        public long getWriteTimeout() {
+            return writeTimeout;
+        }
+
+        public long getConnectTimeout() {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    private final class Reactors {
-        private final Reactor[] reactors;
-        private final AtomicInteger[] counters;
+    private final class Acceptor extends Thread {
+        private final Selector selector;
+        private final ServerSocketChannel serverChannel;
+        private final Reactor reactor;
+        private final ServerConnectionHandler handler;
 
-        public Reactors(int count) throws IOException {
-            counters = new AtomicInteger[count];
-            reactors = new Reactor[count];
-            for (int i = 0; i < count; ++i) {
-                counters[i] = new AtomicInteger(0);
-                reactors[i] = new Reactor(new ReactorEvent(counters[i]));
-                reactors[i].setReadTimeout(readTimeout);
-                reactors[i].setWriteTimeout(writeTimeout);
-            }
+        public Acceptor(String host, int port) throws IOException {
+            selector = Selector.open();
+            serverChannel = ServerSocketChannel.open();
+            ServerSocket serverSocket = serverChannel.socket();
+            InetSocketAddress address = (host == null) ?
+                    new InetSocketAddress(port) :
+                    new InetSocketAddress(host, port);
+            serverSocket.bind(address);
+            serverChannel.configureBlocking(false);
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+            reactor = new Reactor();
+            handler = new ServerConnectionHandler();
         }
 
-        public void start() {
-            int n = reactors.length;
-            for (int i = 0; i < n; ++i) {
-                reactors[i].start();
-            }
-        }
-
-        public void register(SocketChannel channel) {
-            int n = reactors.length;
-            int p = 0;
-            int min = counters[0].get();
-            for (int i = 1; i < n; ++i) {
-                int size = counters[i].get();
-                if (min > size) {
-                    min = size;
-                    p = i;
+        @Override
+        public void run() {
+            reactor.start();
+            while (!isInterrupted()) {
+                try {
+                    process();
+                }
+                catch (IOException e) {
+                    fireErrorEvent(e, null);
+                }
+                catch (ClosedSelectorException e) {
+                    break;
                 }
             }
-            counters[p].getAndIncrement();
-            reactors[p].register(channel);
+            reactor.close();
         }
 
-        public void stop() {
-            for (int i = reactors.length - 1; i >= 0; --i) {
-                reactors[i].close();
+        private void process() throws IOException {
+            int n = selector.select();
+            if (n == 0) return;
+            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            while (it.hasNext()) {
+                SelectionKey key = it.next();
+                it.remove();
+                if (key.isAcceptable()) {
+                    accept(key);
+                }
             }
+        }
+
+        private void accept(SelectionKey key) throws IOException {
+            final SocketChannel channel = ((ServerSocketChannel) key.channel()).accept();
+            if (channel != null) {
+                channel.configureBlocking(false);
+                channel.socket().setReuseAddress(true);
+                channel.socket().setKeepAlive(true);
+                fireAcceptEvent(channel);
+                reactor.register(new Connection(channel, handler));
+            }
+        }
+
+        public void close() {
+            try {
+                selector.close();
+            }
+            catch (IOException e) {}
+            try {
+                serverChannel.close();
+            }
+            catch (IOException e) {}
         }
     }
 }

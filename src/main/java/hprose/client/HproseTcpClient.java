@@ -22,7 +22,7 @@ import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
 import hprose.net.Connection;
-import hprose.net.ConnectionEvent;
+import hprose.net.ConnectionHandler;
 import hprose.net.Reactor;
 import hprose.util.concurrent.Threads;
 import java.io.IOException;
@@ -40,6 +40,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HproseTcpClient extends HproseClient {
@@ -47,34 +48,27 @@ public class HproseTcpClient extends HproseClient {
     private volatile boolean fullDuplex = false;
     private volatile boolean noDelay = false;
     private volatile int maxPoolSize = 10;
-    private volatile long poolTimeout = 30000;
-    private volatile long timeout = 30000;
+    private volatile long idleTimeout = 30000;
+    private volatile long readTimeout = 30000;
+    private volatile long writeTimeout = 30000;
+    private volatile long connectTimeout = 30000;
     private volatile boolean keepAlive = true;
     private volatile SocketTransporter fdTrans = null;
     private volatile SocketTransporter hdTrans = null;
 
-    private abstract class SocketTransporter extends Thread implements ConnectionEvent {
+    private final static class Connector extends Thread {
+        protected final AtomicInteger size = new AtomicInteger(0);
         private final Selector selector;
         private final Reactor reactor;
-        private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
-        protected final AtomicInteger size = new AtomicInteger(0);
-        public String uri = "";
+        private final Queue<Connection> queue = new ConcurrentLinkedQueue<Connection>();
 
-        public SocketTransporter() throws IOException {
+        public Connector() throws IOException {
             this.selector = Selector.open();
-            this.reactor = new Reactor(this);
-            this.uri = HproseTcpClient.this.uri;
+            this.reactor = new Reactor();
         }
 
         @Override
         public void run() {
-            Threads.registerShutdownHandler(new Runnable() {
-                public void run() {
-                    if (SocketTransporter.this != null) {
-                        SocketTransporter.this.close();
-                    }
-                }
-            });
             reactor.start();
             while (!isInterrupted()) {
                 try {
@@ -98,12 +92,12 @@ public class HproseTcpClient extends HproseClient {
 
         private void process() {
             for (;;) {
-                final SocketChannel channel = queue.poll();
-                if (channel == null) {
+                final Connection conn = queue.poll();
+                if (conn == null) {
                     break;
                 }
                 try {
-                    channel.register(selector, SelectionKey.OP_CONNECT);
+                    conn.connect(selector);
                 }
                 catch (ClosedChannelException e) {}
             }
@@ -127,33 +121,65 @@ public class HproseTcpClient extends HproseClient {
             if (channel.isConnectionPending()) {
                 channel.finishConnect();
             }
-            reactor.register(channel);
+            reactor.register((Connection)key.attachment());
         }
 
-        private void register(SocketChannel channel) {
-            queue.offer(channel);
+        private void register(Connection conn) {
+            queue.offer(conn);
             selector.wakeup();
         }
 
-        protected boolean create() throws IOException {
+        public void create(String uri, ConnectionHandler handler, boolean keepAlive, boolean noDelay) throws IOException {
             try {
                 URI u = new URI(uri);
-                if (size.getAndIncrement() < maxPoolSize) {
-                    SocketChannel channel = SocketChannel.open();
-                    channel.configureBlocking(false);
-                    channel.socket().setReuseAddress(true);
-                    channel.socket().setKeepAlive(keepAlive);
-                    channel.socket().setTcpNoDelay(noDelay);
-                    channel.connect(new InetSocketAddress(u.getHost(), u.getPort()));
-                    register(channel);
-                    return true;
-                }
-                size.getAndDecrement();
-                return false;
+                SocketChannel channel = SocketChannel.open();
+                Connection conn = new Connection(channel, handler);
+                channel.configureBlocking(false);
+                channel.socket().setReuseAddress(true);
+                channel.socket().setKeepAlive(keepAlive);
+                channel.socket().setTcpNoDelay(noDelay);
+                channel.connect(new InetSocketAddress(u.getHost(), u.getPort()));
+                register(conn);
             }
             catch (URISyntaxException e) {
                 throw new IOException(e.getMessage());
             }
+        }
+    }
+
+    private final static Connector connector;
+
+    static {
+        Connector temp = null;
+        try {
+            temp = new Connector();
+        }
+        catch (IOException e) {}
+        finally {
+            connector = temp;
+            connector.start();
+        }
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                if (connector != null) {
+                    connector.close();
+                }
+            }
+        });
+    }
+
+    private abstract class SocketTransporter implements ConnectionHandler {
+
+        public long getReadTimeout() {
+            return readTimeout;
+        }
+
+        public long getWriteTimeout() {
+            return writeTimeout;
+        }
+
+        public long getConnectTimeout() {
+            return connectTimeout;
         }
 
         public abstract void send(ByteBufferStream stream, ReceiveCallback callback) throws IOException;
@@ -164,9 +190,7 @@ public class HproseTcpClient extends HproseClient {
         private final ConcurrentLinkedQueue<Request> requests = new ConcurrentLinkedQueue<Request>();
         private final ConcurrentHashMap<Connection, ConcurrentHashMap<Integer, Response>> responses = new ConcurrentHashMap<Connection, ConcurrentHashMap<Integer, Response>>();
         private final ConcurrentHashMap<Connection, AtomicInteger> counts = new ConcurrentHashMap<Connection, AtomicInteger>();
-        public FullDuplexSocketTransporter() throws IOException {
-            super();
-        }
+        private final AtomicInteger size = new AtomicInteger(0);
 
         private final class Request {
             public final ByteBufferStream stream;
@@ -220,7 +244,12 @@ public class HproseTcpClient extends HproseClient {
                 send(conn, stream, callback);
             }
             else {
-                create();
+                if (size.getAndIncrement() < maxPoolSize) {
+                    connector.create(uri, this, keepAlive, noDelay);
+                }
+                else {
+                    size.getAndDecrement();
+                }
                 requests.offer(new Request(stream, callback));
             }
         }
@@ -235,6 +264,27 @@ public class HproseTcpClient extends HproseClient {
             }
             else {
                 send(conn, request.stream, request.callback);
+            }
+        }
+
+        public void onTimeout(Connection conn, String type) {
+            if (CONNECT_TIMEOUT.equals(type)) {
+                Request request;
+                while ((request = requests.poll()) != null) {
+                    request.callback.handler(null, new TimeoutException(type));
+                }
+            }
+            else {
+                ConcurrentHashMap<Integer, Response> r = responses.remove(conn);
+                if (r != null) {
+                    Iterator<Response> iterator = r.values().iterator();
+                    while (iterator.hasNext()) {
+                        Response response = iterator.next();
+                        if (response != null) {
+                            response.callback.handler(null, new TimeoutException(type));
+                        }
+                    }
+                }
             }
         }
 
@@ -318,6 +368,10 @@ public class HproseTcpClient extends HproseClient {
         public void send(ByteBufferStream stream, ReceiveCallback callback) throws IOException {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+
+        public void onTimeout(Connection conn, String type) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
 
     public HproseTcpClient() {
@@ -348,8 +402,8 @@ public class HproseTcpClient extends HproseClient {
 
     @Override
     public void close() {
-        if (fdTrans != null) fdTrans.close();
-        if (hdTrans != null) hdTrans.close();
+//        if (fdTrans != null) fdTrans.close();
+//        if (hdTrans != null) hdTrans.close();
         super.close();
     }
 
@@ -377,20 +431,36 @@ public class HproseTcpClient extends HproseClient {
         this.maxPoolSize = maxPoolSize;
     }
 
-    public long getPoolTimeout() {
-        return poolTimeout;
+    public long getIdleTimeout() {
+        return idleTimeout;
     }
 
-    public void setPoolTimeout(long poolTimeout) {
-        this.poolTimeout = poolTimeout;
+    public void setIdleTimeout(long idleTimeout) {
+        this.idleTimeout = idleTimeout;
     }
 
-    public long getTimeout() {
-        return timeout;
+    public long getReadTimeout() {
+        return readTimeout;
     }
 
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
+    public void setReadTimeout(long readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public long getWriteTimeout() {
+        return writeTimeout;
+    }
+
+    public void setWriteTimeout(long writeTimeout) {
+        this.writeTimeout = writeTimeout;
+    }
+
+    public long getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setConnectTimeout(long connectTimeout) {
+        this.connectTimeout = connectTimeout;
     }
 
     public boolean isKeepAlive() {
@@ -441,16 +511,14 @@ public class HproseTcpClient extends HproseClient {
         SocketTransporter trans;
         if (fullDuplex) {
             trans = fdTrans;
-            if ((trans == null) || !trans.uri.equals(this.uri)) {
+            if (trans == null) {
                 trans = fdTrans = new FullDuplexSocketTransporter();
-                trans.start();
             }
         }
         else {
             trans = hdTrans;
-            if ((trans == null) || !trans.uri.equals(this.uri)) {
+            if (trans == null) {
                 trans = hdTrans = new HalfDuplexSocketTransporter();
-                trans.start();
             }
         }
         trans.send(buffer, callback);

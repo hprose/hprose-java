@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Reactor class for Java.                         *
  *                                                        *
- * LastModified: Apr 13, 2016                             *
+ * LastModified: Apr 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
@@ -33,31 +32,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class Reactor extends Thread {
 
     private final Selector selector;
-    private final Queue<SocketChannel> queue = new ConcurrentLinkedQueue<SocketChannel>();
-    private final ConnectionEvent event;
-    private long readTimeout = 30000;
-    private long writeTimeout = 30000;
+    private final Queue<Connection> queue = new ConcurrentLinkedQueue<Connection>();
 
-    public Reactor(ConnectionEvent event) throws IOException {
+    public Reactor() throws IOException {
         super();
         selector = Selector.open();
-        this.event = event;
-    }
-
-    public long getReadTimeout() {
-        return readTimeout;
-    }
-
-    public void setReadTimeout(long readTimeout) {
-        this.readTimeout = readTimeout;
-    }
-
-    public long getWriteTimeout() {
-        return writeTimeout;
-    }
-
-    public void setWriteTimeout(long writeTimeout) {
-        this.writeTimeout = writeTimeout;
     }
 
     @Override
@@ -88,17 +67,12 @@ public final class Reactor extends Thread {
 
     private void process() {
         for (;;) {
-            final SocketChannel channel = queue.poll();
-            if (channel == null) {
+            final Connection conn = queue.poll();
+            if (conn == null) {
                 break;
             }
             try {
-                SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
-                Connection conn = new Connection(key, event);
-                conn.setReadTimeout(readTimeout);
-                conn.setWriteTimeout(writeTimeout);
-                key.attach(conn);
-                event.onConnected(conn);
+                conn.connected(selector);
             }
             catch (ClosedChannelException e) {}
         }
@@ -127,8 +101,8 @@ public final class Reactor extends Thread {
         }
     }
 
-    public void register(SocketChannel channel) {
-        queue.offer(channel);
+    public void register(Connection conn) {
+        queue.offer(conn);
         selector.wakeup();
     }
 }

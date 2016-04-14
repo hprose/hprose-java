@@ -21,7 +21,7 @@ package hprose.server;
 import hprose.common.HproseContext;
 
 public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context);
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context);
+    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
+    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
     void onSendError(Throwable e, HproseContext context);
 }

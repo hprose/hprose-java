@@ -12,7 +12,7 @@
  *                                                        *
  * Map serializer class for Java.                         *
  *                                                        *
- * LastModified: Apr 29, 2015                             *
+ * LastModified: Apr 16, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,13 +24,14 @@ import static hprose.io.HproseTags.TagMap;
 import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.Map;
 
-final class MapSerializer implements HproseSerializer<Map> {
+final class MapSerializer implements HproseSerializer<Map<?, ?>> {
 
     public final static MapSerializer instance = new MapSerializer();
 
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Map<?,?> map) throws IOException {
+    public final static <K, V> void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Map<K, V> map) throws IOException {
         if (refer != null) refer.set(map);
         int count = map.size();
         stream.write(TagMap);
@@ -38,14 +39,16 @@ final class MapSerializer implements HproseSerializer<Map> {
             ValueWriter.writeInt(stream, count);
         }
         stream.write(TagOpenbrace);
-        for (Map.Entry<?,?> entry : map.entrySet()) {
+        Iterator<Map.Entry<K, V>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<K, V> entry = it.next();
             writer.serialize(entry.getKey());
             writer.serialize(entry.getValue());
         }
-        stream.write(TagClosebrace);        
+        stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Map obj) throws IOException {
+    public final void write(HproseWriter writer, Map<?, ?> obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

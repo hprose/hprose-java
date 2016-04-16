@@ -8,20 +8,26 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseServiceEvent.java                                *
+ * ConnectionHandler.java                                 *
  *                                                        *
- * hprose service event interface for Java.               *
+ * hprose ConnectionHandler interface for Java.           *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 15, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.net;
 
-import hprose.common.HproseContext;
+import java.nio.ByteBuffer;
 
-public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
-    void onSendError(Throwable e, HproseContext context);
+public interface ConnectionHandler {
+    void onConnected(Connection conn);
+    void onReceived(Connection conn, ByteBuffer data, Integer id);
+    void onSended(Connection conn, Integer id);
+    void onClose(Connection conn);
+    void onError(Connection conn, Exception e);
+    void onTimeout(Connection conn, TimeoutType type);
+    long getReadTimeout();
+    long getWriteTimeout();
+    long getConnectTimeout();
 }

@@ -8,20 +8,23 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseServiceEvent.java                                *
+ * Subscriber.java                                        *
  *                                                        *
- * hprose service event interface for Java.               *
+ * Subscriber class for Java.                             *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.util.concurrent;
 
-import hprose.common.HproseContext;
-
-public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
-    void onSendError(Throwable e, HproseContext context);
+final class Subscriber<V> {
+    public final Callback<V> onfulfill;
+    public final Callback<Throwable> onreject;
+    public final Promise<?> next;
+    public Subscriber(Callback<V> onfulfill, Callback<Throwable> onreject, Promise<?> next) {
+        this.onfulfill = onfulfill;
+        this.onreject = onreject;
+        this.next = next;
+    }
 }

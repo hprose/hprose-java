@@ -8,20 +8,25 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseServiceEvent.java                                *
+ * TypeException.java                                     *
  *                                                        *
- * hprose service event interface for Java.               *
+ * TypeException for Java.                                *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: May 16, 2010                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.util.concurrent;
 
-import hprose.common.HproseContext;
+public class TypeException extends RuntimeException {
 
-public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
-    void onSendError(Throwable e, HproseContext context);
+    private static final long serialVersionUID = 5704911936656763854L;
+
+    public TypeException() {
+        super();
+    }
+
+    public TypeException(String msg) {
+        super(msg);
+    }
 }

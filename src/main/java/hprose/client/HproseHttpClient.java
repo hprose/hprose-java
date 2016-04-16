@@ -12,12 +12,13 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Jul 15, 2015                             *
+ * LastModified: Aug 13, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
+import hprose.net.ReceiveCallback;
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
@@ -266,5 +267,24 @@ public class HproseHttpClient extends HproseClient {
         finally {
             if (istream != null) istream.close();
         }
+    }
+
+    @Override
+    protected void send(final ByteBufferStream buffer, final ReceiveCallback callback) throws IOException {
+        executor.execute(new Runnable() {
+            public void run() {
+                ByteBufferStream istream = null;
+                Exception e = null;
+                try {
+                    istream = sendAndReceive(buffer);
+                }
+                catch (Exception ex) {
+                    e = ex;
+                }
+                finally {
+                    callback.handler(istream, e);
+                }
+            }
+        });
     }
 }

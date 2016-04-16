@@ -8,20 +8,18 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseServiceEvent.java                                *
+ * ReceiveCallback.java                                   *
  *                                                        *
- * hprose service event interface for Java.               *
+ * ReceiveCallback interface for Java.                    *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Aug 13, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.net;
 
-import hprose.common.HproseContext;
+import hprose.io.ByteBufferStream;
 
-public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
-    void onSendError(Throwable e, HproseContext context);
+public interface ReceiveCallback {
+    void handler(ByteBufferStream istream, Exception e);
 }

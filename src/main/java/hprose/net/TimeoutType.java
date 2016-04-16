@@ -8,20 +8,26 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseServiceEvent.java                                *
+ * TimeoutType.java                                       *
  *                                                        *
- * hprose service event interface for Java.               *
+ * hprose TimeoutType interface for Java.                 *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 15, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.server;
+package hprose.net;
 
-import hprose.common.HproseContext;
-
-public interface HproseServiceEvent {
-    void onBeforeInvoke(String name, Object[] args, boolean byRef, HproseContext context) throws Throwable;
-    void onAfterInvoke(String name, Object[] args, boolean byRef, Object result, HproseContext context) throws Throwable;
-    void onSendError(Throwable e, HproseContext context);
+public enum TimeoutType {
+    CONNECT_TIMEOUT, READ_TIMEOUT, WRITE_TIMEOUT, IDLE_TIMEOUT;
+    @Override
+    public String toString() {
+        switch(this) {
+            case CONNECT_TIMEOUT: return "connect timeout";
+            case READ_TIMEOUT: return "read timeout";
+            case WRITE_TIMEOUT: return "write timeout";
+            case IDLE_TIMEOUT: return "idle timeout";
+        }
+        return null;
+    }
 }

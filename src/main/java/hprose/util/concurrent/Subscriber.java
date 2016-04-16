@@ -8,26 +8,23 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ConnectionHandler.java                                 *
+ * Subscriber.java                                        *
  *                                                        *
- * hprose ConnectionHandler interface for Java.           *
+ * Subscriber class for Java.                             *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Apr 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.net;
+package hprose.util.concurrent;
 
-import java.nio.ByteBuffer;
-
-public interface ConnectionHandler {
-    void onConnected(Connection conn);
-    void onReceived(Connection conn, ByteBuffer data, Integer id);
-    void onSended(Connection conn, Integer id);
-    void onClose(Connection conn);
-    void onError(Connection conn, Exception e);
-    void onTimeout(Connection conn, TimeoutType type);
-    long getReadTimeout();
-    long getWriteTimeout();
-    long getConnectTimeout();
+final class Subscriber<V> {
+    public final Callback<V> onfulfill;
+    public final Callback<Throwable> onreject;
+    public final Promise<?> next;
+    public Subscriber(Callback<V> onfulfill, Callback<Throwable> onreject, Promise<?> next) {
+        this.onfulfill = onfulfill;
+        this.onreject = onreject;
+        this.next = next;
+    }
 }

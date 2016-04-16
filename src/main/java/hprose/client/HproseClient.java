@@ -18,6 +18,7 @@
 \**********************************************************/
 package hprose.client;
 
+import hprose.net.ReceiveCallback;
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseContext;

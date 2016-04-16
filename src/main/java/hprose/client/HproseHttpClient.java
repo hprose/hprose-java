@@ -18,6 +18,7 @@
 \**********************************************************/
 package hprose.client;
 
+import hprose.net.ReceiveCallback;
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;

@@ -8,26 +8,18 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ConnectionHandler.java                                 *
+ * ReceiveCallback.java                                   *
  *                                                        *
- * hprose ConnectionHandler interface for Java.           *
+ * ReceiveCallback interface for Java.                    *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Aug 13, 2015                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.net;
 
-import java.nio.ByteBuffer;
+import hprose.io.ByteBufferStream;
 
-public interface ConnectionHandler {
-    void onConnected(Connection conn);
-    void onReceived(Connection conn, ByteBuffer data, Integer id);
-    void onSended(Connection conn, Integer id);
-    void onClose(Connection conn);
-    void onError(Connection conn, Exception e);
-    void onTimeout(Connection conn, TimeoutType type);
-    long getReadTimeout();
-    long getWriteTimeout();
-    long getConnectTimeout();
+public interface ReceiveCallback {
+    void handler(ByteBufferStream istream, Exception e);
 }

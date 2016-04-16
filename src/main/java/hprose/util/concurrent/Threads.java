@@ -22,6 +22,7 @@ public final class Threads {
 
     private static final ThreadGroup rootThreadGroup;
     private static final Thread mainThread;
+    private static volatile boolean enableShutdownHandler = true;
     private static volatile Runnable defaultHandler = null;
 
     static {
@@ -60,40 +61,55 @@ public final class Threads {
     }
 
     public static synchronized void registerShutdownHandler(final Runnable handler) {
-        if (defaultHandler == null) {
-            defaultHandler = handler;
-            new Thread() {
-                private final Object o = new Object();
-                @Override
-                public void run() {
-                    for (;;) {
-                        if (!mainThread.isAlive()) {
-                            defaultHandler.run();
-                            break;
-                        }
-                        else {
-                            synchronized (o) {
-                                try {
-                                    o.wait(100);
-                                }
-                                catch (InterruptedException e) {
-                                    break;
+        if (enableShutdownHandler) {
+            if (defaultHandler == null) {
+                defaultHandler = handler;
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    @Override
+                    public void run() {
+                        defaultHandler.run();
+                    }
+                });
+                new Thread() {
+                    private final Object o = new Object();
+                    @Override
+                    public void run() {
+                        for (;;) {
+                            if (!mainThread.isAlive()) {
+                                System.exit(0);
+                                break;
+                            }
+                            else {
+                                synchronized (o) {
+                                    try {
+                                        o.wait(100);
+                                    }
+                                    catch (InterruptedException e) {
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }.start();
-        }
-        else {
-            final Runnable oldHandler = defaultHandler;
-            defaultHandler = new Runnable() {
-                public void run() {
-                    oldHandler.run();
-                    handler.run();
-                }
-            };
+                }.start();
+            }
+            else {
+                final Runnable oldHandler = defaultHandler;
+                defaultHandler = new Runnable() {
+                    public void run() {
+                        oldHandler.run();
+                        handler.run();
+                    }
+                };
+            }
         }
     }
 
+    public static void run() {
+        defaultHandler.run();
+    }
+
+    public static void disabledShutdownHandler() {
+        enableShutdownHandler = false;
+    }
 }

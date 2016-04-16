@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 14, 2016                             *
+ * LastModified: Apr 16, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,8 +33,7 @@ public final class Connection {
     private final SocketChannel channel;
     private final ConnectionHandler handler;
     private volatile SelectionKey key;
-    private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
-    private volatile String timeoutType;
+    private volatile TimeoutType timeoutType;
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
             close();
@@ -46,35 +45,37 @@ public final class Connection {
     private int dataLength = -1;
     private Integer id = null;
     private OutPacket packet = null;
+    private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
     public Connection(SocketChannel channel, ConnectionHandler handler) {
         this.channel = channel;
         this.handler = handler;
     }
 
-    public void connect(Selector selector) throws ClosedChannelException {
+    public final void connect(Selector selector) throws ClosedChannelException {
         key = channel.register(selector, SelectionKey.OP_CONNECT, this);
-        timeoutType = ConnectionHandler.CONNECT_TIMEOUT;
-        timer.setTimeout(handler.getConnectTimeout());
+        setTimeout(handler.getConnectTimeout(), TimeoutType.CONNECT_TIMEOUT);
     }
 
-    public void connected(Selector selector) throws ClosedChannelException {
-        timer.clearTimeout();
+    public final void connected(Selector selector) throws ClosedChannelException {
+        clearTimeout();
         key = channel.register(selector, SelectionKey.OP_READ, this);
         handler.onConnected(this);
     }
 
-    public SocketChannel socketChannel() {
+    public final SocketChannel socketChannel() {
         return channel;
     }
 
-    public void close() {
+    public final void close() {
         try {
-            timer.clearTimeout();
-            handler.onClose(this);
+            clearTimeout();
             channel.close();
             key.cancel();
         }
         catch (IOException e) {}
+        finally {
+            handler.onClose(this);
+        }
     }
 
     public final boolean receive() {
@@ -83,8 +84,7 @@ public final class Connection {
             return false;
         }
         try {
-            timeoutType = ConnectionHandler.READ_TIMEOUT;
-            timer.setTimeout(handler.getReadTimeout());
+            setTimeout(handler.getReadTimeout(), TimeoutType.READ_TIMEOUT);
             int n = channel.read(inbuf);
             if (n < 0) {
                 close();
@@ -106,8 +106,7 @@ public final class Connection {
                         ByteBufferStream.free(inbuf);
                         inbuf = buf;
                     }
-                    timeoutType = ConnectionHandler.READ_TIMEOUT;
-                    timer.setTimeout(handler.getReadTimeout());
+                    setTimeout(handler.getReadTimeout(), TimeoutType.READ_TIMEOUT);
                     if (channel.read(inbuf) < 0) {
                         close();
                         return false;
@@ -127,7 +126,7 @@ public final class Connection {
                     data.put(inbuf);
                     inbuf.limit(bufLen);
                     inbuf.compact();
-                    timer.clearTimeout();
+                    clearTimeout();
                     handler.onReceived(this, data, id);
                     headerLength = 4;
                     dataLength = -1;
@@ -167,8 +166,7 @@ public final class Connection {
         try {
             for (;;) {
                 while (packet.writeLength < packet.totalLength) {
-                    timeoutType = ConnectionHandler.WRITE_TIMEOUT;
-                    timer.setTimeout(handler.getWriteTimeout());
+                    setTimeout(handler.getWriteTimeout(), TimeoutType.WRITE_TIMEOUT);
                     long n = channel.write(packet.buffers);
                     if (n < 0) {
                         close();
@@ -182,7 +180,7 @@ public final class Connection {
                     packet.writeLength += n;
                 }
                 ByteBufferStream.free(packet.buffers[1]);
-                timer.clearTimeout();
+                clearTimeout();
                 handler.onSended(this, packet.id);
                 packet = outqueue.poll();
                 if (packet == null) {
@@ -194,5 +192,19 @@ public final class Connection {
         catch (Exception e) {
             close();
         }
+    }
+
+    public final void setTimeout(long timeout, TimeoutType type) {
+        timeoutType = type;
+        if (type == TimeoutType.IDLE_TIMEOUT) {
+            timer.setTimeout(timeout);
+        }
+        else {
+            timer.setTimeout(timeout, true);
+        }
+    }
+
+    public final void clearTimeout() {
+        timer.clear();
     }
 }

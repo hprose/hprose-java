@@ -8,26 +8,16 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ConnectionHandler.java                                 *
+ * State.java                                             *
  *                                                        *
- * hprose ConnectionHandler interface for Java.           *
+ * State enum for Java.                                   *
  *                                                        *
  * LastModified: Apr 15, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.net;
+package hprose.util.concurrent;
 
-import java.nio.ByteBuffer;
-
-public interface ConnectionHandler {
-    void onConnected(Connection conn);
-    void onReceived(Connection conn, ByteBuffer data, Integer id);
-    void onSended(Connection conn, Integer id);
-    void onClose(Connection conn);
-    void onError(Connection conn, Exception e);
-    void onTimeout(Connection conn, TimeoutType type);
-    long getReadTimeout();
-    long getWriteTimeout();
-    long getConnectTimeout();
+public enum State {
+    PENDING, FULFILLED, REJECTED
 }

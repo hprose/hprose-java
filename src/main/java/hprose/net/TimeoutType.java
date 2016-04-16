@@ -8,18 +8,26 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ReceiveCallback.java                                   *
+ * TimeoutType.java                                       *
  *                                                        *
- * ReceiveCallback interface for Java.                    *
+ * hprose TimeoutType interface for Java.                 *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 15, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.client;
+package hprose.net;
 
-import hprose.io.ByteBufferStream;
-
-public interface ReceiveCallback {
-    void handler(ByteBufferStream istream, Exception e);
+public enum TimeoutType {
+    CONNECT_TIMEOUT, READ_TIMEOUT, WRITE_TIMEOUT, IDLE_TIMEOUT;
+    @Override
+    public String toString() {
+        switch(this) {
+            case CONNECT_TIMEOUT: return "connect timeout";
+            case READ_TIMEOUT: return "read timeout";
+            case WRITE_TIMEOUT: return "write timeout";
+            case IDLE_TIMEOUT: return "idle timeout";
+        }
+        return null;
+    }
 }

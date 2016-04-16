@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Apr 13, 2016                             *
+ * LastModified: Apr 15, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,22 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
+
     private final static ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
-
-    public enum State {
-        PENDING, FULFILLED, REJECTED
-    }
-
-    private final class Subscriber {
-        public final Callback<V> onfulfill;
-        public final Callback<Throwable> onreject;
-        public final Promise<?> next;
-        public Subscriber(Callback<V> onfulfill, Callback<Throwable> onreject, Promise<?> next) {
-            this.onfulfill = onfulfill;
-            this.onreject = onreject;
-            this.next = next;
-        }
-    }
     static {
         Threads.registerShutdownHandler(new Runnable() {
             public void run() {
@@ -54,7 +40,8 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             }
         });
     }
-    private final ConcurrentLinkedQueue<Subscriber> subscribers = new ConcurrentLinkedQueue<Subscriber>();
+
+    private final ConcurrentLinkedQueue<Subscriber<V>> subscribers = new ConcurrentLinkedQueue<Subscriber<V>>();
     private volatile State state = State.PENDING;
     private volatile Object value;
     private volatile Throwable reason;
@@ -614,7 +601,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             state = State.FULFILLED;
             this.value = value;
             while (!subscribers.isEmpty()) {
-                Subscriber subscriber = subscribers.poll();
+                Subscriber<V> subscriber = subscribers.poll();
                 resolve(subscriber.onfulfill, subscriber.onreject, subscriber.next, value);
             }
         }
@@ -625,7 +612,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             state = State.REJECTED;
             this.reason = e;
             while (!subscribers.isEmpty()) {
-                Subscriber subscriber = subscribers.poll();
+                Subscriber<V> subscriber = subscribers.poll();
                 if (subscriber.onreject != null) {
                     call(subscriber.onreject, subscriber.next, e);
                 }
@@ -655,7 +642,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
                 }
             }
             else {
-                subscribers.offer(new Subscriber(onfulfill, onreject, next));
+                subscribers.offer(new Subscriber<V>(onfulfill, onreject, next));
             }
             return next;
         }

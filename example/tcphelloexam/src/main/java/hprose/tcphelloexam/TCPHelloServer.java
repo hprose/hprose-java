@@ -1,14 +1,8 @@
 package hprose.tcphelloexam;
 
-import hprose.common.HproseContext;
-import hprose.common.HproseFilter;
 import hprose.server.HproseTcpServer;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 
 public class TCPHelloServer {
     public static String hello(String name) {
@@ -16,6 +10,7 @@ public class TCPHelloServer {
     }
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         HproseTcpServer server = new HproseTcpServer("tcp://localhost:4321");
+/*
         server.addFilter(new HproseFilter() {
             public String getString(ByteBuffer buffer) {
                 Charset charset;
@@ -45,12 +40,16 @@ public class TCPHelloServer {
                 return ostream;
             }
         });
+*/
         server.add("hello", TCPHelloServer.class);
-        //server.setEnabledThreadPool(true);
+//        server.setEnabledThreadPool(true);
+//        ExecutorService pool = Executors.newFixedThreadPool(2);
+//        server.setThreadPool(pool);
         server.start();
         System.out.println("START");
         System.in.read();
         server.stop();
         System.out.println("STOP");
+        //pool.shutdown();
     }
 }

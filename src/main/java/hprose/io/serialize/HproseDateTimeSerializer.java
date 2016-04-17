@@ -12,7 +12,7 @@
  *                                                        *
  * Hprose DateTime serializer class for Java.             *
  *                                                        *
- * LastModified: Aug 8, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class HproseDateTimeSerializer implements HproseSerializer<DateTime> {
+final class HproseDateTimeSerializer implements Serializer<DateTime> {
 
     public final static HproseDateTimeSerializer instance = new HproseDateTimeSerializer();
 
@@ -48,7 +48,7 @@ final class HproseDateTimeSerializer implements HproseSerializer<DateTime> {
         stream.write(dt.utc ? TagUTC : TagSemicolon);
     }
 
-    public final void write(HproseWriter writer, DateTime obj) throws IOException {
+    public final void write(Writer writer, DateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

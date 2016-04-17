@@ -12,7 +12,7 @@
  *                                                        *
  * URL unserializer class for Java.                       *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -30,7 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 
-final class URLUnserializer implements HproseUnserializer {
+final class URLUnserializer implements Unserializer {
 
     public final static URLUnserializer instance = new URLUnserializer();
 
@@ -43,13 +43,13 @@ final class URLUnserializer implements HproseUnserializer {
         }
     }
 
-    final static URL readURL(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static URL readURL(Reader reader, ByteBuffer buffer) throws IOException {
         URL u = toURL(ValueReader.readString(buffer));
         reader.refer.set(u);
         return u;
     }
 
-    final static URL readURL(HproseReader reader, InputStream stream) throws IOException {
+    final static URL readURL(Reader reader, InputStream stream) throws IOException {
         URL u = toURL(ValueReader.readString(stream));
         reader.refer.set(u);
         return u;
@@ -65,7 +65,7 @@ final class URLUnserializer implements HproseUnserializer {
         return toURL(obj.toString());
     }
 
-    final static URL read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static URL read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch(tag) {
             case TagNull:
@@ -76,7 +76,7 @@ final class URLUnserializer implements HproseUnserializer {
         }
     }
 
-    final static URL read(HproseReader reader, InputStream stream) throws IOException {
+    final static URL read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch(tag) {
             case TagNull:
@@ -87,11 +87,11 @@ final class URLUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 }

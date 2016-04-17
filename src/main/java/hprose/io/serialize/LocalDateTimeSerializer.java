@@ -12,7 +12,7 @@
  *                                                        *
  * LocalDateTime serializer class for Java.               *
  *                                                        *
- * LastModified: Jun 23, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 
-final class LocalDateTimeSerializer implements HproseSerializer<LocalDateTime> {
+final class LocalDateTimeSerializer implements Serializer<LocalDateTime> {
 
     public final static LocalDateTimeSerializer instance = new LocalDateTimeSerializer();
 
@@ -44,7 +44,7 @@ final class LocalDateTimeSerializer implements HproseSerializer<LocalDateTime> {
         }
     }
 
-    public final void write(HproseWriter writer, LocalDateTime obj) throws IOException {
+    public final void write(Writer writer, LocalDateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

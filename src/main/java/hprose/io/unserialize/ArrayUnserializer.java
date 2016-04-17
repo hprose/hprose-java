@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * OtherTypeArrayUnserializer.java                        *
+ * ArrayUnserializer.java                                 *
  *                                                        *
- * other type array unserializer class for Java.          *
+ * array unserializer class for Java.                     *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -30,12 +30,12 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class ArrayUnserializer implements HproseUnserializer {
+final class ArrayUnserializer implements Unserializer {
 
     public final static ArrayUnserializer instance = new ArrayUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    final static <T> T[] readArray(HproseReader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
+    final static <T> T[] readArray(Reader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -43,7 +43,7 @@ final class ArrayUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(buffer, TagOpenbrace);
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a[i] = (T) unserializer.read(reader, buffer, componentClass, componentType);
                 }
@@ -56,7 +56,7 @@ final class ArrayUnserializer implements HproseUnserializer {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static <T> T[] readArray(HproseReader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
+    final static <T> T[] readArray(Reader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -64,7 +64,7 @@ final class ArrayUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(stream, TagOpenbrace);
                 T[] a = (T[])Array.newInstance(componentClass, count);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a[i] = (T) unserializer.read(reader, stream, componentClass, componentType);
                 }
@@ -77,7 +77,7 @@ final class ArrayUnserializer implements HproseUnserializer {
     }
 
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         Class<?> componentClass = cls.getComponentType();
         if (type instanceof GenericArrayType) {
             Type componentType = ((GenericArrayType) type).getGenericComponentType();
@@ -88,7 +88,7 @@ final class ArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         Class<?> componentClass = cls.getComponentType();
         if (type instanceof GenericArrayType) {
             Type componentType = ((GenericArrayType) type).getGenericComponentType();

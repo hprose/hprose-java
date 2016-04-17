@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReferenceArray unserializer class for Java.      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,21 +27,21 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
+final class AtomicReferenceArrayUnserializer implements Unserializer {
 
     public final static AtomicReferenceArrayUnserializer instance = new AtomicReferenceArrayUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(Reader reader, ByteBuffer buffer, Class<T> componentClass, Type componentType) throws IOException {
         return new AtomicReferenceArray<T>(ArrayUnserializer.readArray(reader, buffer, componentClass, componentType));
     }
 
     @SuppressWarnings({"unchecked"})
-    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(HproseReader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
+    private <T> AtomicReferenceArray<T> readAtomicReferenceArray(Reader reader, InputStream stream, Class<T> componentClass, Type componentType) throws IOException {
         return new AtomicReferenceArray<T>(ArrayUnserializer.readArray(reader, stream, componentClass, componentType));
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = ClassUtil.toClass(type);
@@ -52,7 +52,7 @@ final class AtomicReferenceArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
             cls = ClassUtil.toClass(type);

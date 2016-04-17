@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Aug 7, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,7 +35,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-final class OtherTypeSerializer implements HproseSerializer {
+final class OtherTypeSerializer implements Serializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
@@ -52,7 +52,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         int refcount;
     }
 
-    private static void writeObject(HproseWriter writer, Object object, Class<?> type) throws IOException {
+    private static void writeObject(Writer writer, Object object, Class<?> type) throws IOException {
         Map<String, MemberAccessor> members = Accessors.getMembers(type, writer.mode);
         for (Map.Entry<String, MemberAccessor> entry : members.entrySet()) {
             MemberAccessor member = entry.getValue();
@@ -60,7 +60,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         }
     }
 
-    private static int writeClass(HproseWriter writer, Class<?> type) throws IOException {
+    private static int writeClass(Writer writer, Class<?> type) throws IOException {
         SerializeCache cache = memberCache.get(writer.mode).get(type);
         if (cache == null) {
             cache = new SerializeCache();
@@ -92,7 +92,7 @@ final class OtherTypeSerializer implements HproseSerializer {
     }
 
     @SuppressWarnings({"unchecked"})
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
+    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
         Class<?> type = object.getClass();
         Integer cr = writer.classref.get(type);
         if (cr == null) {
@@ -106,7 +106,7 @@ final class OtherTypeSerializer implements HproseSerializer {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Object obj) throws IOException {
+    public final void write(Writer writer, Object obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

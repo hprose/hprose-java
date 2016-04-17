@@ -12,7 +12,7 @@
  *                                                        *
  * other type array serializer class for Java.            *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 
-final class OtherTypeArraySerializer implements HproseSerializer {
+final class OtherTypeArraySerializer implements Serializer {
 
     public final static OtherTypeArraySerializer instance = new OtherTypeArraySerializer();
 
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Object array) throws IOException {
+    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Object array) throws IOException {
         if (refer != null) refer.set(array);
         int length = Array.getLength(array);
         stream.write(TagList);
@@ -44,7 +44,7 @@ final class OtherTypeArraySerializer implements HproseSerializer {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Object obj) throws IOException {
+    public final void write(Writer writer, Object obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

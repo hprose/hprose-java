@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp serializer class for Java.                   *
  *                                                        *
- * LastModified: Aug 8, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-final class TimestampSerializer implements HproseSerializer<Timestamp> {
+final class TimestampSerializer implements Serializer<Timestamp> {
 
     public final static TimestampSerializer instance = new TimestampSerializer();
 
@@ -39,7 +39,7 @@ final class TimestampSerializer implements HproseSerializer<Timestamp> {
         stream.write(TagSemicolon);
     }
 
-    public final void write(HproseWriter writer, Timestamp obj) throws IOException {
+    public final void write(Writer writer, Timestamp obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

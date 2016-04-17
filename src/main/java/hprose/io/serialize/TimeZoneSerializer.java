@@ -12,7 +12,7 @@
  *                                                        *
  * TimeZone serializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,11 +24,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.TimeZone;
 
-final class TimeZoneSerializer implements HproseSerializer<TimeZone> {
+final class TimeZoneSerializer implements Serializer<TimeZone> {
 
     public final static TimeZoneSerializer instance = new TimeZoneSerializer();
 
-    public final void write(HproseWriter writer, TimeZone obj) throws IOException {
+    public final void write(Writer writer, TimeZone obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

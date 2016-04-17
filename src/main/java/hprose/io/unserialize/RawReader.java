@@ -8,24 +8,49 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseRawReader.java                                   *
+ * RawReader.java                                         *
  *                                                        *
  * hprose raw reader class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.unserialize;
 
 import hprose.common.HproseException;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagBytes;
+import static hprose.io.HproseTags.TagClass;
+import static hprose.io.HproseTags.TagClosebrace;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagError;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagGuid;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagMap;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagObject;
+import static hprose.io.HproseTags.TagOpenbrace;
+import static hprose.io.HproseTags.TagQuote;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTC;
+import static hprose.io.HproseTags.TagUTF8Char;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public final class HproseRawReader implements HproseTags {
+public final class RawReader {
 
     private static void readBytesRaw(ByteBuffer buffer, OutputStream ostream) throws IOException {
         int len = 0;

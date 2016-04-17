@@ -12,7 +12,7 @@
  *                                                        *
  * OffsetDateTime serializer class for Java.              *
  *                                                        *
- * LastModified: Jun 23, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-final class OffsetDateTimeSerializer implements HproseSerializer<OffsetDateTime> {
+final class OffsetDateTimeSerializer implements Serializer<OffsetDateTime> {
 
     public final static OffsetDateTimeSerializer instance = new OffsetDateTimeSerializer();
 
@@ -51,7 +51,7 @@ final class OffsetDateTimeSerializer implements HproseSerializer<OffsetDateTime>
         }
     }
 
-    public final void write(HproseWriter writer, OffsetDateTime obj) throws IOException {
+    public final void write(Writer writer, OffsetDateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

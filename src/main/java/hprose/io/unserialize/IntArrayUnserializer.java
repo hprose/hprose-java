@@ -12,7 +12,7 @@
  *                                                        *
  * int array unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,11 +29,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class IntArrayUnserializer implements HproseUnserializer {
+final class IntArrayUnserializer implements Unserializer {
 
     public final static IntArrayUnserializer instance = new IntArrayUnserializer();
 
-    final static int[] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static int[] read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -52,7 +52,7 @@ final class IntArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    final static int[] read(HproseReader reader, InputStream stream) throws IOException {
+    final static int[] read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -71,11 +71,11 @@ final class IntArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

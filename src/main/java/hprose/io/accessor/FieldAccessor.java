@@ -12,7 +12,7 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,11 +20,11 @@ package hprose.io.accessor;
 
 import hprose.common.HproseException;
 import static hprose.io.HproseTags.TagNull;
-import hprose.io.serialize.HproseSerializer;
-import hprose.io.serialize.HproseWriter;
+import hprose.io.serialize.Serializer;
 import hprose.io.serialize.SerializerFactory;
-import hprose.io.unserialize.HproseReader;
-import hprose.io.unserialize.HproseUnserializer;
+import hprose.io.serialize.Writer;
+import hprose.io.unserialize.Unserializer;
+import hprose.io.unserialize.Reader;
 import hprose.io.unserialize.UnserializerFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,8 +36,8 @@ public final class FieldAccessor implements MemberAccessor {
     private final long offset;
     private final Class<?> cls;
     private final Type type;
-    private final HproseSerializer serializer;
-    private final HproseUnserializer unserializer;
+    private final Serializer serializer;
+    private final Unserializer unserializer;
 
     public FieldAccessor(Field accessor) {
         accessor.setAccessible(true);
@@ -50,7 +50,7 @@ public final class FieldAccessor implements MemberAccessor {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void serialize(HproseWriter writer, Object obj) throws IOException {
+    public void serialize(Writer writer, Object obj) throws IOException {
         Object value;
         try {
             value = Accessors.unsafe.getObject(obj, offset);
@@ -67,7 +67,7 @@ public final class FieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
+    public void unserialize(Reader reader, ByteBuffer buffer, Object obj) throws IOException {
         Object value = unserializer.read(reader, buffer, cls, type);
         try {
             Accessors.unsafe.putObject(obj, offset, value);
@@ -78,7 +78,7 @@ public final class FieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
+    public void unserialize(Reader reader, InputStream stream, Object obj) throws IOException {
         Object value = unserializer.read(reader, stream, cls, type);
         try {
             Accessors.unsafe.putObject(obj, offset, value);

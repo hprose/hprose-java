@@ -12,7 +12,7 @@
  *                                                        *
  * Map unserializer class for Java.                       *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,7 +20,13 @@
 package hprose.io.unserialize;
 
 import hprose.common.HproseException;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagClass;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagMap;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagObject;
+import static hprose.io.HproseTags.TagOpenbrace;
+import static hprose.io.HproseTags.TagRef;
 import hprose.io.accessor.ConstructorAccessor;
 import hprose.util.ClassUtil;
 import java.io.IOException;
@@ -31,12 +37,12 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-final class MapUnserializer implements HproseUnserializer, HproseTags {
+final class MapUnserializer implements Unserializer {
 
     public final static MapUnserializer instance = new MapUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    private static <K, V> Map<K, V> readListAsMap(HproseReader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
+    private static <K, V> Map<K, V> readListAsMap(Reader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
         int count = ValueReader.readInt(buffer, TagOpenbrace);
         Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
@@ -47,7 +53,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
                 !keyClass.equals(Object.class)) {
                 throw ValueReader.castError(reader.tagToString(TagList), cls);
             }
-            HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
+            Unserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
                 K key = (K)(keyClass.equals(String.class) ? String.valueOf(i) : i);
                 V value = (V)valueUnserializer.read(reader, buffer, valueClass, valueType);
@@ -59,7 +65,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <K, V> Map<K, V> readListAsMap(HproseReader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
+    private static <K, V> Map<K, V> readListAsMap(Reader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type valueType) throws IOException {
         int count = ValueReader.readInt(stream, TagOpenbrace);
         Map<K, V> m = (Map<K, V>)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
@@ -70,7 +76,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
                 !keyClass.equals(Object.class)) {
                 throw ValueReader.castError(reader.tagToString(TagList), cls);
             }
-            HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
+            Unserializer valueUnserializer = UnserializerFactory.get(valueClass);
             for (int i = 0; i < count; ++i) {
                 K key = (K)(keyClass.equals(String.class) ? String.valueOf(i) : i);
                 V value = (V)valueUnserializer.read(reader, stream, valueClass, valueType);
@@ -82,7 +88,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static Map readObjectAsMap(HproseReader reader, ByteBuffer buffer, Map map) throws IOException {
+    private static Map readObjectAsMap(Reader reader, ByteBuffer buffer, Map map) throws IOException {
         Object c = reader.classref.get(ValueReader.readInt(buffer, TagOpenbrace));
         String[] memberNames = reader.membersref.get(c);
         reader.refer.set(map);
@@ -95,7 +101,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static Map readObjectAsMap(HproseReader reader, InputStream stream, Map map) throws IOException {
+    private static Map readObjectAsMap(Reader reader, InputStream stream, Map map) throws IOException {
         Object c = reader.classref.get(ValueReader.readInt(stream, TagOpenbrace));
         String[] memberNames = reader.membersref.get(c);
         reader.refer.set(map);
@@ -108,12 +114,12 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <K, V> Map<K, V> readMap(HproseReader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+    private static <K, V> Map<K, V> readMap(Reader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int count = ValueReader.readInt(buffer, TagOpenbrace);
         Map m = (Map)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
-        HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
-        HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
+        Unserializer keyUnserializer = UnserializerFactory.get(keyClass);
+        Unserializer valueUnserializer = UnserializerFactory.get(valueClass);
         for (int i = 0; i < count; ++i) {
             K key = (K)keyUnserializer.read(reader, buffer, keyClass, keyType);
             V value = (V)valueUnserializer.read(reader, buffer, valueClass, valueType);
@@ -124,12 +130,12 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <K, V> Map<K, V> readMap(HproseReader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+    private static <K, V> Map<K, V> readMap(Reader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int count = ValueReader.readInt(stream, TagOpenbrace);
         Map m = (Map)ConstructorAccessor.newInstance(cls);
         reader.refer.set(m);
-        HproseUnserializer keyUnserializer = UnserializerFactory.get(keyClass);
-        HproseUnserializer valueUnserializer = UnserializerFactory.get(valueClass);
+        Unserializer keyUnserializer = UnserializerFactory.get(keyClass);
+        Unserializer valueUnserializer = UnserializerFactory.get(valueClass);
         for (int i = 0; i < count; ++i) {
             K key = (K)keyUnserializer.read(reader, stream, keyClass, keyType);
             V value = (V)valueUnserializer.read(reader, stream, valueClass, valueType);
@@ -140,7 +146,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static <K, V> Map<K, V> read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+    final static <K, V> Map<K, V> read(Reader reader, ByteBuffer buffer, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -156,7 +162,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static <K, V> Map<K, V> read(HproseReader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
+    final static <K, V> Map<K, V> read(Reader reader, InputStream stream, Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -172,7 +178,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static Map readMap(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    final static Map readMap(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         Type keyType, valueType;
         Class<?> keyClass, valueClass;
         if (type instanceof ParameterizedType) {
@@ -192,7 +198,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static Map readMap(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    final static Map readMap(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         Type keyType, valueType;
         Class<?> keyClass, valueClass;
         if (type instanceof ParameterizedType) {
@@ -211,7 +217,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
         return read(reader, stream, cls, keyClass, valueClass, keyType, valueType);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (!Modifier.isInterface(cls.getModifiers()) && !Modifier.isAbstract(cls.getModifiers())) {
             return readMap(reader, buffer, cls, type);
         }
@@ -220,7 +226,7 @@ final class MapUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (!Modifier.isInterface(cls.getModifiers()) && !Modifier.isAbstract(cls.getModifiers())) {
             return readMap(reader, stream, cls, type);
         }

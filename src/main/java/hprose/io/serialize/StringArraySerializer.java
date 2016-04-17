@@ -12,7 +12,7 @@
  *                                                        *
  * String array serializer class for Java.                *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class StringArraySerializer implements HproseSerializer<String[]> {
+final class StringArraySerializer implements Serializer<String[]> {
 
     public final static StringArraySerializer instance = new StringArraySerializer();
 
@@ -50,7 +50,7 @@ final class StringArraySerializer implements HproseSerializer<String[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, String[] obj) throws IOException {
+    public final void write(Writer writer, String[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

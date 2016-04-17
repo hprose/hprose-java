@@ -12,7 +12,7 @@
  *                                                        *
  * value reader class for Java.                           *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,12 @@ package hprose.io.unserialize;
 
 import hprose.common.HproseException;
 import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagNeg;
+import static hprose.io.HproseTags.TagPoint;
+import static hprose.io.HproseTags.TagQuote;
+import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagUTC;
 import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +34,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public final class ValueReader implements HproseTags {
+public final class ValueReader {
 
     final static HproseException badEncoding(int c) {
         return new HproseException("bad utf-8 encoding at " + ((c < 0) ? "end of stream" : "0x" + Integer.toHexString(c & 255)));

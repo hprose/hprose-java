@@ -12,7 +12,7 @@
  *                                                        *
  * TreeSet unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,15 +25,15 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.TreeSet;
 
-final class TreeSetUnserializer implements HproseUnserializer {
+final class TreeSetUnserializer implements Unserializer {
 
     public final static TreeSetUnserializer instance = new TreeSetUnserializer();
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return CollectionUnserializer.readCollection(reader, buffer, TreeSet.class, type);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return CollectionUnserializer.readCollection(reader, stream, TreeSet.class, type);
     }
 

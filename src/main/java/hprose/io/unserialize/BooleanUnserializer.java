@@ -12,25 +12,36 @@
  *                                                        *
  * boolean unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTF8Char;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-public final class BooleanUnserializer implements HproseUnserializer, HproseTags {
+public final class BooleanUnserializer implements Unserializer {
 
     public final static BooleanUnserializer instance = new BooleanUnserializer();
 
-    final static boolean read(HproseReader reader, ByteBuffer buffer, int tag) throws IOException {
+    final static boolean read(Reader reader, ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
             case '0': return false;
             case '1':
@@ -55,7 +66,7 @@ public final class BooleanUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    final static boolean read(HproseReader reader, InputStream stream, int tag) throws IOException {
+    final static boolean read(Reader reader, InputStream stream, int tag) throws IOException {
         switch (tag) {
             case '0': return false;
             case '1':
@@ -80,7 +91,7 @@ public final class BooleanUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    public final static boolean read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    public final static boolean read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagTrue: return true;
@@ -90,7 +101,7 @@ public final class BooleanUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    public final static boolean read(HproseReader reader, InputStream stream) throws IOException {
+    public final static boolean read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagTrue: return true;
@@ -100,11 +111,11 @@ public final class BooleanUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return BooleanUnserializer.read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return BooleanUnserializer.read(reader, stream);
     }
 

@@ -12,20 +12,20 @@
  *                                                        *
  * MemberAccessor interface for Java.                     *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.accessor;
 
-import hprose.io.serialize.HproseWriter;
-import hprose.io.unserialize.HproseReader;
+import hprose.io.serialize.Writer;
+import hprose.io.unserialize.Reader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public interface MemberAccessor {
-    void serialize(HproseWriter writer, Object obj) throws IOException;
-    void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException;
-    void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException;
+    void serialize(Writer writer, Object obj) throws IOException;
+    void unserialize(Reader reader, ByteBuffer buffer, Object obj) throws IOException;
+    void unserialize(Reader reader, InputStream stream, Object obj) throws IOException;
 }

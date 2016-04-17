@@ -12,16 +12,16 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io;
 
+import hprose.io.serialize.Writer;
 import java.io.OutputStream;
 
-@Deprecated
-public final class HproseWriter extends hprose.io.serialize.HproseWriter {
+public final class HproseWriter extends Writer {
 
     public HproseWriter(OutputStream stream) {
         super(stream);

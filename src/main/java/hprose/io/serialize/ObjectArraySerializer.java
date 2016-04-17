@@ -12,7 +12,7 @@
  *                                                        *
  * Object array serializer class for Java.                *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,11 +25,11 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class ObjectArraySerializer implements HproseSerializer<Object[]> {
+final class ObjectArraySerializer implements Serializer<Object[]> {
 
     public final static ObjectArraySerializer instance = new ObjectArraySerializer();
 
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Object[] array) throws IOException {
+    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Object[] array) throws IOException {
         if (refer != null) refer.set(array);
         int length = array.length;
         stream.write(TagList);
@@ -43,7 +43,7 @@ final class ObjectArraySerializer implements HproseSerializer<Object[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Object[] obj) throws IOException {
+    public final void write(Writer writer, Object[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

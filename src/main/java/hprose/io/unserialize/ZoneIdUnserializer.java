@@ -8,11 +8,11 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ZoneIdUnserializer.java                              *
+ * ZoneIdUnserializer.java                                *
  *                                                        *
- * ZoneId unserializer class for Java.                  *
+ * ZoneId unserializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,17 +29,17 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.time.ZoneId;
 
-final class ZoneIdUnserializer implements HproseUnserializer {
+final class ZoneIdUnserializer implements Unserializer {
 
     public final static ZoneIdUnserializer instance = new ZoneIdUnserializer();
 
-    final static ZoneId readZoneId(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static ZoneId readZoneId(Reader reader, ByteBuffer buffer) throws IOException {
         ZoneId tz = ZoneId.of(ValueReader.readString(buffer));
         reader.refer.set(tz);
         return tz;
     }
 
-    final static ZoneId readZoneId(HproseReader reader, InputStream stream) throws IOException {
+    final static ZoneId readZoneId(Reader reader, InputStream stream) throws IOException {
         ZoneId tz = ZoneId.of(ValueReader.readString(stream));
         reader.refer.set(tz);
         return tz;
@@ -55,7 +55,7 @@ final class ZoneIdUnserializer implements HproseUnserializer {
         return ZoneId.of(obj.toString());
     }
 
-    final static ZoneId read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static ZoneId read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -66,7 +66,7 @@ final class ZoneIdUnserializer implements HproseUnserializer {
         }
     }
 
-    final static ZoneId read(HproseReader reader, InputStream stream) throws IOException {
+    final static ZoneId read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
@@ -77,11 +77,11 @@ final class ZoneIdUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

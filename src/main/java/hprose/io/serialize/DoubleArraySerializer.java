@@ -12,7 +12,7 @@
  *                                                        *
  * double array serializer class for Java.                *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class DoubleArraySerializer implements HproseSerializer<double[]> {
+final class DoubleArraySerializer implements Serializer<double[]> {
 
     public final static DoubleArraySerializer instance = new DoubleArraySerializer();
 
@@ -43,7 +43,7 @@ final class DoubleArraySerializer implements HproseSerializer<double[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, double[] obj) throws IOException {
+    public final void write(Writer writer, double[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

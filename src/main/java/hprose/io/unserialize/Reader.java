@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Jul 2, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,7 +22,28 @@ import hprose.common.HproseException;
 import hprose.io.ByteBufferInputStream;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagBytes;
+import static hprose.io.HproseTags.TagClass;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagError;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagGuid;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagMap;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagObject;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTF8Char;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import java.io.IOException;
@@ -66,7 +87,7 @@ final class RealReaderRefer implements ReaderRefer {
     public final void reset() { ref.clear(); }
 }
 
-public class HproseReader implements HproseTags {
+public class Reader {
 
     public final InputStream stream;
     private final ByteBuffer buffer;
@@ -75,19 +96,19 @@ public class HproseReader implements HproseTags {
     final IdentityHashMap<Object, String[]> membersref = new IdentityHashMap<Object, String[]>();
     final ReaderRefer refer;
 
-    public HproseReader(InputStream stream) {
+    public Reader(InputStream stream) {
         this(stream, HproseMode.MemberMode, false);
     }
 
-    public HproseReader(InputStream stream, boolean simple) {
+    public Reader(InputStream stream, boolean simple) {
         this(stream, HproseMode.MemberMode, simple);
     }
 
-    public HproseReader(InputStream stream, HproseMode mode) {
+    public Reader(InputStream stream, HproseMode mode) {
         this(stream, mode, false);
     }
 
-    public HproseReader(InputStream stream, HproseMode mode, boolean simple) {
+    public Reader(InputStream stream, HproseMode mode, boolean simple) {
         this.stream = stream;
         if (stream != null && stream instanceof ByteBufferInputStream) {
             buffer = ((ByteBufferInputStream)stream).stream.buffer;
@@ -99,38 +120,38 @@ public class HproseReader implements HproseTags {
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
 
-    public HproseReader(ByteBuffer buffer) {
+    public Reader(ByteBuffer buffer) {
         this(buffer, HproseMode.MemberMode, false);
     }
 
-    public HproseReader(ByteBuffer buffer, boolean simple) {
+    public Reader(ByteBuffer buffer, boolean simple) {
         this(buffer, HproseMode.MemberMode, simple);
     }
 
-    public HproseReader(ByteBuffer buffer, HproseMode mode) {
+    public Reader(ByteBuffer buffer, HproseMode mode) {
         this(buffer, mode, false);
     }
 
-    public HproseReader(ByteBuffer buffer, HproseMode mode, boolean simple) {
+    public Reader(ByteBuffer buffer, HproseMode mode, boolean simple) {
         this.stream = null;
         this.buffer = buffer;
         this.mode = mode;
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
 
-    public HproseReader(byte[] bytes) {
+    public Reader(byte[] bytes) {
         this(bytes, HproseMode.MemberMode, false);
     }
 
-    public HproseReader(byte[] bytes, boolean simple) {
+    public Reader(byte[] bytes, boolean simple) {
         this(bytes, HproseMode.MemberMode, simple);
     }
 
-    public HproseReader(byte[] bytes, HproseMode mode) {
+    public Reader(byte[] bytes, HproseMode mode) {
         this(bytes, mode, false);
     }
 
-    public HproseReader(byte[] bytes, HproseMode mode, boolean simple) {
+    public Reader(byte[] bytes, HproseMode mode, boolean simple) {
         this.stream = null;
         this.buffer = ByteBuffer.wrap(bytes);
         this.mode = mode;
@@ -732,10 +753,10 @@ public class HproseReader implements HproseTags {
 
     public final void readRaw(OutputStream ostream) throws IOException {
         if (buffer != null) {
-            HproseRawReader.readRaw(buffer, ostream, buffer.get());
+            RawReader.readRaw(buffer, ostream, buffer.get());
         }
         else {
-            HproseRawReader.readRaw(stream, ostream, stream.read());
+            RawReader.readRaw(stream, ostream, stream.read());
         }
     }
 

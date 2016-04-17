@@ -12,24 +12,36 @@
  *                                                        *
  * long unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTF8Char;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-public final class LongUnserializer implements HproseUnserializer, HproseTags {
+public final class LongUnserializer implements Unserializer {
 
     public final static LongUnserializer instance = new LongUnserializer();
 
-    final static long read(HproseReader reader, ByteBuffer buffer, int tag) throws IOException {
+    final static long read(Reader reader, ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
             case TagDouble: return Double.valueOf(ValueReader.readDouble(buffer)).longValue();
             case TagEmpty: return 0l;
@@ -44,7 +56,7 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    final static long read(HproseReader reader, InputStream stream, int tag) throws IOException {
+    final static long read(Reader reader, InputStream stream, int tag) throws IOException {
         switch (tag) {
             case TagDouble: return Double.valueOf(ValueReader.readDouble(stream)).longValue();
             case TagEmpty: return 0l;
@@ -59,7 +71,7 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    public final static long read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    public final static long read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
         if (tag == TagInteger || tag == TagLong) return ValueReader.readLong(buffer, TagSemicolon);
@@ -67,7 +79,7 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
         return read(reader, buffer, tag);
     }
 
-    public final static long read(HproseReader reader, InputStream stream) throws IOException {
+    public final static long read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag >= '0' && tag <= '9') return (long)(tag - '0');
         if (tag == TagInteger || tag == TagLong) return ValueReader.readLong(stream, TagSemicolon);
@@ -75,11 +87,11 @@ public final class LongUnserializer implements HproseUnserializer, HproseTags {
         return read(reader, stream, tag);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

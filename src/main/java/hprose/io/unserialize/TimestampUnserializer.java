@@ -12,14 +12,22 @@
  *                                                        *
  * Timestamp unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
 import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +35,7 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
 
-final class TimestampUnserializer implements HproseUnserializer, HproseTags {
+final class TimestampUnserializer implements Unserializer {
 
     public final static TimestampUnserializer instance = new TimestampUnserializer();
 
@@ -41,7 +49,7 @@ final class TimestampUnserializer implements HproseUnserializer, HproseTags {
         return Timestamp.valueOf(obj.toString());
     }
 
-    final static Timestamp read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Timestamp read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toTimestamp();
@@ -60,7 +68,7 @@ final class TimestampUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    final static Timestamp read(HproseReader reader, InputStream stream) throws IOException {
+    final static Timestamp read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toTimestamp();
@@ -79,11 +87,11 @@ final class TimestampUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

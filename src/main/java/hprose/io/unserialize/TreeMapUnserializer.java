@@ -12,7 +12,7 @@
  *                                                        *
  * TreeMap unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,15 +25,15 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.TreeMap;
 
-final class TreeMapUnserializer implements HproseUnserializer {
+final class TreeMapUnserializer implements Unserializer {
 
     public final static TreeMapUnserializer instance = new TreeMapUnserializer();
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return MapUnserializer.readMap(reader, buffer, TreeMap.class, type);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return MapUnserializer.readMap(reader, stream, TreeMap.class, type);
     }
 

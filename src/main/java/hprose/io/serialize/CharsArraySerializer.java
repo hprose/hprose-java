@@ -12,7 +12,7 @@
  *                                                        *
  * chars array serializer class for Java.                 *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class CharsArraySerializer implements HproseSerializer<char[][]> {
+final class CharsArraySerializer implements Serializer<char[][]> {
 
     public final static CharsArraySerializer instance = new CharsArraySerializer();
 
@@ -50,7 +50,7 @@ final class CharsArraySerializer implements HproseSerializer<char[][]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, char[][] obj) throws IOException {
+    public final void write(Writer writer, char[][] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

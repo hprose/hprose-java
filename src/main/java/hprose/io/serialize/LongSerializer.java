@@ -12,7 +12,7 @@
  *                                                        *
  * long serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,11 +21,11 @@ package hprose.io.serialize;
 
 import java.io.IOException;
 
-final class LongSerializer implements HproseSerializer<Long> {
+final class LongSerializer implements Serializer<Long> {
 
     public final static LongSerializer instance = new LongSerializer();
 
-    public final void write(HproseWriter writer, Long obj) throws IOException {
+    public final void write(Writer writer, Long obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

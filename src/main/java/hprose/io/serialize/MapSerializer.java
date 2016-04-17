@@ -12,7 +12,7 @@
  *                                                        *
  * Map serializer class for Java.                         *
  *                                                        *
- * LastModified: Apr 16, 2016                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,11 +27,11 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-final class MapSerializer implements HproseSerializer<Map<?, ?>> {
+final class MapSerializer implements Serializer<Map<?, ?>> {
 
     public final static MapSerializer instance = new MapSerializer();
 
-    public final static <K, V> void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Map<K, V> map) throws IOException {
+    public final static <K, V> void write(Writer writer, OutputStream stream, WriterRefer refer, Map<K, V> map) throws IOException {
         if (refer != null) refer.set(map);
         int count = map.size();
         stream.write(TagMap);
@@ -48,7 +48,7 @@ final class MapSerializer implements HproseSerializer<Map<?, ?>> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Map<?, ?> obj) throws IOException {
+    public final void write(Writer writer, Map<?, ?> obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

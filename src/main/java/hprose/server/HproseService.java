@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jun 8, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,9 +26,17 @@ import hprose.common.HproseMethods;
 import hprose.common.HproseResultMode;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
-import hprose.io.HproseTags;
-import hprose.io.serialize.HproseWriter;
-import hprose.io.unserialize.HproseReader;
+import static hprose.io.HproseTags.TagArgument;
+import static hprose.io.HproseTags.TagCall;
+import static hprose.io.HproseTags.TagEnd;
+import static hprose.io.HproseTags.TagError;
+import static hprose.io.HproseTags.TagFunctions;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagOpenbrace;
+import static hprose.io.HproseTags.TagResult;
+import static hprose.io.HproseTags.TagTrue;
+import hprose.io.serialize.Writer;
+import hprose.io.unserialize.Reader;
 import hprose.util.StrUtil;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -37,7 +45,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.concurrent.Future;
 
-public abstract class HproseService implements HproseTags {
+public abstract class HproseService {
 
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode = HproseMode.MemberMode;
@@ -517,7 +525,7 @@ public abstract class HproseService implements HproseTags {
             event.onSendError(e, context);
         }
         ByteBufferStream data = new ByteBufferStream();
-        HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, true);
+        Writer writer = new Writer(data.getOutputStream(), mode, true);
         data.write(TagError);
         writer.writeString(getErrorMessage(e));
         data.write(TagEnd);
@@ -525,7 +533,7 @@ public abstract class HproseService implements HproseTags {
     }
 
     protected ByteBufferStream doInvoke(ByteBufferStream stream, HproseMethods methods, HproseContext context) throws Throwable {
-        HproseReader reader = new HproseReader(stream.getInputStream(), mode);
+        Reader reader = new Reader(stream.getInputStream(), mode);
         ByteBufferStream data = new ByteBufferStream();
         int tag;
         do {
@@ -632,7 +640,7 @@ public abstract class HproseService implements HproseTags {
             else {
                 data.write(TagResult);
                 boolean simple = remoteMethod.simple;
-                HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, simple);
+                Writer writer = new Writer(data.getOutputStream(), mode, simple);
                 if (remoteMethod.mode == HproseResultMode.Serialized) {
                     data.write((byte[])result);
                 }
@@ -657,7 +665,7 @@ public abstract class HproseService implements HproseTags {
             names.addAll(methods.getAllNames());
         }
         ByteBufferStream data = new ByteBufferStream();
-        HproseWriter writer = new HproseWriter(data.getOutputStream(), mode, true);
+        Writer writer = new Writer(data.getOutputStream(), mode, true);
         data.write(TagFunctions);
         writer.writeList(names);
         data.write(TagEnd);

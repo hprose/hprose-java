@@ -12,17 +12,17 @@
  *                                                        *
  * DoubleFieldAccessor class for Java.                    *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.accessor;
 
 import hprose.common.HproseException;
-import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
+import hprose.io.serialize.Writer;
 import hprose.io.unserialize.DoubleUnserializer;
-import hprose.io.unserialize.HproseReader;
+import hprose.io.unserialize.Reader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -38,7 +38,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void serialize(HproseWriter writer, Object obj) throws IOException {
+    public void serialize(Writer writer, Object obj) throws IOException {
         double value;
         try {
             value = Accessors.unsafe.getDouble(obj, offset);
@@ -50,7 +50,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
+    public void unserialize(Reader reader, ByteBuffer buffer, Object obj) throws IOException {
         double value = DoubleUnserializer.read(reader, buffer);
         try {
             Accessors.unsafe.putDouble(obj, offset, value);
@@ -61,7 +61,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
+    public void unserialize(Reader reader, InputStream stream, Object obj) throws IOException {
         double value = DoubleUnserializer.read(reader, stream);
         try {
             Accessors.unsafe.putDouble(obj, offset, value);

@@ -12,7 +12,7 @@
  *                                                        *
  * Double unserializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,11 +28,11 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class DoubleObjectUnserializer implements HproseUnserializer {
+final class DoubleObjectUnserializer implements Unserializer {
 
     public final static DoubleObjectUnserializer instance = new DoubleObjectUnserializer();
 
-    final static Double read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Double read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagDouble) return ValueReader.readDouble(buffer);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
@@ -41,7 +41,7 @@ final class DoubleObjectUnserializer implements HproseUnserializer {
         return DoubleUnserializer.read(reader, buffer, tag);
     }
 
-    final static Double read(HproseReader reader, InputStream stream) throws IOException {
+    final static Double read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagDouble) return ValueReader.readDouble(stream);
         if (tag >= '0' && tag <= '9') return (double)(tag - '0');
@@ -50,11 +50,11 @@ final class DoubleObjectUnserializer implements HproseUnserializer {
         return DoubleUnserializer.read(reader, stream, tag);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 }

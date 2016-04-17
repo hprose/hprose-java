@@ -12,7 +12,7 @@
  *                                                        *
  * Pattern unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,17 +29,17 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
-final class PatternUnserializer implements HproseUnserializer {
+final class PatternUnserializer implements Unserializer {
 
     public final static PatternUnserializer instance = new PatternUnserializer();
 
-    final static Pattern readPattern(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Pattern readPattern(Reader reader, ByteBuffer buffer) throws IOException {
         Pattern pattern = Pattern.compile(ValueReader.readString(buffer));
         reader.refer.set(pattern);
         return pattern;
     }
 
-    final static Pattern readPattern(HproseReader reader, InputStream stream) throws IOException {
+    final static Pattern readPattern(Reader reader, InputStream stream) throws IOException {
         Pattern pattern = Pattern.compile(ValueReader.readString(stream));
         reader.refer.set(pattern);
         return pattern;
@@ -55,7 +55,7 @@ final class PatternUnserializer implements HproseUnserializer {
         return Pattern.compile(obj.toString());
     }
 
-    final static Pattern read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Pattern read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -66,7 +66,7 @@ final class PatternUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Pattern read(HproseReader reader, InputStream stream) throws IOException {
+    final static Pattern read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
@@ -77,11 +77,11 @@ final class PatternUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

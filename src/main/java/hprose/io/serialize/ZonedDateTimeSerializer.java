@@ -12,7 +12,7 @@
  *                                                        *
  * ZonedDateTime serializer class for Java.               *
  *                                                        *
- * LastModified: Jun 23, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-final class ZonedDateTimeSerializer implements HproseSerializer<ZonedDateTime> {
+final class ZonedDateTimeSerializer implements Serializer<ZonedDateTime> {
 
     public final static ZonedDateTimeSerializer instance = new ZonedDateTimeSerializer();
 
@@ -51,7 +51,7 @@ final class ZonedDateTimeSerializer implements HproseSerializer<ZonedDateTime> {
         }
     }
 
-    public final void write(HproseWriter writer, ZonedDateTime obj) throws IOException {
+    public final void write(Writer writer, ZonedDateTime obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

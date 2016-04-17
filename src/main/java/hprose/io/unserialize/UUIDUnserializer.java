@@ -12,7 +12,7 @@
  *                                                        *
  * UUID unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,24 +20,29 @@
 package hprose.io.unserialize;
 
 import hprose.common.HproseException;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagBytes;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagGuid;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-final class UUIDUnserializer implements HproseUnserializer, HproseTags {
+final class UUIDUnserializer implements Unserializer {
 
     public final static UUIDUnserializer instance = new UUIDUnserializer();
 
-    final static UUID readUUID(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static UUID readUUID(Reader reader, ByteBuffer buffer) throws IOException {
         UUID uuid = ValueReader.readUUID(buffer);
         reader.refer.set(uuid);
         return uuid;
     }
 
-    final static UUID readUUID(HproseReader reader, InputStream stream) throws IOException {
+    final static UUID readUUID(Reader reader, InputStream stream) throws IOException {
         UUID uuid = ValueReader.readUUID(stream);
         reader.refer.set(uuid);
         return uuid;
@@ -59,7 +64,7 @@ final class UUIDUnserializer implements HproseUnserializer, HproseTags {
         throw ValueReader.castError(obj, UUID.class);
     }
 
-    final static UUID read(HproseReader reader, ByteBuffer buffer) throws IOException  {
+    final static UUID read(Reader reader, ByteBuffer buffer) throws IOException  {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -72,7 +77,7 @@ final class UUIDUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    final static UUID read(HproseReader reader, InputStream stream) throws IOException  {
+    final static UUID read(Reader reader, InputStream stream) throws IOException  {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
@@ -85,11 +90,11 @@ final class UUIDUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

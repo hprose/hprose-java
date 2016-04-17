@@ -12,7 +12,7 @@
  *                                                        *
  * StringBuffer serializer class for Java.                *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class StringBufferSerializer implements HproseSerializer<StringBuffer> {
+final class StringBufferSerializer implements Serializer<StringBuffer> {
 
     public final static StringBufferSerializer instance = new StringBufferSerializer();
 
@@ -34,7 +34,7 @@ final class StringBufferSerializer implements HproseSerializer<StringBuffer> {
         ValueWriter.write(stream, s.toString());
     }
 
-    public final void write(HproseWriter writer, StringBuffer obj) throws IOException {
+    public final void write(Writer writer, StringBuffer obj) throws IOException {
         OutputStream stream = writer.stream;
         switch (obj.length()) {
             case 0:

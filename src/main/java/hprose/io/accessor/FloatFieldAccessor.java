@@ -12,17 +12,17 @@
  *                                                        *
  * FloatFieldAccessor class for Java.                     *
  *                                                        *
- * LastModified: Jun 25, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.accessor;
 
 import hprose.common.HproseException;
-import hprose.io.serialize.HproseWriter;
 import hprose.io.serialize.ValueWriter;
+import hprose.io.serialize.Writer;
 import hprose.io.unserialize.FloatUnserializer;
-import hprose.io.unserialize.HproseReader;
+import hprose.io.unserialize.Reader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -38,7 +38,7 @@ public final class FloatFieldAccessor implements MemberAccessor {
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void serialize(HproseWriter writer, Object obj) throws IOException {
+    public void serialize(Writer writer, Object obj) throws IOException {
         float value;
         try {
             value = Accessors.unsafe.getFloat(obj, offset);
@@ -50,7 +50,7 @@ public final class FloatFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, ByteBuffer buffer, Object obj) throws IOException {
+    public void unserialize(Reader reader, ByteBuffer buffer, Object obj) throws IOException {
         float value = FloatUnserializer.read(reader, buffer);
         try {
             Accessors.unsafe.putFloat(obj, offset, value);
@@ -61,7 +61,7 @@ public final class FloatFieldAccessor implements MemberAccessor {
     }
 
     @Override
-    public void unserialize(HproseReader reader, InputStream stream, Object obj) throws IOException {
+    public void unserialize(Reader reader, InputStream stream, Object obj) throws IOException {
         float value = FloatUnserializer.read(reader, stream);
         try {
             Accessors.unsafe.putFloat(obj, offset, value);

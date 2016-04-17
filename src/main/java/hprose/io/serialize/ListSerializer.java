@@ -12,7 +12,7 @@
  *                                                        *
  * List serializer class for Java.                        *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,11 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
 
-final class ListSerializer implements HproseSerializer<List> {
+final class ListSerializer implements Serializer<List> {
 
     public final static ListSerializer instance = new ListSerializer();
 
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, List list) throws IOException {
+    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, List list) throws IOException {
         if (refer != null) refer.set(list);
         int count = list.size();
         stream.write(TagList);
@@ -53,7 +53,7 @@ final class ListSerializer implements HproseSerializer<List> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, List obj) throws IOException {
+    public final void write(Writer writer, List obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

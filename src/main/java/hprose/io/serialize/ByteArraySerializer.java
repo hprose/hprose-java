@@ -12,7 +12,7 @@
  *                                                        *
  * byte array serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import static hprose.io.HproseTags.TagQuote;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class ByteArraySerializer implements HproseSerializer<byte[]> {
+final class ByteArraySerializer implements Serializer<byte[]> {
 
     public final static ByteArraySerializer instance = new ByteArraySerializer();
 
@@ -40,7 +40,7 @@ final class ByteArraySerializer implements HproseSerializer<byte[]> {
         stream.write(TagQuote);
     }
 
-    public final void write(HproseWriter writer, byte[] obj) throws IOException {
+    public final void write(Writer writer, byte[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

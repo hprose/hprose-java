@@ -12,7 +12,7 @@
  *                                                        *
  * character serializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,11 +21,11 @@ package hprose.io.serialize;
 
 import java.io.IOException;
 
-final class CharSerializer implements HproseSerializer<Character> {
+final class CharSerializer implements Serializer<Character> {
 
     public final static CharSerializer instance = new CharSerializer();
 
-    public final void write(HproseWriter writer, Character obj) throws IOException {
+    public final void write(Writer writer, Character obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

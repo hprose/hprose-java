@@ -12,20 +12,34 @@
  *                                                        *
  * value writer class for Java.                           *
  *                                                        *
- * LastModified: Jun 18, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.serialize;
 
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNeg;
+import static hprose.io.HproseTags.TagPoint;
+import static hprose.io.HproseTags.TagPos;
+import static hprose.io.HproseTags.TagQuote;
+import static hprose.io.HproseTags.TagSemicolon;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTF8Char;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
 
-public final class ValueWriter implements HproseTags {
+public final class ValueWriter {
     private final static byte[] digits    = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
     private final static byte[] DigitTens = { '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '1', '1', '1', '1',

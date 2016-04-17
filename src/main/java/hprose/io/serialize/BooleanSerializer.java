@@ -12,7 +12,7 @@
  *                                                        *
  * boolean serializer class for Java.                     *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,11 +21,11 @@ package hprose.io.serialize;
 
 import java.io.IOException;
 
-final class BooleanSerializer implements HproseSerializer<Boolean> {
+final class BooleanSerializer implements Serializer<Boolean> {
 
     public final static BooleanSerializer instance = new BooleanSerializer();
 
-    public final void write(HproseWriter writer, Boolean obj) throws IOException {
+    public final void write(Writer writer, Boolean obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

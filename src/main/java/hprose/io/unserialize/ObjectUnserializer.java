@@ -12,7 +12,7 @@
  *                                                        *
  * other type unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -37,11 +37,11 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-final class ObjectUnserializer implements HproseUnserializer {
+final class ObjectUnserializer implements Unserializer {
 
     public final static ObjectUnserializer instance = new ObjectUnserializer();
 
-    private static <T> T readMapAsObject(HproseReader reader, ByteBuffer buffer, Class<T> type) throws IOException {
+    private static <T> T readMapAsObject(Reader reader, ByteBuffer buffer, Class<T> type) throws IOException {
         T obj = ConstructorAccessor.newInstance(type);
         if (obj == null) {
             throw new HproseException("Can not make an instance of type: " + type.toString());
@@ -62,7 +62,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         return obj;
     }
 
-    private static <T> T readMapAsObject(HproseReader reader, InputStream stream, Class<T> type) throws IOException {
+    private static <T> T readMapAsObject(Reader reader, InputStream stream, Class<T> type) throws IOException {
         T obj = ConstructorAccessor.newInstance(type);
         if (obj == null) {
             throw new HproseException("Can not make an instance of type: " + type.toString());
@@ -83,7 +83,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         return obj;
     }
 
-    final static void readClass(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static void readClass(Reader reader, ByteBuffer buffer) throws IOException {
         String className = ValueReader.readString(buffer);
         int count = ValueReader.readInt(buffer, TagOpenbrace);
         String[] memberNames = new String[count];
@@ -97,7 +97,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         reader.membersref.put(key, memberNames);
     }
 
-    final static void readClass(HproseReader reader, InputStream stream) throws IOException {
+    final static void readClass(Reader reader, InputStream stream) throws IOException {
         String className = ValueReader.readString(stream);
         int count = ValueReader.readInt(stream, TagOpenbrace);
         String[] memberNames = new String[count];
@@ -111,7 +111,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         reader.membersref.put(key, memberNames);
     }
 
-    final static Object readObject(HproseReader reader, ByteBuffer buffer, Class<?> type) throws IOException {
+    final static Object readObject(Reader reader, ByteBuffer buffer, Class<?> type) throws IOException {
         Object c = reader.classref.get(ValueReader.readInt(buffer, TagOpenbrace));
         String[] memberNames = reader.membersref.get(c);
         int count = memberNames.length;
@@ -148,7 +148,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Object readObject(HproseReader reader, InputStream stream, Class<?> type) throws IOException {
+    final static Object readObject(Reader reader, InputStream stream, Class<?> type) throws IOException {
         Object c = reader.classref.get(ValueReader.readInt(stream, TagOpenbrace));
         String[] memberNames = reader.membersref.get(c);
         int count = memberNames.length;
@@ -185,7 +185,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Object read(HproseReader reader, ByteBuffer buffer, Class<?> type) throws IOException {
+    final static Object read(Reader reader, ByteBuffer buffer, Class<?> type) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -197,7 +197,7 @@ final class ObjectUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Object read(HproseReader reader, InputStream stream, Class<?> type) throws IOException {
+    final static Object read(Reader reader, InputStream stream, Class<?> type) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -209,11 +209,11 @@ final class ObjectUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer, cls);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream, cls);
     }
 

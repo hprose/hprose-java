@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicLongArray serializer class for Java.             *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-final class AtomicLongArraySerializer implements HproseSerializer<AtomicLongArray> {
+final class AtomicLongArraySerializer implements Serializer<AtomicLongArray> {
 
     public final static AtomicLongArraySerializer instance = new AtomicLongArraySerializer();
 
@@ -44,7 +44,7 @@ final class AtomicLongArraySerializer implements HproseSerializer<AtomicLongArra
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, AtomicLongArray obj) throws IOException {
+    public final void write(Writer writer, AtomicLongArray obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

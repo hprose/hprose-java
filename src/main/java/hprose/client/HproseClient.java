@@ -12,13 +12,12 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 13, 2016                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
-import hprose.net.ReceiveCallback;
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseContext;
@@ -30,9 +29,14 @@ import hprose.common.HproseInvoker;
 import hprose.common.HproseResultMode;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
-import hprose.io.HproseTags;
-import hprose.io.serialize.HproseWriter;
-import hprose.io.unserialize.HproseReader;
+import static hprose.io.HproseTags.TagArgument;
+import static hprose.io.HproseTags.TagCall;
+import static hprose.io.HproseTags.TagEnd;
+import static hprose.io.HproseTags.TagError;
+import static hprose.io.HproseTags.TagResult;
+import hprose.io.serialize.Writer;
+import hprose.io.unserialize.Reader;
+import hprose.net.ReceiveCallback;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import hprose.util.concurrent.Threads;
@@ -51,7 +55,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 
-public abstract class HproseClient implements HproseInvoker, HproseTags {
+public abstract class HproseClient implements HproseInvoker {
     protected final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
@@ -585,7 +589,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
 
     private ByteBufferStream doOutput(String functionName, Object[] arguments, boolean byRef, boolean simple, HproseContext context) throws IOException {
         ByteBufferStream stream = new ByteBufferStream();
-        HproseWriter hproseWriter = new HproseWriter(stream.getOutputStream(), mode, simple);
+        Writer hproseWriter = new Writer(stream.getOutputStream(), mode, simple);
         stream.write(TagCall);
         hproseWriter.writeString(functionName);
         if ((arguments != null) && (arguments.length > 0 || byRef)) {
@@ -641,7 +645,7 @@ public abstract class HproseClient implements HproseInvoker, HproseTags {
             return ByteBufferStreamToType(stream, returnType);
         }
         Object result = null;
-        HproseReader hproseReader = new HproseReader(stream.getInputStream(), mode);
+        Reader hproseReader = new Reader(stream.getInputStream(), mode);
         while ((tag = stream.read()) != TagEnd) {
             switch (tag) {
                 case TagResult:

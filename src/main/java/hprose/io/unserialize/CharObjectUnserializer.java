@@ -12,7 +12,7 @@
  *                                                        *
  * Character unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,29 +26,29 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class CharObjectUnserializer implements HproseUnserializer {
+final class CharObjectUnserializer implements Unserializer {
 
     public final static CharObjectUnserializer instance = new CharObjectUnserializer();
 
-    final static Character read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Character read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagUTF8Char) return ValueReader.readChar(buffer);
         if (tag == TagNull) return null;
         return CharUnserializer.read(reader, buffer, tag);
     }
 
-    final static Character read(HproseReader reader, InputStream stream) throws IOException {
+    final static Character read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagUTF8Char) return ValueReader.readChar(stream);
         if (tag == TagNull) return null;
         return CharUnserializer.read(reader, stream, tag);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

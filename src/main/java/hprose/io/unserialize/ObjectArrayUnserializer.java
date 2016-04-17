@@ -12,7 +12,7 @@
  *                                                        *
  * Object array unserializer class for Java.              *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,11 +29,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class ObjectArrayUnserializer implements HproseUnserializer {
+final class ObjectArrayUnserializer implements Unserializer {
 
     public final static ObjectArrayUnserializer instance = new ObjectArrayUnserializer();
 
-    final static Object[] readArray(HproseReader reader, ByteBuffer buffer, int count) throws IOException {
+    final static Object[] readArray(Reader reader, ByteBuffer buffer, int count) throws IOException {
         Object[] a = new Object[count];
         reader.refer.set(a);
         for (int i = 0; i < count; ++i) {
@@ -43,7 +43,7 @@ final class ObjectArrayUnserializer implements HproseUnserializer {
         return a;
     }
 
-    final static Object[] readArray(HproseReader reader, InputStream stream, int count) throws IOException {
+    final static Object[] readArray(Reader reader, InputStream stream, int count) throws IOException {
         Object[] a = new Object[count];
         reader.refer.set(a);
         for (int i = 0; i < count; ++i) {
@@ -53,7 +53,7 @@ final class ObjectArrayUnserializer implements HproseUnserializer {
         return a;
     }
 
-    final static Object[] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Object[] read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -63,7 +63,7 @@ final class ObjectArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Object[] read(HproseReader reader, InputStream stream) throws IOException {
+    final static Object[] read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -73,11 +73,11 @@ final class ObjectArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

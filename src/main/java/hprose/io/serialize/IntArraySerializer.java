@@ -12,7 +12,7 @@
  *                                                        *
  * int array serializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class IntArraySerializer implements HproseSerializer<int[]> {
+final class IntArraySerializer implements Serializer<int[]> {
 
     public final static IntArraySerializer instance = new IntArraySerializer();
 
@@ -43,7 +43,7 @@ final class IntArraySerializer implements HproseSerializer<int[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, int[] obj) throws IOException {
+    public final void write(Writer writer, int[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

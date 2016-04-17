@@ -12,14 +12,19 @@
  *                                                        *
  * OffsetDateTime unserializer class for Java.            *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
 import hprose.util.DateTime;
 import hprose.util.TimeZoneUtil;
 import java.io.IOException;
@@ -29,7 +34,7 @@ import java.nio.ByteBuffer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-final class OffsetDateTimeUnserializer implements HproseUnserializer, HproseTags {
+final class OffsetDateTimeUnserializer implements Unserializer {
 
     public final static OffsetDateTimeUnserializer instance = new OffsetDateTimeUnserializer();
 
@@ -50,7 +55,7 @@ final class OffsetDateTimeUnserializer implements HproseUnserializer, HproseTags
         return OffsetDateTime.parse(obj.toString());
     }
 
-    final static OffsetDateTime read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static OffsetDateTime read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagDate: return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, buffer));
@@ -63,7 +68,7 @@ final class OffsetDateTimeUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    final static OffsetDateTime read(HproseReader reader, InputStream stream) throws IOException {
+    final static OffsetDateTime read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagDate: return toOffsetDateTime(DefaultUnserializer.readDateTime(reader, stream));
@@ -76,11 +81,11 @@ final class OffsetDateTimeUnserializer implements HproseUnserializer, HproseTags
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

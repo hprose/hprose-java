@@ -12,7 +12,7 @@
  *                                                        *
  * default unserializer class for Java.                   *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,8 +20,28 @@
 package hprose.io.unserialize;
 
 import hprose.common.HproseException;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagBytes;
+import static hprose.io.HproseTags.TagClass;
+import static hprose.io.HproseTags.TagDate;
+import static hprose.io.HproseTags.TagDouble;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagError;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagGuid;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagInteger;
+import static hprose.io.HproseTags.TagList;
+import static hprose.io.HproseTags.TagLong;
+import static hprose.io.HproseTags.TagMap;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagObject;
 import static hprose.io.HproseTags.TagOpenbrace;
+import static hprose.io.HproseTags.TagRef;
+import static hprose.io.HproseTags.TagString;
+import static hprose.io.HproseTags.TagTime;
+import static hprose.io.HproseTags.TagTrue;
+import static hprose.io.HproseTags.TagUTF8Char;
 import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,36 +50,36 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-final class DefaultUnserializer implements HproseUnserializer, HproseTags {
+final class DefaultUnserializer implements Unserializer {
 
     public final static DefaultUnserializer instance = new DefaultUnserializer();
 
-    final static DateTime readDateTime(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static DateTime readDateTime(Reader reader, ByteBuffer buffer) throws IOException {
         DateTime datetime = ValueReader.readDateTime(buffer);
         reader.refer.set(datetime);
         return datetime;
     }
 
-    final static DateTime readDateTime(HproseReader reader, InputStream stream) throws IOException {
+    final static DateTime readDateTime(Reader reader, InputStream stream) throws IOException {
         DateTime datetime = ValueReader.readDateTime(stream);
         reader.refer.set(datetime);
         return datetime;
     }
 
-    final static DateTime readTime(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static DateTime readTime(Reader reader, ByteBuffer buffer) throws IOException {
         DateTime datetime = ValueReader.readTime(buffer);
         reader.refer.set(datetime);
         return datetime;
     }
 
-    final static DateTime readTime(HproseReader reader, InputStream stream) throws IOException {
+    final static DateTime readTime(Reader reader, InputStream stream) throws IOException {
         DateTime datetime = ValueReader.readTime(stream);
         reader.refer.set(datetime);
         return datetime;
     }
 
     @SuppressWarnings({"unchecked"})
-    final static ArrayList readList(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static ArrayList readList(Reader reader, ByteBuffer buffer) throws IOException {
         int count = ValueReader.readInt(buffer, TagOpenbrace);
         ArrayList a = new ArrayList(count);
         reader.refer.set(a);
@@ -71,7 +91,7 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static ArrayList readList(HproseReader reader, InputStream stream) throws IOException {
+    final static ArrayList readList(Reader reader, InputStream stream) throws IOException {
         int count = ValueReader.readInt(stream, TagOpenbrace);
         ArrayList a = new ArrayList(count);
         reader.refer.set(a);
@@ -83,7 +103,7 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static HashMap readMap(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static HashMap readMap(Reader reader, ByteBuffer buffer) throws IOException {
         int count = ValueReader.readInt(buffer, TagOpenbrace);
         HashMap map = new HashMap(count);
         reader.refer.set(map);
@@ -97,7 +117,7 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
     }
 
     @SuppressWarnings({"unchecked"})
-    final static HashMap readMap(HproseReader reader, InputStream stream) throws IOException {
+    final static HashMap readMap(Reader reader, InputStream stream) throws IOException {
         int count = ValueReader.readInt(stream, TagOpenbrace);
         HashMap map = new HashMap(count);
         reader.refer.set(map);
@@ -110,7 +130,7 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
         return map;
     }
 
-    final static Object read(HproseReader reader, ByteBuffer buffer, int tag) throws IOException {
+    final static Object read(Reader reader, ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
             case '0': return 0;
             case '1': return 1;
@@ -149,7 +169,7 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    final static Object read(HproseReader reader, InputStream stream, int tag) throws IOException {
+    final static Object read(Reader reader, InputStream stream, int tag) throws IOException {
         switch (tag) {
             case '0': return 0;
             case '1': return 1;
@@ -188,19 +208,19 @@ final class DefaultUnserializer implements HproseUnserializer, HproseTags {
         }
     }
 
-    final static Object read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Object read(Reader reader, ByteBuffer buffer) throws IOException {
         return read(reader, buffer, buffer.get());
     }
 
-    final static Object read(HproseReader reader, InputStream stream) throws IOException {
+    final static Object read(Reader reader, InputStream stream) throws IOException {
         return read(reader, stream, stream.read());
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

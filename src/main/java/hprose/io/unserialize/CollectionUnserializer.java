@@ -12,7 +12,7 @@
  *                                                        *
  * Collection unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,12 +34,12 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
-final class CollectionUnserializer implements HproseUnserializer {
+final class CollectionUnserializer implements Unserializer {
 
     public final static CollectionUnserializer instance = new CollectionUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    private static <T> Collection<T> readCollection(HproseReader reader, ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
+    private static <T> Collection<T> readCollection(Reader reader, ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -47,7 +47,7 @@ final class CollectionUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(buffer, TagOpenbrace);
                 Collection<T> a = (Collection<T>)ConstructorAccessor.newInstance(cls);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a.add((T)unserializer.read(reader, buffer, componentClass, componentType));
                 }
@@ -60,7 +60,7 @@ final class CollectionUnserializer implements HproseUnserializer {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <T> Collection<T> readCollection(HproseReader reader, InputStream stream, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
+    private static <T> Collection<T> readCollection(Reader reader, InputStream stream, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -68,7 +68,7 @@ final class CollectionUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(stream, TagOpenbrace);
                 Collection<T> a = (Collection<T>)ConstructorAccessor.newInstance(cls);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a.add((T)unserializer.read(reader, stream, componentClass, componentType));
                 }
@@ -80,7 +80,7 @@ final class CollectionUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Collection readCollection(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    final static Collection readCollection(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         Type componentType;
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
@@ -94,7 +94,7 @@ final class CollectionUnserializer implements HproseUnserializer {
         return readCollection(reader, buffer, cls, componentClass, componentType);
     }
 
-    final static Collection readCollection(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    final static Collection readCollection(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         Type componentType;
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
@@ -108,7 +108,7 @@ final class CollectionUnserializer implements HproseUnserializer {
         return readCollection(reader, stream, cls, componentClass, componentType);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         if (!Modifier.isInterface(cls.getModifiers()) && !Modifier.isAbstract(cls.getModifiers())) {
             return readCollection(reader, buffer, cls, type);
         }
@@ -117,7 +117,7 @@ final class CollectionUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         if (!Modifier.isInterface(cls.getModifiers()) && !Modifier.isAbstract(cls.getModifiers())) {
             return readCollection(reader, stream, cls, type);
         }

@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicLong unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,15 +25,15 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
-final class AtomicLongUnserializer implements HproseUnserializer {
+final class AtomicLongUnserializer implements Unserializer {
 
     public final static AtomicLongUnserializer instance = new AtomicLongUnserializer();
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return new AtomicLong(LongUnserializer.read(reader, buffer));
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return new AtomicLong(LongUnserializer.read(reader, stream));
     }
 

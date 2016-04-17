@@ -12,7 +12,7 @@
  *                                                        *
  * Collection serializer class for Java.                  *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,11 +27,11 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 
-final class CollectionSerializer implements HproseSerializer<Collection> {
+final class CollectionSerializer implements Serializer<Collection> {
 
     public final static CollectionSerializer instance = new CollectionSerializer();
 
-    public final static void write(HproseWriter writer, OutputStream stream, WriterRefer refer, Collection collection) throws IOException {
+    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Collection collection) throws IOException {
         if (refer != null) refer.set(collection);
         int count = collection.size();
         stream.write(TagList);
@@ -45,7 +45,7 @@ final class CollectionSerializer implements HproseSerializer<Collection> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Collection obj) throws IOException {
+    public final void write(Writer writer, Collection obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

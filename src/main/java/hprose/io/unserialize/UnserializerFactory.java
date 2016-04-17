@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Aug 8, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -60,7 +60,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Pattern;
 
 public final class UnserializerFactory {
-    private final static ConcurrentHashMap<Class<?>, HproseUnserializer> unserializers = new ConcurrentHashMap<Class<?>, HproseUnserializer>();
+    private final static ConcurrentHashMap<Class<?>, Unserializer> unserializers = new ConcurrentHashMap<Class<?>, Unserializer>();
     static {
         unserializers.put(void.class, DefaultUnserializer.instance);
         unserializers.put(boolean.class, BooleanUnserializer.instance);
@@ -164,8 +164,8 @@ public final class UnserializerFactory {
         }
     }
 
-    public final static HproseUnserializer get(Class<?> type) {
-        HproseUnserializer unserializer = unserializers.get(type);
+    public final static Unserializer get(Class<?> type) {
+        Unserializer unserializer = unserializers.get(type);
         if (unserializer == null) {
             if (type.isEnum()) {
                 unserializer = EnumUnserializer.instance;
@@ -193,7 +193,7 @@ public final class UnserializerFactory {
         return unserializer;
     }
 
-    public final static void register(Class<?> type, HproseUnserializer unserializer) {
+    public final static void register(Class<?> type, Unserializer unserializer) {
         unserializers.put(type, unserializer);
     }
 

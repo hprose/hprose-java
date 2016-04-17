@@ -12,7 +12,7 @@
  *                                                        *
  * char array unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,23 +31,23 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class CharArrayUnserializer implements HproseUnserializer {
+final class CharArrayUnserializer implements Unserializer {
 
     public final static CharArrayUnserializer instance = new CharArrayUnserializer();
 
-    final static char[] readChars(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static char[] readChars(Reader reader, ByteBuffer buffer) throws IOException {
         char[] chars = ValueReader.readChars(buffer);
         reader.refer.set(chars);
         return chars;
     }
 
-    final static char[] readChars(HproseReader reader, InputStream stream) throws IOException {
+    final static char[] readChars(Reader reader, InputStream stream) throws IOException {
         char[] chars = ValueReader.readChars(stream);
         reader.refer.set(chars);
         return chars;
     }
 
-    final static char[] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static char[] read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -77,7 +77,7 @@ final class CharArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    final static char[] read(HproseReader reader, InputStream stream) throws IOException {
+    final static char[] read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -107,11 +107,11 @@ final class CharArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

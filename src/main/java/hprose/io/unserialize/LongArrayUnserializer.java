@@ -12,7 +12,7 @@
  *                                                        *
  * long array unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,11 +29,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class LongArrayUnserializer implements HproseUnserializer {
+final class LongArrayUnserializer implements Unserializer {
 
     public final static LongArrayUnserializer instance = new LongArrayUnserializer();
 
-    final static long[] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static long[] read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -53,7 +53,7 @@ final class LongArrayUnserializer implements HproseUnserializer {
     }
 
 
-    final static long[] read(HproseReader reader, InputStream stream) throws IOException {
+    final static long[] read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -72,11 +72,11 @@ final class LongArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

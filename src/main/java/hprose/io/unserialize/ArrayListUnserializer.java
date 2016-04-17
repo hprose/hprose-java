@@ -12,7 +12,7 @@
  *                                                        *
  * ArrayList unserializer class for Java.                 *
  *                                                        *
- * LastModified: Jul 30, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,12 +31,12 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-final class ArrayListUnserializer implements HproseUnserializer {
+final class ArrayListUnserializer implements Unserializer {
 
     public final static ArrayListUnserializer instance = new ArrayListUnserializer();
 
     @SuppressWarnings({"unchecked"})
-    private static <T> ArrayList<T> readArrayList(HproseReader reader, ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
+    private static <T> ArrayList<T> readArrayList(Reader reader, ByteBuffer buffer, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull: return null;
@@ -44,7 +44,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(buffer, TagOpenbrace);
                 ArrayList<T> a = new ArrayList<T>(count);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a.add((T)unserializer.read(reader, buffer, componentClass, componentType));
                 }
@@ -57,7 +57,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static <T> ArrayList<T> readArrayList(HproseReader reader, InputStream stream, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
+    private static <T> ArrayList<T> readArrayList(Reader reader, InputStream stream, Class<?> cls, Class<T> componentClass, Type componentType) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull: return null;
@@ -65,7 +65,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
                 int count = ValueReader.readInt(stream, TagOpenbrace);
                 ArrayList<T> a = new ArrayList<T>(count);
                 reader.refer.set(a);
-                HproseUnserializer unserializer = UnserializerFactory.get(componentClass);
+                Unserializer unserializer = UnserializerFactory.get(componentClass);
                 for (int i = 0; i < count; ++i) {
                     a.add((T)unserializer.read(reader, stream, componentClass, componentType));
                 }
@@ -77,7 +77,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
         }
     }
 
-    final static ArrayList readArrayList(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    final static ArrayList readArrayList(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         Type componentType;
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
@@ -91,7 +91,7 @@ final class ArrayListUnserializer implements HproseUnserializer {
         return readArrayList(reader, buffer, cls, componentClass, componentType);
     }
 
-    final static ArrayList readArrayList(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    final static ArrayList readArrayList(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         Type componentType;
         Class<?> componentClass;
         if (type instanceof ParameterizedType) {
@@ -105,11 +105,11 @@ final class ArrayListUnserializer implements HproseUnserializer {
         return readArrayList(reader, stream, cls, componentClass, componentType);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return readArrayList(reader, buffer, cls, type);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return readArrayList(reader, stream, cls, type);
     }
 }

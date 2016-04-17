@@ -12,7 +12,7 @@
  *                                                        *
  * Time array serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Time;
 
-final class TimeArraySerializer implements HproseSerializer<Time[]> {
+final class TimeArraySerializer implements Serializer<Time[]> {
 
     public final static TimeArraySerializer instance = new TimeArraySerializer();
 
@@ -51,7 +51,7 @@ final class TimeArraySerializer implements HproseSerializer<Time[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Time[] obj) throws IOException {
+    public final void write(Writer writer, Time[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

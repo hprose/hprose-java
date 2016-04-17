@@ -12,7 +12,7 @@
  *                                                        *
  * TimeZone unserializer class for Java.                  *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,17 +29,17 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.TimeZone;
 
-final class TimeZoneUnserializer implements HproseUnserializer {
+final class TimeZoneUnserializer implements Unserializer {
 
     public final static TimeZoneUnserializer instance = new TimeZoneUnserializer();
 
-    final static TimeZone readTimeZone(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static TimeZone readTimeZone(Reader reader, ByteBuffer buffer) throws IOException {
         TimeZone tz = TimeZone.getTimeZone(ValueReader.readString(buffer));
         reader.refer.set(tz);
         return tz;
     }
 
-    final static TimeZone readTimeZone(HproseReader reader, InputStream stream) throws IOException {
+    final static TimeZone readTimeZone(Reader reader, InputStream stream) throws IOException {
         TimeZone tz = TimeZone.getTimeZone(ValueReader.readString(stream));
         reader.refer.set(tz);
         return tz;
@@ -55,7 +55,7 @@ final class TimeZoneUnserializer implements HproseUnserializer {
         return TimeZone.getTimeZone(obj.toString());
     }
 
-    final static TimeZone read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static TimeZone read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -66,7 +66,7 @@ final class TimeZoneUnserializer implements HproseUnserializer {
         }
     }
 
-    final static TimeZone read(HproseReader reader, InputStream stream) throws IOException {
+    final static TimeZone read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
@@ -77,11 +77,11 @@ final class TimeZoneUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

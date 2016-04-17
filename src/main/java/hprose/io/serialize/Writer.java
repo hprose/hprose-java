@@ -8,18 +8,25 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseWriter.java                                      *
+ * Writer.java                                            *
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Aug 7, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.serialize;
 
 import hprose.io.HproseMode;
-import hprose.io.HproseTags;
+import static hprose.io.HproseTags.TagEmpty;
+import static hprose.io.HproseTags.TagFalse;
+import static hprose.io.HproseTags.TagInfinity;
+import static hprose.io.HproseTags.TagNaN;
+import static hprose.io.HproseTags.TagNeg;
+import static hprose.io.HproseTags.TagNull;
+import static hprose.io.HproseTags.TagPos;
+import static hprose.io.HproseTags.TagTrue;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -37,7 +44,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class HproseWriter implements HproseTags {
+public class Writer {
 
     public final OutputStream stream;
     final WriterRefer refer;
@@ -45,19 +52,19 @@ public class HproseWriter implements HproseTags {
     final HashMap<Class<?>, Integer> classref = new HashMap<Class<?>, Integer>();
     int lastclassref = 0;
 
-    public HproseWriter(OutputStream stream) {
+    public Writer(OutputStream stream) {
         this(stream, HproseMode.MemberMode, false);
     }
 
-    public HproseWriter(OutputStream stream, boolean simple) {
+    public Writer(OutputStream stream, boolean simple) {
         this(stream, HproseMode.MemberMode, simple);
     }
 
-    public HproseWriter(OutputStream stream, HproseMode mode) {
+    public Writer(OutputStream stream, HproseMode mode) {
         this(stream, mode, false);
     }
 
-    public HproseWriter(OutputStream stream, HproseMode mode, boolean simple) {
+    public Writer(OutputStream stream, HproseMode mode, boolean simple) {
         this.stream = stream;
         this.mode = mode;
         this.refer = simple ? null : new WriterRefer();

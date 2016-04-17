@@ -12,7 +12,7 @@
  *                                                        *
  * char unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,11 +31,11 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-public final class CharUnserializer implements HproseUnserializer {
+public final class CharUnserializer implements Unserializer {
 
     public final static CharUnserializer instance = new CharUnserializer();
 
-    final static char read(HproseReader reader, ByteBuffer buffer, int tag) throws IOException {
+    final static char read(Reader reader, ByteBuffer buffer, int tag) throws IOException {
         switch (tag) {
             case '0':
             case '1':
@@ -56,7 +56,7 @@ public final class CharUnserializer implements HproseUnserializer {
         }
     }
 
-    final static char read(HproseReader reader, InputStream stream, int tag) throws IOException {
+    final static char read(Reader reader, InputStream stream, int tag) throws IOException {
         switch (tag) {
             case '0':
             case '1':
@@ -78,25 +78,25 @@ public final class CharUnserializer implements HproseUnserializer {
         }
     }
 
-    public final static char read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    public final static char read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagUTF8Char) return ValueReader.readChar(buffer);
         if (tag == TagNull) return (char)0;
         return read(reader, buffer, tag);
     }
 
-    public final static char read(HproseReader reader, InputStream stream) throws IOException {
+    public final static char read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagUTF8Char) return ValueReader.readChar(stream);
         if (tag == TagNull) return (char)0;
         return read(reader, stream, tag);
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

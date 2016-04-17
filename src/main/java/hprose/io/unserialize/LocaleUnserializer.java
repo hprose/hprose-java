@@ -12,7 +12,7 @@
  *                                                        *
  * Locale unserializer class for Java.                    *
  *                                                        *
- * LastModified: Jun 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,7 +29,7 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-final class LocaleUnserializer implements HproseUnserializer {
+final class LocaleUnserializer implements Unserializer {
 
     public final static LocaleUnserializer instance = new LocaleUnserializer();
 
@@ -44,13 +44,13 @@ final class LocaleUnserializer implements HproseUnserializer {
         return new Locale(items[0], items[1], items[2]);
     }
 
-    final static Locale readLocale(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Locale readLocale(Reader reader, ByteBuffer buffer) throws IOException {
         Locale locale = toLocale(ValueReader.readString(buffer));
         reader.refer.set(locale);
         return locale;
     }
 
-    final static Locale readLocale(HproseReader reader, InputStream stream) throws IOException {
+    final static Locale readLocale(Reader reader, InputStream stream) throws IOException {
         Locale locale = toLocale(ValueReader.readString(stream));
         reader.refer.set(locale);
         return locale;
@@ -66,7 +66,7 @@ final class LocaleUnserializer implements HproseUnserializer {
         return toLocale(obj.toString());
     }
 
-    final static Locale read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static Locale read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch(tag) {
             case TagNull:
@@ -77,7 +77,7 @@ final class LocaleUnserializer implements HproseUnserializer {
         }
     }
 
-    final static Locale read(HproseReader reader, InputStream stream) throws IOException {
+    final static Locale read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch(tag) {
             case TagNull:
@@ -88,11 +88,11 @@ final class LocaleUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

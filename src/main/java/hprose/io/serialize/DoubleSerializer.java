@@ -12,7 +12,7 @@
  *                                                        *
  * double serializer class for Java.                      *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,11 +21,11 @@ package hprose.io.serialize;
 
 import java.io.IOException;
 
-final class DoubleSerializer implements HproseSerializer<Double> {
+final class DoubleSerializer implements Serializer<Double> {
 
     public final static DoubleSerializer instance = new DoubleSerializer();
 
-    public final void write(HproseWriter writer, Double obj) throws IOException {
+    public final void write(Writer writer, Double obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

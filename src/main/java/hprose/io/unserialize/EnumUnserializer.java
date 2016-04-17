@@ -12,7 +12,7 @@
  *                                                        *
  * Enum unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,11 +25,11 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class EnumUnserializer implements HproseUnserializer {
+final class EnumUnserializer implements Unserializer {
 
     public final static EnumUnserializer instance = new EnumUnserializer();
 
-    final static <T> T read(HproseReader reader, ByteBuffer buffer, Class<T> type) throws HproseException {
+    final static <T> T read(Reader reader, ByteBuffer buffer, Class<T> type) throws HproseException {
         try {
             return type.getEnumConstants()[IntUnserializer.read(reader, buffer)];
         }
@@ -38,7 +38,7 @@ final class EnumUnserializer implements HproseUnserializer {
         }
     }
 
-    final static <T> T read(HproseReader reader, InputStream stream, Class<T> type) throws HproseException {
+    final static <T> T read(Reader reader, InputStream stream, Class<T> type) throws HproseException {
         try {
             return type.getEnumConstants()[IntUnserializer.read(reader, stream)];
         }
@@ -47,11 +47,11 @@ final class EnumUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer, cls);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream, cls);
     }
 

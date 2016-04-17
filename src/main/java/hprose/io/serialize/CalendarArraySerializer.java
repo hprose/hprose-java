@@ -12,7 +12,7 @@
  *                                                        *
  * Calendar array serializer class for Java.              *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Calendar;
 
-final class CalendarArraySerializer implements HproseSerializer<Calendar[]> {
+final class CalendarArraySerializer implements Serializer<Calendar[]> {
 
     public final static CalendarArraySerializer instance = new CalendarArraySerializer();
 
@@ -51,7 +51,7 @@ final class CalendarArraySerializer implements HproseSerializer<Calendar[]> {
         stream.write(TagClosebrace);
     }
 
-    public final void write(HproseWriter writer, Calendar[] obj) throws IOException {
+    public final void write(Writer writer, Calendar[] obj) throws IOException {
         OutputStream stream = writer.stream;
         WriterRefer refer = writer.refer;
         if (refer == null || !refer.write(stream, obj)) {

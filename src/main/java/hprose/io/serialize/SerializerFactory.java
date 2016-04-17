@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Aug 8, 2015                              *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -60,7 +60,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Pattern;
 
 public final class SerializerFactory {
-    private final static ConcurrentHashMap<Class<?>, HproseSerializer> serializers = new ConcurrentHashMap<Class<?>, HproseSerializer>();
+    private final static ConcurrentHashMap<Class<?>, Serializer> serializers = new ConcurrentHashMap<Class<?>, Serializer>();
 
     static {
         serializers.put(void.class, NullSerializer.instance);
@@ -165,8 +165,8 @@ public final class SerializerFactory {
         }
     }
 
-    public final static HproseSerializer get(Class<?> type) {
-        HproseSerializer serializer = serializers.get(type);
+    public final static Serializer get(Class<?> type) {
+        Serializer serializer = serializers.get(type);
         if (serializer == null) {
             if (type.isEnum()) {
                 serializer = EnumSerializer.instance;
@@ -197,7 +197,7 @@ public final class SerializerFactory {
         return serializer;
     }
 
-    public final static void register(Class<?> type, HproseSerializer serializer) {
+    public final static void register(Class<?> type, Serializer serializer) {
         serializers.put(type, serializer);
     }
 }

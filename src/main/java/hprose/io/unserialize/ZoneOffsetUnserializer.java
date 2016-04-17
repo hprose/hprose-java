@@ -12,7 +12,7 @@
  *                                                        *
  * ZoneOffset unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 27, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,17 +29,17 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.time.ZoneOffset;
 
-final class ZoneOffsetUnserializer implements HproseUnserializer {
+final class ZoneOffsetUnserializer implements Unserializer {
 
     public final static ZoneOffsetUnserializer instance = new ZoneOffsetUnserializer();
 
-    final static ZoneOffset readZoneOffset(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static ZoneOffset readZoneOffset(Reader reader, ByteBuffer buffer) throws IOException {
         ZoneOffset tz = ZoneOffset.of(ValueReader.readString(buffer));
         reader.refer.set(tz);
         return tz;
     }
 
-    final static ZoneOffset readZoneOffset(HproseReader reader, InputStream stream) throws IOException {
+    final static ZoneOffset readZoneOffset(Reader reader, InputStream stream) throws IOException {
         ZoneOffset tz = ZoneOffset.of(ValueReader.readString(stream));
         reader.refer.set(tz);
         return tz;
@@ -55,7 +55,7 @@ final class ZoneOffsetUnserializer implements HproseUnserializer {
         return ZoneOffset.of(obj.toString());
     }
 
-    final static ZoneOffset read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static ZoneOffset read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         switch (tag) {
             case TagNull:
@@ -66,7 +66,7 @@ final class ZoneOffsetUnserializer implements HproseUnserializer {
         }
     }
 
-    final static ZoneOffset read(HproseReader reader, InputStream stream) throws IOException {
+    final static ZoneOffset read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         switch (tag) {
             case TagNull:
@@ -77,11 +77,11 @@ final class ZoneOffsetUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

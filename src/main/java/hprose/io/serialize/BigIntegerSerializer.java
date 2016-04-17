@@ -12,7 +12,7 @@
  *                                                        *
  * BigInteger serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 26, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,11 +22,11 @@ package hprose.io.serialize;
 import java.io.IOException;
 import java.math.BigInteger;
 
-final class BigIntegerSerializer implements HproseSerializer<BigInteger> {
+final class BigIntegerSerializer implements Serializer<BigInteger> {
 
     public final static BigIntegerSerializer instance = new BigIntegerSerializer();
 
-    public final void write(HproseWriter writer, BigInteger obj) throws IOException {
+    public final void write(Writer writer, BigInteger obj) throws IOException {
         ValueWriter.write(writer.stream, obj);
     }
 }

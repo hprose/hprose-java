@@ -12,7 +12,7 @@
  *                                                        *
  * byte array unserializer class for Java.                *
  *                                                        *
- * LastModified: Jun 24, 2015                             *
+ * LastModified: Apr 17, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,23 +33,23 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-final class ByteArrayUnserializer implements HproseUnserializer {
+final class ByteArrayUnserializer implements Unserializer {
 
     public final static ByteArrayUnserializer instance = new ByteArrayUnserializer();
 
-    final static byte[] readBytes(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static byte[] readBytes(Reader reader, ByteBuffer buffer) throws IOException {
         byte[] b = ValueReader.readBytes(buffer);
         reader.refer.set(b);
         return b;
     }
 
-    final static byte[] readBytes(HproseReader reader, InputStream stream) throws IOException {
+    final static byte[] readBytes(Reader reader, InputStream stream) throws IOException {
         byte[] b = ValueReader.readBytes(stream);
         reader.refer.set(b);
         return b;
     }
 
-    final static byte[] read(HproseReader reader, ByteBuffer buffer) throws IOException {
+    final static byte[] read(Reader reader, ByteBuffer buffer) throws IOException {
         int tag = buffer.get();
         if (tag == TagBytes) return readBytes(reader, buffer);
         switch (tag) {
@@ -81,7 +81,7 @@ final class ByteArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    final static byte[] read(HproseReader reader, InputStream stream) throws IOException {
+    final static byte[] read(Reader reader, InputStream stream) throws IOException {
         int tag = stream.read();
         if (tag == TagBytes) return readBytes(reader, stream);
         switch (tag) {
@@ -113,11 +113,11 @@ final class ByteArrayUnserializer implements HproseUnserializer {
         }
     }
 
-    public final Object read(HproseReader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
         return read(reader, buffer);
     }
 
-    public final Object read(HproseReader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
+    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
         return read(reader, stream);
     }
 

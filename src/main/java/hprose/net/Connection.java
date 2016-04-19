@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 16, 2016                             *
+ * LastModified: Apr 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -36,8 +36,12 @@ public final class Connection {
     private volatile TimeoutType timeoutType;
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
-            close();
-            handler.onTimeout(Connection.this, timeoutType);
+            try {
+                handler.onTimeout(Connection.this, timeoutType);
+            }
+            finally {
+                close();
+            }
         }
     });
     private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
@@ -57,8 +61,8 @@ public final class Connection {
     }
 
     public final void connected(Selector selector) throws ClosedChannelException {
-        clearTimeout();
-        key = channel.register(selector, SelectionKey.OP_READ, this);
+        timer.clear();
+        key = channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, this);
         handler.onConnected(this);
     }
 
@@ -68,7 +72,7 @@ public final class Connection {
 
     public final void close() {
         try {
-            clearTimeout();
+            timer.clear();
             channel.close();
             key.cancel();
         }
@@ -79,10 +83,6 @@ public final class Connection {
     }
 
     public final boolean receive() {
-        if (!channel.isOpen()) {
-            close();
-            return false;
-        }
         try {
             setTimeout(handler.getReadTimeout(), TimeoutType.READ_TIMEOUT);
             int n = channel.read(inbuf);
@@ -126,7 +126,7 @@ public final class Connection {
                     data.put(inbuf);
                     inbuf.limit(bufLen);
                     inbuf.compact();
-                    clearTimeout();
+                    timer.clear();
                     handler.onReceived(this, data, id);
                     headerLength = 4;
                     dataLength = -1;
@@ -147,19 +147,13 @@ public final class Connection {
 
     public final void send(ByteBuffer buffer, Integer id) {
         outqueue.offer(new OutPacket(buffer, id));
-        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         key.selector().wakeup();
     }
 
     public final void send() {
-        if (!channel.isOpen()) {
-            close();
-            return;
-        }
         if (packet == null) {
             packet = outqueue.poll();
             if (packet == null) {
-                key.interestOps(SelectionKey.OP_READ);
                 return;
             }
         }
@@ -173,18 +167,15 @@ public final class Connection {
                         return;
                     }
                     if (n == 0) {
-                        key.interestOps(SelectionKey.OP_READ |
-                                        SelectionKey.OP_WRITE);
                         return;
                     }
                     packet.writeLength += n;
                 }
                 ByteBufferStream.free(packet.buffers[1]);
-                clearTimeout();
+                timer.clear();
                 handler.onSended(this, packet.id);
                 packet = outqueue.poll();
                 if (packet == null) {
-                    key.interestOps(SelectionKey.OP_READ);
                     return;
                 }
             }
@@ -204,7 +195,7 @@ public final class Connection {
         }
     }
 
-    public final void clearTimeout() {
-        timer.clear();
-    }
+//    public final void clearTimeout() {
+//        timer.clear();
+//    }
 }

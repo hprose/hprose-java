@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connector class for Java.                       *
  *                                                        *
- * LastModified: Apr 16, 2016                             *
+ * LastModified: Apr 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -110,6 +110,7 @@ public final class Connector extends Thread {
             URI u = new URI(uri);
             SocketChannel channel = SocketChannel.open();
             Connection conn = new Connection(channel, handler);
+            handler.onConnect(conn);
             channel.configureBlocking(false);
             channel.socket().setReuseAddress(true);
             channel.socket().setKeepAlive(keepAlive);

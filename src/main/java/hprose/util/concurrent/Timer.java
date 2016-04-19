@@ -42,24 +42,24 @@ public class Timer {
     public Timer(Runnable callback) {
         timeoutCallback = callback;
     }
-    private Future<?> timeoutID = null;
-    public void clear() {
+    private volatile Future<?> timeoutID = null;
+    public synchronized void clear() {
         if (timeoutID != null) {
             timeoutID.cancel(false);
             timeoutID = null;
         }
     }
-    public void setTimeout(long timeout) {
+    public synchronized void setTimeout(long timeout) {
         setTimeout(timeout, false);
     }
-    public void setInterval(long timeout) {
+    public synchronized void setInterval(long timeout) {
         setInterval(timeout, false);
     }
-    public void setTimeout(long timeout, boolean waitOnShutdown) {
+    public synchronized void setTimeout(long timeout, boolean waitOnShutdown) {
         clear();
         timeoutID = (waitOnShutdown ? timer1 : timer2).schedule(timeoutCallback, timeout, TimeUnit.MILLISECONDS);
     }
-    public void setInterval(long timeout, boolean waitOnShutdown) {
+    public synchronized void setInterval(long timeout, boolean waitOnShutdown) {
         clear();
         if (timeout > 0) {
             timeoutID = (waitOnShutdown ? timer1 : timer2).scheduleAtFixedRate(timeoutCallback, timeout, timeout, TimeUnit.MILLISECONDS);

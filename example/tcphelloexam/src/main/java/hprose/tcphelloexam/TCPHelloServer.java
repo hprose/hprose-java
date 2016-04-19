@@ -10,6 +10,7 @@ public class TCPHelloServer {
     }
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         HproseTcpServer server = new HproseTcpServer("tcp://localhost:4321");
+        server.setReactorThreads(2);
 /*
         server.addFilter(new HproseFilter() {
             public String getString(ByteBuffer buffer) {

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose ConnectionHandler interface for Java.           *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Apr 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,7 @@ package hprose.net;
 import java.nio.ByteBuffer;
 
 public interface ConnectionHandler {
+    void onConnect(Connection conn);
     void onConnected(Connection conn);
     void onReceived(Connection conn, ByteBuffer data, Integer id);
     void onSended(Connection conn, Integer id);

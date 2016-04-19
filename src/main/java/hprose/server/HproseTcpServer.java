@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Apr 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -43,7 +43,7 @@ public class HproseTcpServer extends HproseService {
     private volatile long readTimeout = 30000;
     private volatile long writeTimeout = 30000;
     private boolean enabledThreadPool = false;
-    private int reactorThreads = (Runtime.getRuntime().availableProcessors() + 1) >> 1;
+    private int reactorThreads = 2;
     private Acceptor acceptor = null;
     private String host = null;
     private int port = 0;
@@ -83,6 +83,8 @@ public class HproseTcpServer extends HproseService {
     }
 
     private final class ServerConnectionHandler implements ConnectionHandler {
+
+        public void onConnect(Connection conn) {}
 
         public void onConnected(Connection conn) {
                 fireAcceptEvent(conn.socketChannel());

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Apr 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -32,11 +32,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +61,7 @@ final class Response {
     }
 }
 
-abstract class SocketTransporter implements ConnectionHandler {
+abstract class SocketTransporter extends Thread implements ConnectionHandler {
     protected final static class ConnectorHolder {
         final static Connector connector;
         static {
@@ -83,11 +84,12 @@ abstract class SocketTransporter implements ConnectionHandler {
         }
     }
     protected final HproseTcpClient client;
-    protected final Queue<Connection> idleConnections = new ConcurrentLinkedQueue<Connection>();
-    protected final Queue<Request> requests = new ConcurrentLinkedQueue<Request>();
+    protected final BlockingQueue<Connection> idleConnections = new LinkedBlockingQueue<Connection>();
+    protected final BlockingQueue<Request> requests = new LinkedBlockingQueue<Request>();
     protected final AtomicInteger size = new AtomicInteger(0);
 
     public SocketTransporter(HproseTcpClient client) {
+        super();
         this.client = client;
     }
     public final long getReadTimeout() {
@@ -99,33 +101,67 @@ abstract class SocketTransporter implements ConnectionHandler {
     public final long getConnectTimeout() {
         return client.getConnectTimeout();
     }
-    protected final Connection fetch() {
-        Connection conn = idleConnections.poll();
-        if (conn != null) {
-            conn.clearTimeout();
+
+    @Override
+    public void run() {
+        while (!isInterrupted()) {
+            Request reqeust;
+            try {
+                reqeust = requests.take();
+            }
+            catch (InterruptedException e) {
+                break;
+            }
+            Connection conn = idleConnections.poll();
+            if (conn == null) {
+                if (geRealPoolSize() < client.getMaxPoolSize()) {
+                    try {
+                        ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
+                    }
+                    catch (IOException ex) {
+                        reqeust.callback.handler(null, ex);
+                    }
+                }
+                try {
+                    conn = idleConnections.take();
+                }
+                catch (InterruptedException e) {
+                    break;
+                }
+            }
+            send(conn, reqeust);
         }
-        return conn;
     }
 
-    protected abstract void send(Connection conn, ByteBufferStream stream, ReceiveCallback callback);
+    protected abstract int geRealPoolSize();
 
-    public final void send(ByteBufferStream stream, ReceiveCallback callback) throws IOException {
-        Connection conn = fetch();
-        if (conn != null) {
-            send(conn, stream, callback);
-        }
-        else {
-            if (size.getAndIncrement() < client.getMaxPoolSize()) {
-                ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
+    protected abstract void send(Connection conn, Request request);
+
+    public final synchronized void send(ByteBufferStream stream, ReceiveCallback callback) {
+        requests.offer(new Request(stream, callback));
+    }
+
+    protected void close(Map<Connection, Object> responses) {
+        interrupt();
+        while (!responses.isEmpty()) {
+            Iterator<Connection> it = responses.keySet().iterator();
+            while (it.hasNext()) {
+                Connection conn = it.next();
+                conn.close();
             }
-            else {
-                size.getAndDecrement();
-            }
-            requests.offer(new Request(stream, callback));
         }
+        while (!requests.isEmpty()) {
+            requests.poll().callback.handler(null, new ClosedChannelException());
+        }
+    }
+
+    public final void onClose(Connection conn) {
+        idleConnections.remove(conn);
+        onError(conn, new ClosedChannelException());
     }
 
     public abstract void close();
+
 }
 
 final class FullDuplexSocketTransporter extends SocketTransporter {
@@ -140,16 +176,16 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                 Connection conn = entry.getKey();
                 Map<Integer, Response> res = entry.getValue();
                 Iterator<Map.Entry<Integer, Response>> it = res.entrySet().iterator();
-                 while (it.hasNext()) {
+                while (it.hasNext()) {
                     Map.Entry<Integer, Response> e = it.next();
                     Response response = e.getValue();
                     if ((currentTime - response.createTime) >= client.getTimeout()) {
                         it.remove();
                         response.callback.handler(null, new TimeoutException("timeout"));
-                        if (res.isEmpty()) {
-                            conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
-                        }
                     }
+                }
+                if (res.isEmpty()) {
+                    conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
                 }
             }
         }
@@ -158,60 +194,62 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     public FullDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
         timer.setInterval((client.getTimeout() + 1) >> 1);
+        start();
     }
-
 
     private void recycle(Connection conn) {
         conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
     }
 
-    protected final void send(Connection conn, ByteBufferStream stream, ReceiveCallback callback) {
-        int id = nextId.getAndIncrement() & 0x7fffffff;
-        responses.get(conn).put(id, new Response(callback));
-        conn.send(stream.buffer, id);
+    protected final void send(Connection conn, Request request) {
+        Map<Integer, Response> res = responses.get(conn);
+        if (res.size() < 10) {
+            int id = nextId.incrementAndGet() & 0x7fffffff;
+            res.put(id, new Response(request.callback));
+            conn.send(request.stream.buffer, id);
+        }
+        else {
+            idleConnections.offer(conn);
+            requests.offer(request);
+        }
+    }
+
+    protected final int geRealPoolSize() {
+        return responses.size();
     }
 
     @Override
     public final void close() {
         timer.clear();
-        Iterator<Connection> it = responses.keySet().iterator();
-        while (it.hasNext()) {
-            Connection conn = it.next();
-            conn.close();
-        }
+        close((Map<Connection, Object>)(Object)responses);
+    }
+
+    public void onConnect(Connection conn) {
+        responses.put(conn, new ConcurrentHashMap<Integer, Response>());
     }
 
     public void onConnected(Connection conn) {
-        responses.put(conn, new ConcurrentHashMap<Integer, Response>());
-        Request request = requests.poll();
-        if (request == null) {
-            idleConnections.offer(conn);
-            recycle(conn);
-        }
-        else {
-            send(conn, request.stream, request.callback);
-        }
+        idleConnections.offer(conn);
+        recycle(conn);
     }
 
     public final void onTimeout(Connection conn, TimeoutType type) {
         if (TimeoutType.CONNECT_TIMEOUT == type) {
+            responses.remove(conn);
             Request request;
             while ((request = requests.poll()) != null) {
                 request.callback.handler(null, new TimeoutException("connect timeout"));
             }
         }
-        else if (TimeoutType.IDLE_TIMEOUT == type) {
-            idleConnections.remove(conn);
-        }
-        else {
+        else if (TimeoutType.IDLE_TIMEOUT != type) {
             Map<Integer, Response> res = responses.get(conn);
             if (res != null) {
                 Iterator<Map.Entry<Integer, Response>> it = res.entrySet().iterator();
                 while (it.hasNext()) {
                     Map.Entry<Integer, Response> entry = it.next();
+                    it.remove();
                     Response response = entry.getValue();
                     response.callback.handler(null, new TimeoutException(type.toString()));
-                    it.remove();
                 }
             }
         }
@@ -220,47 +258,36 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
         Map<Integer, Response> res = responses.get(conn);
         if (res != null) {
-           Response response = res.remove(id);
-           if (response != null) {
-               response.callback.handler(new ByteBufferStream(data), null);
-           }
-        }
-        if (res == null || res.isEmpty()) {
-            recycle(conn);
+            Response response = res.remove(id);
+            if (response != null) {
+                response.callback.handler(new ByteBufferStream(data), null);
+            }
+            if (res.isEmpty()) {
+                recycle(conn);
+            }
         }
     }
 
     public final void onSended(Connection conn, Integer id) {
-        Request request = requests.poll();
-        if (request == null) {
-            idleConnections.offer(conn);
-        }
-        else {
-            send(conn, request.stream, request.callback);
-        }
-    }
-
-    public final void onClose(Connection conn) {
-        size.decrementAndGet();
-        idleConnections.remove(conn);
-        responses.remove(conn);
+        idleConnections.offer(conn);
     }
 
     public final void onError(Connection conn, Exception e) {
-        Map<Integer, Response> res = responses.get(conn);
+        Map<Integer, Response> res = responses.remove(conn);
         if (res != null) {
             Iterator<Map.Entry<Integer, Response>> it = res.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, Response> entry = it.next();
+                it.remove();
                 Response response = entry.getValue();
                 response.callback.handler(null, e);
-                it.remove();
             }
         }
     }
 }
 
 final class HalfDuplexSocketTransporter extends SocketTransporter {
+    private final static Response nullResponse = new Response(null);
     private final Map<Connection, Response> responses = new ConcurrentHashMap<Connection, Response>();
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
@@ -282,6 +309,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     public HalfDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
         timer.setInterval((client.getTimeout() + 1) >> 1);
+        start();
     }
 
     private void recycle(Connection conn) {
@@ -289,68 +317,59 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
     }
 
-    protected final void send(Connection conn, ByteBufferStream stream, ReceiveCallback callback) {
-        responses.put(conn, new Response(callback));
-        conn.send(stream.buffer, null);
+    protected final void send(Connection conn, Request request) {
+        responses.put(conn, new Response(request.callback));
+        conn.send(request.stream.buffer, null);
+    }
+
+    protected final int geRealPoolSize() {
+        return responses.size();
     }
 
     @Override
     public final void close() {
         timer.clear();
-        Iterator<Connection> it = responses.keySet().iterator();
-        while (it.hasNext()) {
-            it.next().close();
-        }
-        responses.clear();
+        close((Map<Connection, Object>)(Object)responses);
+    }
+
+    public void onConnect(Connection conn) {
+        responses.put(conn, nullResponse);
     }
 
     public void onConnected(Connection conn) {
-        Request request = requests.poll();
-        if (request == null) {
-            recycle(conn);
-        }
-        else {
-            send(conn, request.stream, request.callback);
-        }
+        recycle(conn);
     }
 
     public final void onTimeout(Connection conn, TimeoutType type) {
         if (TimeoutType.CONNECT_TIMEOUT == type) {
+            responses.remove(conn);
             Request request;
             while ((request = requests.poll()) != null) {
                 request.callback.handler(null, new TimeoutException("connect timeout"));
             }
         }
-        else if (TimeoutType.IDLE_TIMEOUT == type) {
-            idleConnections.remove(conn);
-        }
-        else {
-            Response response = responses.remove(conn);
-            if (response != null) {
+        else if (TimeoutType.IDLE_TIMEOUT != type) {
+            Response response = responses.put(conn, nullResponse);
+            if (response != null && response != nullResponse) {
                 response.callback.handler(null, new TimeoutException(type.toString()));
             }
         }
+        conn.close();
     }
 
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
-        Response response = responses.remove(conn);
-        onConnected(conn);
-        if (response != null) {
+        Response response = responses.put(conn, nullResponse);
+        recycle(conn);
+        if (response != null && response != nullResponse) {
             response.callback.handler(new ByteBufferStream(data), null);
         }
     }
 
     public final void onSended(Connection conn, Integer id) {}
 
-    public final void onClose(Connection conn) {
-        size.decrementAndGet();
-        idleConnections.remove(conn);
-        responses.remove(conn);
-    }
-
     public final void onError(Connection conn, Exception e) {
         Response response = responses.remove(conn);
-        if (response != null) {
+        if (response != null && response != nullResponse) {
             response.callback.handler(null, e);
         }
     }
@@ -362,7 +381,7 @@ final class Result {
 }
 
 public class HproseTcpClient extends HproseClient {
-    private static int reactorThreads = (Runtime.getRuntime().availableProcessors() + 1) >> 1;
+    private static int reactorThreads = 2;
 
     public static int getReactorThreads() {
         return reactorThreads;
@@ -374,15 +393,15 @@ public class HproseTcpClient extends HproseClient {
 
     private volatile boolean fullDuplex = false;
     private volatile boolean noDelay = false;
-    private volatile int maxPoolSize = 10;
+    private volatile int maxPoolSize = 2;
     private volatile long idleTimeout = 30000;
     private volatile long readTimeout = 30000;
     private volatile long writeTimeout = 30000;
     private volatile long connectTimeout = 30000;
     private volatile long timeout = 30000;
     private volatile boolean keepAlive = true;
-    private volatile SocketTransporter fdTrans = null;
-    private volatile SocketTransporter hdTrans = null;
+    private final SocketTransporter fdTrans = new FullDuplexSocketTransporter(this);
+    private final SocketTransporter hdTrans = new HalfDuplexSocketTransporter(this);
 
     public HproseTcpClient() {
         super();
@@ -412,8 +431,8 @@ public class HproseTcpClient extends HproseClient {
 
     @Override
     public final void close() {
-        if (fdTrans != null) fdTrans.close();
-        if (hdTrans != null) hdTrans.close();
+        fdTrans.close();
+        hdTrans.close();
         super.close();
     }
 
@@ -421,7 +440,7 @@ public class HproseTcpClient extends HproseClient {
         return fullDuplex;
     }
 
-    public final void setFullDuplex(boolean fullDuplex) {
+    public final synchronized void setFullDuplex(boolean fullDuplex) {
         this.fullDuplex = fullDuplex;
     }
 
@@ -527,20 +546,12 @@ public class HproseTcpClient extends HproseClient {
 
     @Override
     protected final void send(ByteBufferStream buffer, ReceiveCallback callback) throws IOException {
-        SocketTransporter trans;
         if (fullDuplex) {
-            trans = fdTrans;
-            if (trans == null) {
-                trans = fdTrans = new FullDuplexSocketTransporter(this);
-            }
+            fdTrans.send(buffer, callback);
         }
         else {
-            trans = hdTrans;
-            if (trans == null) {
-                trans = hdTrans = new HalfDuplexSocketTransporter(this);
-            }
+            hdTrans.send(buffer, callback);
         }
-        trans.send(buffer, callback);
     }
 
 }

@@ -35,13 +35,28 @@ public class HproseInvocationHandler implements InvocationHandler {
 
     public Object invoke(Object proxy, Method method, final Object[] arguments) throws Throwable {
         MethodName methodName = method.getAnnotation(MethodName.class);
-        final String functionName = ns + ((methodName == null) ? method.getName() : methodName.value());
-        ResultMode rm = method.getAnnotation(ResultMode.class);
-        final HproseResultMode resultMode = (rm == null) ? HproseResultMode.Normal : rm.value();
-        SimpleMode sm = method.getAnnotation(SimpleMode.class);
-        final boolean simple = (sm == null) ? false : sm.value();        
+        ResultMode mode = method.getAnnotation(ResultMode.class);
         ByRef byref = method.getAnnotation(ByRef.class);
-        final boolean byRef = (byref == null) ? false : byref.value();        
+        SimpleMode simple = method.getAnnotation(SimpleMode.class);
+        Retry retry = method.getAnnotation(Retry.class);
+        Idempotent idempotent = method.getAnnotation(Idempotent.class);
+        Failswitch failswitch = method.getAnnotation(Failswitch.class);
+        Oneway oneway = method.getAnnotation(Oneway.class);
+        Timeout timeout = method.getAnnotation(Timeout.class);
+
+        final String functionName = ns + ((methodName == null) ? method.getName() : methodName.value());
+
+        final InvokeSettings settings = new InvokeSettings();
+
+        if (mode != null) settings.setMode(mode.value());
+        if (simple != null) settings.setSimple(simple.value());
+        if (byref != null) settings.setByref(byref.value());
+        if (retry != null) settings.setRetry(retry.value());
+        if (idempotent != null) settings.setIdempotent(idempotent.value());
+        if (failswitch != null) settings.setFailswitch(failswitch.value());
+        if (oneway != null) settings.setOneway(oneway.value());
+        if (timeout != null) settings.setTimeout(timeout.value());
+
         Type[] paramTypes = method.getGenericParameterTypes();
         Type returnType = method.getGenericReturnType();
         if (void.class.equals(returnType) ||
@@ -57,7 +72,7 @@ public class HproseInvocationHandler implements InvocationHandler {
             HproseCallback1 callback = (HproseCallback1) arguments[n - 1];
             Object[] tmpargs = new Object[n - 1];
             System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
-            client.invoke(functionName, tmpargs, callback, null, returnType, resultMode, simple);
+            client.invoke(functionName, tmpargs, callback, null, returnType, settings);
         }
         else if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
@@ -66,7 +81,7 @@ public class HproseInvocationHandler implements InvocationHandler {
             HproseCallback callback = (HproseCallback) arguments[n - 1];
             Object[] tmpargs = new Object[n - 1];
             System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
-            client.invoke(functionName, tmpargs, callback, null, returnType, byRef, resultMode, simple);
+            client.invoke(functionName, tmpargs, callback, null, returnType, settings);
         }
         else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback1.class)
                          && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
@@ -77,7 +92,7 @@ public class HproseInvocationHandler implements InvocationHandler {
             HproseErrorEvent errorEvent = (HproseErrorEvent) arguments[n - 1];
             Object[] tmpargs = new Object[n - 2];
             System.arraycopy(arguments, 0, tmpargs, 0, n - 2);
-            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, resultMode, simple);
+            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, settings);
         }
         else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback.class)
                          && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
@@ -88,10 +103,10 @@ public class HproseInvocationHandler implements InvocationHandler {
             HproseErrorEvent errorEvent = (HproseErrorEvent) arguments[n - 1];
             Object[] tmpargs = new Object[n - 2];
             System.arraycopy(arguments, 0, tmpargs, 0, n - 2);
-            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, byRef, resultMode, simple);
+            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, settings);
         }
         else {
-            result = client.invoke(functionName, arguments, returnType, byRef, resultMode, simple);
+            result = client.invoke(functionName, arguments, returnType, settings);
         }
         return result;
     }

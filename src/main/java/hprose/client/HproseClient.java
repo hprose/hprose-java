@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -60,6 +60,7 @@ public abstract class HproseClient implements HproseInvoker {
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode;
+    private int timeout;
     protected String uri;
     public HproseErrorEvent onError = null;
 
@@ -127,6 +128,15 @@ public abstract class HproseClient implements HproseInvoker {
             }
         }
         throw new HproseException("This client doesn't support " + scheme + " scheme.");
+    }
+
+    public final int getTimeout() {
+        return timeout;
+    }
+
+    public final void setTimeout(int timeout) {
+        if (timeout < 1) throw new IllegalArgumentException("timeout must be great than 0");
+        this.timeout = timeout;
     }
 
     public HproseFilter getFilter() {

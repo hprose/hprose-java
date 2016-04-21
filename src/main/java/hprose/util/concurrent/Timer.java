@@ -12,7 +12,7 @@
  *                                                        *
  * Timer class for Java.                                  *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -49,17 +49,17 @@ public class Timer {
             timeoutID = null;
         }
     }
-    public synchronized void setTimeout(long timeout) {
+    public synchronized void setTimeout(int timeout) {
         setTimeout(timeout, false);
     }
-    public synchronized void setInterval(long timeout) {
+    public synchronized void setInterval(int timeout) {
         setInterval(timeout, false);
     }
-    public synchronized void setTimeout(long timeout, boolean waitOnShutdown) {
+    public synchronized void setTimeout(int timeout, boolean waitOnShutdown) {
         clear();
         timeoutID = (waitOnShutdown ? timer1 : timer2).schedule(timeoutCallback, timeout, TimeUnit.MILLISECONDS);
     }
-    public synchronized void setInterval(long timeout, boolean waitOnShutdown) {
+    public synchronized void setInterval(int timeout, boolean waitOnShutdown) {
         clear();
         if (timeout > 0) {
             timeoutID = (waitOnShutdown ? timer1 : timer2).scheduleAtFixedRate(timeoutCallback, timeout, timeout, TimeUnit.MILLISECONDS);

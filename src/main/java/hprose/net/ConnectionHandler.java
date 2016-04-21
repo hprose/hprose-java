@@ -12,7 +12,7 @@
  *                                                        *
  * hprose ConnectionHandler interface for Java.           *
  *                                                        *
- * LastModified: Apr 19, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,7 +28,7 @@ public interface ConnectionHandler {
     void onClose(Connection conn);
     void onError(Connection conn, Exception e);
     void onTimeout(Connection conn, TimeoutType type);
-    long getReadTimeout();
-    long getWriteTimeout();
-    long getConnectTimeout();
+    int getReadTimeout();
+    int getWriteTimeout();
+    int getConnectTimeout();
 }

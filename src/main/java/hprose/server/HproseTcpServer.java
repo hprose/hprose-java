@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 19, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -40,8 +40,8 @@ public class HproseTcpServer extends HproseService {
 
     private final static ThreadLocal<TcpContext> currentContext = new ThreadLocal<TcpContext>();
     private volatile ExecutorService threadPool = null;
-    private volatile long readTimeout = 30000;
-    private volatile long writeTimeout = 30000;
+    private volatile int readTimeout = 30000;
+    private volatile int writeTimeout = 30000;
     private boolean enabledThreadPool = false;
     private int reactorThreads = 2;
     private Acceptor acceptor = null;
@@ -119,15 +119,15 @@ public class HproseTcpServer extends HproseService {
 
         public void onTimeout(Connection conn, TimeoutType type) {}
 
-        public long getReadTimeout() {
+        public int getReadTimeout() {
             return readTimeout;
         }
 
-        public long getWriteTimeout() {
+        public int getWriteTimeout() {
             return writeTimeout;
         }
 
-        public long getConnectTimeout() {
+        public int getConnectTimeout() {
             throw new UnsupportedOperationException();
         }
     }
@@ -296,19 +296,19 @@ public class HproseTcpServer extends HproseService {
         }
     }
 
-    public long getReadTimeout() {
+    public int getReadTimeout() {
         return readTimeout;
     }
 
-    public void setReadTimeout(long readTimeout) {
+    public void setReadTimeout(int readTimeout) {
         this.readTimeout = readTimeout;
     }
 
-    public long getWriteTimeout() {
+    public int getWriteTimeout() {
         return writeTimeout;
     }
 
-    public void setWriteTimeout(long writeTimeout) {
+    public void setWriteTimeout(int writeTimeout) {
         this.writeTimeout = writeTimeout;
     }
 

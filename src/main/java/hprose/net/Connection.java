@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 19, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -185,7 +185,7 @@ public final class Connection {
         }
     }
 
-    public final void setTimeout(long timeout, TimeoutType type) {
+    public final void setTimeout(int timeout, TimeoutType type) {
         timeoutType = type;
         if (type == TimeoutType.IDLE_TIMEOUT) {
             timer.setTimeout(timeout);

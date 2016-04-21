@@ -12,16 +12,16 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
-import hprose.net.ReceiveCallback;
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
+import hprose.net.ReceiveCallback;
 import hprose.util.Base64;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +50,6 @@ public class HproseHttpClient extends HproseClient {
     private int proxyPort = 80;
     private String proxyUser = null;
     private String proxyPass = null;
-    private int timeout = 0;
     private HostnameVerifier hv = null;
     private SSLSocketFactory sslsf = null;
 
@@ -154,14 +153,6 @@ public class HproseHttpClient extends HproseClient {
         this.proxyPass = proxyPass;
     }
 
-    public int getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-
     public HostnameVerifier getHostnameVerifier() {
         return hv;
     }
@@ -196,8 +187,8 @@ public class HproseHttpClient extends HproseClient {
             if (hv != null) ((HttpsURLConnection)conn).setHostnameVerifier(hv);
             if (sslsf != null) ((HttpsURLConnection)conn).setSSLSocketFactory(sslsf);
         }
-        conn.setConnectTimeout(timeout);
-        conn.setReadTimeout(timeout);
+        conn.setConnectTimeout(getTimeout());
+        conn.setReadTimeout(getTimeout());
         conn.setRequestProperty("Cookie", cookieManager.getCookie(url.getHost(),
                                                                   url.getFile(),
                                                                   url.getProtocol().equals("https")));

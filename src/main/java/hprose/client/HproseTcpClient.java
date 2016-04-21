@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 19, 2016                             *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -92,13 +92,13 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
         super();
         this.client = client;
     }
-    public final long getReadTimeout() {
+    public final int getReadTimeout() {
         return client.getReadTimeout();
     }
-    public final long getWriteTimeout() {
+    public final int getWriteTimeout() {
         return client.getWriteTimeout();
     }
-    public final long getConnectTimeout() {
+    public final int getConnectTimeout() {
         return client.getConnectTimeout();
     }
 
@@ -394,11 +394,10 @@ public class HproseTcpClient extends HproseClient {
     private volatile boolean fullDuplex = false;
     private volatile boolean noDelay = false;
     private volatile int maxPoolSize = 2;
-    private volatile long idleTimeout = 30000;
-    private volatile long readTimeout = 30000;
-    private volatile long writeTimeout = 30000;
-    private volatile long connectTimeout = 30000;
-    private volatile long timeout = 30000;
+    private volatile int idleTimeout = 30000;
+    private volatile int readTimeout = 30000;
+    private volatile int writeTimeout = 30000;
+    private volatile int connectTimeout = 30000;
     private volatile boolean keepAlive = true;
     private final SocketTransporter fdTrans = new FullDuplexSocketTransporter(this);
     private final SocketTransporter hdTrans = new HalfDuplexSocketTransporter(this);
@@ -461,49 +460,40 @@ public class HproseTcpClient extends HproseClient {
         this.maxPoolSize = maxPoolSize;
     }
 
-    public final long getIdleTimeout() {
+    public final int getIdleTimeout() {
         return idleTimeout;
     }
 
-    public final void setIdleTimeout(long idleTimeout) {
+    public final void setIdleTimeout(int idleTimeout) {
         if (idleTimeout < 0) throw new IllegalArgumentException("idleTimeout must be great than -1");
         this.idleTimeout = idleTimeout;
     }
 
-    public final long getReadTimeout() {
+    public final int getReadTimeout() {
         return readTimeout;
     }
 
-    public final void setReadTimeout(long readTimeout) {
+    public final void setReadTimeout(int readTimeout) {
         if (readTimeout < 1) throw new IllegalArgumentException("readTimeout must be great than 0");
         this.readTimeout = readTimeout;
     }
 
-    public final long getWriteTimeout() {
+    public final int getWriteTimeout() {
         return writeTimeout;
     }
 
-    public final void setWriteTimeout(long writeTimeout) {
+    public final void setWriteTimeout(int writeTimeout) {
         if (writeTimeout < 1) throw new IllegalArgumentException("writeTimeout must be great than 0");
         this.writeTimeout = writeTimeout;
     }
 
-    public final long getConnectTimeout() {
+    public final int getConnectTimeout() {
         return connectTimeout;
     }
 
-    public final void setConnectTimeout(long connectTimeout) {
+    public final void setConnectTimeout(int connectTimeout) {
         if (connectTimeout < 1) throw new IllegalArgumentException("connectTimeout must be great than 0");
         this.connectTimeout = connectTimeout;
-    }
-
-    public final long getTimeout() {
-        return timeout;
-    }
-
-    public final void setTimeout(long timeout) {
-        if (timeout < 1) throw new IllegalArgumentException("timeout must be great than 0");
-        this.timeout = timeout;
     }
 
     public final boolean isKeepAlive() {

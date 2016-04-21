@@ -12,7 +12,7 @@
  *                                                        *
  * SimpleMode Annotation for Java.                        *
  *                                                        *
- * LastModified: Mar 2, 2014                              *
+ * LastModified: Apr 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,5 +26,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface SimpleMode {
-    boolean value();
+    boolean value() default true;
 }

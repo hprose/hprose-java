@@ -827,4 +827,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         });
     }
 
+    public final Future<V> toFuture() {
+        return new PromiseFuture<V>(this);
+    }
 }

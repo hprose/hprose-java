@@ -8,18 +8,20 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ReceiveCallback.java                                   *
+ * NextFilterHandler.java                                 *
  *                                                        *
- * ReceiveCallback interface for Java.                    *
+ * hprose NextFilterHandler interface for Java.           *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 24, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.net;
 
+package hprose.common;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public interface ReceiveCallback {
-    void handler(ByteBuffer buffer, Exception e);
+public interface NextFilterHandler {
+    ByteBuffer handle(ByteBuffer request, HproseContext context) throws IOException;
 }

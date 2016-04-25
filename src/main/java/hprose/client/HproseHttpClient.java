@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 22, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -77,12 +78,30 @@ public class HproseHttpClient extends HproseClient {
         super(uri, mode);
     }
 
+    public HproseHttpClient(String[] uris) {
+        super(uris);
+    }
+
+    public HproseHttpClient(String[] uris, HproseMode mode) {
+        super(uris, mode);
+    }
+
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
         String scheme = (new URI(uri)).getScheme().toLowerCase();
         if (!scheme.equals("http") && !scheme.equals("https")) {
             throw new HproseException("This client doesn't support " + scheme + " scheme.");
         }
         return new HproseHttpClient(uri, mode);
+    }
+
+    public static HproseClient create(String[] uris, HproseMode mode) throws IOException, URISyntaxException {
+        for (int i = 0, n = uris.length; i < n; ++i) {
+            String scheme = (new URI(uris[i])).getScheme().toLowerCase();
+            if (!scheme.equals("http") && !scheme.equals("https")) {
+                throw new HproseException("This client doesn't support " + scheme + " scheme.");
+            }
+        }
+        return new HproseHttpClient(uris, mode);
     }
 
     public void setHeader(String name, String value) {
@@ -170,7 +189,7 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected ByteBufferStream sendAndReceive(ByteBufferStream stream) throws IOException {
+    protected ByteBuffer sendAndReceive(ByteBuffer request) throws IOException {
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -210,10 +229,11 @@ public class HproseHttpClient extends HproseClient {
         conn.setDoOutput(true);
         conn.setUseCaches(false);
         conn.setRequestProperty("Content-Type", "application/hprose");
-        conn.setRequestProperty("Content-Length", Integer.toString(stream.available()));
+        conn.setRequestProperty("Content-Length", Integer.toString(request.remaining()));
         OutputStream ostream = null;
         try {
             ostream = conn.getOutputStream();
+            ByteBufferStream stream = new ByteBufferStream(request);
             stream.writeTo(ostream);
             ostream.flush();
         }
@@ -232,20 +252,21 @@ public class HproseHttpClient extends HproseClient {
         }
         cookieManager.setCookie(cookieList, url.getHost());
         InputStream istream = null;
+        ByteBufferStream response = new ByteBufferStream();
         try {
             istream = conn.getInputStream();
-            stream.buffer.clear();
-            stream.readFrom(istream);
-            return stream;
+            response.readFrom(istream);
+            response.flip();
+            return response.buffer;
         }
         catch (IOException e) {
             InputStream estream = null;
             try {
                 estream = conn.getErrorStream();
                 if (estream != null) {
-                    stream.buffer.clear();
-                    stream.readFrom(estream);
-                    return stream;
+                    response.readFrom(estream);
+                    response.flip();
+                    return response.buffer;
                 }
                 else {
                     throw e;
@@ -261,19 +282,19 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected void send(final ByteBufferStream buffer, final ReceiveCallback callback) throws IOException {
+    protected void sendAndReceive(final ByteBuffer request, final ReceiveCallback callback) {
         executor.execute(new Runnable() {
             public void run() {
-                ByteBufferStream istream = null;
+                ByteBuffer response = null;
                 Exception e = null;
                 try {
-                    istream = sendAndReceive(buffer);
+                    response = sendAndReceive(request);
                 }
                 catch (Exception ex) {
                     e = ex;
                 }
                 finally {
-                    callback.handler(istream, e);
+                    callback.handler(response, e);
                 }
             }
         });

@@ -8,18 +8,20 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ReceiveCallback.java                                   *
+ * AsyncFilterHandler.java                                *
  *                                                        *
- * ReceiveCallback interface for Java.                    *
+ * hprose AsyncFilterHandler interface for Java.          *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 24, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.net;
 
+package hprose.common;
+
+import hprose.util.concurrent.Promise;
 import java.nio.ByteBuffer;
 
-public interface ReceiveCallback {
-    void handler(ByteBuffer buffer, Exception e);
+public interface AsyncFilterHandler {
+    Promise<ByteBuffer> handle(ByteBuffer request, HproseContext context, NextAsyncFilterHandler next);
 }

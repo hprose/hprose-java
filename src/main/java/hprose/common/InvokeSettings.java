@@ -12,27 +12,23 @@
  *                                                        *
  * hprose invoke settings class for Java.                 *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 23, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.common;
 
+import java.lang.reflect.Type;
+
 public final class InvokeSettings {
     private HproseResultMode mode = HproseResultMode.Normal;
-    private boolean byref = false;
-    private boolean simple = false;
-    private boolean idempotent = false;
-    private boolean failswitch = false;
-    private boolean oneway = false;
-    private int retry = 10;
-    private int timeout = 30000;
-
-    private static final InvokeSettings defaultSettings = new InvokeSettings();
-
-    public static InvokeSettings getDefaultSettings() {
-        return defaultSettings;
-    }
+    private Boolean byref = null;
+    private Boolean simple = null;
+    private Boolean idempotent = null;
+    private Boolean failswitch = null;
+    private Boolean oneway = null;
+    private Integer retry = null;
+    private Type type = null;
 
     public HproseResultMode getMode() {
         return mode;
@@ -90,11 +86,22 @@ public final class InvokeSettings {
         this.oneway = oneway;
     }
 
-    public long getTimeout() {
-        return timeout;
+    public Type getReturnType() {
+        return type;
     }
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
+    public void setReturnType(Type type) {
+        this.type = type;
+    }
+
+    public void copyFrom(InvokeSettings settings) {
+        mode = settings.mode;
+        if (settings.byref != null) byref = settings.byref;
+        if (settings.simple != null) simple = settings.simple;
+        if (settings.failswitch != null) failswitch = settings.failswitch;
+        if (settings.idempotent != null) idempotent = settings.idempotent;
+        if (settings.oneway != null) oneway = settings.oneway;
+        if (settings.retry != null) retry = settings.retry;
+        if (settings.type != null) type = settings.type;
     }
 }

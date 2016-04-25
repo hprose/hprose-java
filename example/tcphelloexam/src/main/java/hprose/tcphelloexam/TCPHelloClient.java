@@ -2,6 +2,8 @@ package hprose.tcphelloexam;
 
 import hprose.client.HproseTcpClient;
 import hprose.common.HproseCallback1;
+import hprose.util.concurrent.Action;
+import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -15,9 +17,21 @@ public class TCPHelloClient {
         int threadNumber = 8;
         final int roundNumber = 125000;
         Thread[] threads = new Thread[threadNumber];
-        final HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
+        final HproseTcpClient client = new HproseTcpClient(new String[] {"tcp://localhost:4321", "tcp://localhost:4321"} );
         client.setFullDuplex(true);
         client.setMaxPoolSize(2);
+        //System.out.println(client.invoke("hello", new Object[] {"World"}));
+        client.invoke("hello", new Object[] {"Async World"}, Promise.class).then(new Action<String>() {
+            @Override
+            public void call(String value) throws Throwable {
+                System.out.println(value);
+            }
+        }, new Action<Throwable>() {
+            @Override
+            public void call(Throwable value) throws Throwable {
+                Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, value);
+            }
+        });
         for (int i = 0; i < threadNumber; i++) {
             threads[i] = new Thread() {
                 @Override

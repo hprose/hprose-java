@@ -8,18 +8,19 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * ReceiveCallback.java                                   *
+ * NextAsyncInvokeHandler.java                            *
  *                                                        *
- * ReceiveCallback interface for Java.                    *
+ * hprose NextAsyncInvokeHandler interface for Java.      *
  *                                                        *
- * LastModified: Aug 13, 2015                             *
+ * LastModified: Apr 24, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.net;
 
-import java.nio.ByteBuffer;
+package hprose.common;
 
-public interface ReceiveCallback {
-    void handler(ByteBuffer buffer, Exception e);
+import hprose.util.concurrent.Promise;
+
+public interface NextAsyncInvokeHandler {
+    Promise<Object> handle(String name, Object[] args, HproseContext context);
 }

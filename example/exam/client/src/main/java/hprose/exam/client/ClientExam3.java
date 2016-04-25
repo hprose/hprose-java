@@ -1,6 +1,7 @@
 package hprose.exam.client;
 
 import hprose.client.HproseHttpClient;
+import hprose.common.InvokeSettings;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -26,7 +27,9 @@ public class ClientExam3 {
         System.out.println(map);
         System.out.println(map2);
         System.out.println(arguments[0]);
-        map2 = client.invoke("ex2_swapKeyAndValue", arguments, HashMap.class, true);
+        InvokeSettings settings = new InvokeSettings();
+        settings.setByref(true);
+        map2 = client.invoke("ex2_swapKeyAndValue", arguments, HashMap.class, settings);
         System.out.println(map);
         System.out.println(map2);
         System.out.println(arguments[0]);

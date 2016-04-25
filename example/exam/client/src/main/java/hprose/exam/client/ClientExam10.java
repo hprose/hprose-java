@@ -71,7 +71,7 @@ public class ClientExam10 {
         test.getUserList(new HproseCallback1<List<User>>() {
             public void handler(List<User> users) {
                 synchronized (test) {
-                    System.out.println("getUserList:");        
+                    System.out.println("getUserList:");
                     for (User user : users) {
                         System.out.printf("name: %s, ", user.getName());
                         System.out.printf("age: %d, ", user.getAge());
@@ -87,7 +87,7 @@ public class ClientExam10 {
         test.getUserArray(new HproseCallback1<User[]>() {
             public void handler(User[] users) {
                 synchronized (test) {
-                    System.out.println("getUserArray:");        
+                    System.out.println("getUserArray:");
                     for (User user : users) {
                         System.out.printf("name: %s, ", user.getName());
                         System.out.printf("age: %d, ", user.getAge());
@@ -105,7 +105,7 @@ public class ClientExam10 {
         try {
             users = result.get();
             synchronized (test) {
-                System.out.println("Future<List<User>> getUserList:");        
+                System.out.println("Future<List<User>> getUserList:");
                 for (User user : users) {
                     System.out.printf("name: %s, ", user.getName());
                     System.out.printf("age: %d, ", user.getAge());
@@ -114,7 +114,7 @@ public class ClientExam10 {
                     System.out.printf("married: %s.", user.isMarried());
                     System.out.println();
                 }
-                System.out.println();        
+                System.out.println();
             }
         } catch (Exception ex) {
             Logger.getLogger(ClientExam10.class.getName()).log(Level.SEVERE, null, ex);

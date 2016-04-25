@@ -12,7 +12,7 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Apr 28, 2015                             *
+ * LastModified: Apr 24, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,7 +33,7 @@ public class HproseInvocationHandler implements InvocationHandler {
         this.ns = (ns == null) ? "" : ns + "_";
     }
 
-    public Object invoke(Object proxy, Method method, final Object[] arguments) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         MethodName methodName = method.getAnnotation(MethodName.class);
         ResultMode mode = method.getAnnotation(ResultMode.class);
         ByRef byref = method.getAnnotation(ByRef.class);
@@ -42,9 +42,8 @@ public class HproseInvocationHandler implements InvocationHandler {
         Idempotent idempotent = method.getAnnotation(Idempotent.class);
         Failswitch failswitch = method.getAnnotation(Failswitch.class);
         Oneway oneway = method.getAnnotation(Oneway.class);
-        Timeout timeout = method.getAnnotation(Timeout.class);
 
-        final String functionName = ns + ((methodName == null) ? method.getName() : methodName.value());
+        final String name = ns + ((methodName == null) ? method.getName() : methodName.value());
 
         final InvokeSettings settings = new InvokeSettings();
 
@@ -55,7 +54,6 @@ public class HproseInvocationHandler implements InvocationHandler {
         if (idempotent != null) settings.setIdempotent(idempotent.value());
         if (failswitch != null) settings.setFailswitch(failswitch.value());
         if (oneway != null) settings.setOneway(oneway.value());
-        if (timeout != null) settings.setTimeout(timeout.value());
 
         Type[] paramTypes = method.getGenericParameterTypes();
         Type returnType = method.getGenericReturnType();
@@ -69,44 +67,49 @@ public class HproseInvocationHandler implements InvocationHandler {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }
-            HproseCallback1 callback = (HproseCallback1) arguments[n - 1];
+            HproseCallback1 callback = (HproseCallback1) args[n - 1];
             Object[] tmpargs = new Object[n - 1];
-            System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
-            client.invoke(functionName, tmpargs, callback, null, returnType, settings);
+            System.arraycopy(args, 0, tmpargs, 0, n - 1);
+            settings.setReturnType(returnType);
+            client.invoke(name, tmpargs, callback, settings);
         }
         else if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }
-            HproseCallback callback = (HproseCallback) arguments[n - 1];
+            HproseCallback callback = (HproseCallback) args[n - 1];
             Object[] tmpargs = new Object[n - 1];
-            System.arraycopy(arguments, 0, tmpargs, 0, n - 1);
-            client.invoke(functionName, tmpargs, callback, null, returnType, settings);
+            System.arraycopy(args, 0, tmpargs, 0, n - 1);
+            settings.setReturnType(returnType);
+            client.invoke(name, tmpargs, callback, settings);
         }
         else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback1.class)
                          && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
             if (paramTypes[n - 2] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 2]).getActualTypeArguments()[0];
             }
-            HproseCallback1 callback = (HproseCallback1) arguments[n - 2];
-            HproseErrorEvent errorEvent = (HproseErrorEvent) arguments[n - 1];
+            HproseCallback1 callback = (HproseCallback1) args[n - 2];
+            HproseErrorEvent errorEvent = (HproseErrorEvent) args[n - 1];
             Object[] tmpargs = new Object[n - 2];
-            System.arraycopy(arguments, 0, tmpargs, 0, n - 2);
-            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, settings);
+            System.arraycopy(args, 0, tmpargs, 0, n - 2);
+            settings.setReturnType(returnType);
+            client.invoke(name, tmpargs, callback, errorEvent, settings);
         }
         else if ((n > 1) && ClassUtil.toClass(paramTypes[n - 2]).equals(HproseCallback.class)
                          && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseErrorEvent.class)) {
             if (paramTypes[n - 2] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 2]).getActualTypeArguments()[0];
             }
-            HproseCallback callback = (HproseCallback) arguments[n - 2];
-            HproseErrorEvent errorEvent = (HproseErrorEvent) arguments[n - 1];
+            HproseCallback callback = (HproseCallback) args[n - 2];
+            HproseErrorEvent errorEvent = (HproseErrorEvent) args[n - 1];
             Object[] tmpargs = new Object[n - 2];
-            System.arraycopy(arguments, 0, tmpargs, 0, n - 2);
-            client.invoke(functionName, tmpargs, callback, errorEvent, returnType, settings);
+            System.arraycopy(args, 0, tmpargs, 0, n - 2);
+            settings.setReturnType(returnType);
+            client.invoke(name, tmpargs, callback, errorEvent, settings);
         }
         else {
-            result = client.invoke(functionName, arguments, returnType, settings);
+            settings.setReturnType(returnType);
+            result = client.invoke(name, args, settings);
         }
         return result;
     }

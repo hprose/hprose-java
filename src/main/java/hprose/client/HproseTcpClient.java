@@ -12,14 +12,13 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 25, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
 import hprose.common.HproseException;
-import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
 import hprose.net.Connection;
 import hprose.net.ConnectionHandler;
@@ -39,15 +38,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 final class Request {
-    public final ByteBufferStream stream;
+    public final ByteBuffer buffer;
     public final ReceiveCallback callback;
-    public Request(ByteBufferStream stream, ReceiveCallback callback) {
-        this.stream = stream;
+    public Request(ByteBuffer buffer, ReceiveCallback callback) {
+        this.buffer = buffer;
         this.callback = callback;
     }
 }
@@ -105,12 +105,15 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
     @Override
     public void run() {
         while (!isInterrupted()) {
-            Request reqeust;
-            try {
-                reqeust = requests.take();
-            }
-            catch (InterruptedException e) {
-                break;
+            Request request = requests.peek();
+            if (request == null) {
+                try {
+                    request = requests.take();
+                }
+                catch (InterruptedException e) {
+                    break;
+                }
+                requests.offer(request);
             }
             Connection conn = idleConnections.poll();
             if (conn == null) {
@@ -119,17 +122,30 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
                         ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
                     }
                     catch (IOException ex) {
-                        reqeust.callback.handler(null, ex);
+                        while ((request = requests.poll()) != null) {
+                            request.callback.handler(null, ex);
+                        }
                     }
                 }
                 try {
-                    conn = idleConnections.take();
+                    conn = idleConnections.poll(client.getConnectTimeout(), TimeUnit.MILLISECONDS);
                 }
                 catch (InterruptedException e) {
                     break;
                 }
             }
-            send(conn, reqeust);
+            if (conn != null) {
+                request = requests.poll();
+                if (request == null) {
+                    try {
+                        request = requests.take();
+                    }
+                    catch (InterruptedException e) {
+                        break;
+                    }
+                }
+                send(conn, request);
+            }
         }
     }
 
@@ -137,8 +153,8 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 
     protected abstract void send(Connection conn, Request request);
 
-    public final synchronized void send(ByteBufferStream stream, ReceiveCallback callback) {
-        requests.offer(new Request(stream, callback));
+    public final synchronized void send(ByteBuffer buffer, ReceiveCallback callback) {
+        requests.offer(new Request(buffer, callback));
     }
 
     protected void close(Map<Connection, Object> responses) {
@@ -184,8 +200,8 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                         response.callback.handler(null, new TimeoutException("timeout"));
                     }
                 }
-                if (res.isEmpty()) {
-                    conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
+                if (res.isEmpty() && conn.isConnected()) {
+                    recycle(conn);
                 }
             }
         }
@@ -203,14 +219,16 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 
     protected final void send(Connection conn, Request request) {
         Map<Integer, Response> res = responses.get(conn);
-        if (res.size() < 10) {
-            int id = nextId.incrementAndGet() & 0x7fffffff;
-            res.put(id, new Response(request.callback));
-            conn.send(request.stream.buffer, id);
-        }
-        else {
-            idleConnections.offer(conn);
-            requests.offer(request);
+        if (res != null) {
+            if (res.size() < 10) {
+                int id = nextId.incrementAndGet() & 0x7fffffff;
+                res.put(id, new Response(request.callback));
+                conn.send(request.buffer, id);
+            }
+            else {
+                idleConnections.offer(conn);
+                requests.offer(request);
+            }
         }
     }
 
@@ -260,7 +278,10 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         if (res != null) {
             Response response = res.remove(id);
             if (response != null) {
-                response.callback.handler(new ByteBufferStream(data), null);
+                if (data.position() != 0) {
+                    data.flip();
+                }
+                response.callback.handler(data, null);
             }
             if (res.isEmpty()) {
                 recycle(conn);
@@ -319,7 +340,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 
     protected final void send(Connection conn, Request request) {
         responses.put(conn, new Response(request.callback));
-        conn.send(request.stream.buffer, null);
+        conn.send(request.buffer, null);
     }
 
     protected final int geRealPoolSize() {
@@ -361,7 +382,10 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         Response response = responses.put(conn, nullResponse);
         recycle(conn);
         if (response != null && response != nullResponse) {
-            response.callback.handler(new ByteBufferStream(data), null);
+            if (data.position() != 0) {
+                data.flip();
+            }
+            response.callback.handler(data, null);
         }
     }
 
@@ -376,7 +400,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 }
 
 final class Result {
-    public volatile ByteBufferStream stream;
+    public volatile ByteBuffer buffer;
     public volatile IOException ex;
 }
 
@@ -418,6 +442,14 @@ public class HproseTcpClient extends HproseClient {
         super(uri, mode);
     }
 
+    public HproseTcpClient(String[] uris) {
+        super(uris);
+    }
+
+    public HproseTcpClient(String[] uris, HproseMode mode) {
+        super(uris, mode);
+    }
+
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
         String scheme = (new URI(uri)).getScheme().toLowerCase();
         if (!scheme.equals("tcp") &&
@@ -426,6 +458,18 @@ public class HproseTcpClient extends HproseClient {
             throw new HproseException("This client doesn't support " + scheme + " scheme.");
         }
         return new HproseTcpClient(uri, mode);
+    }
+
+    public static HproseClient create(String[] uris, HproseMode mode) throws IOException, URISyntaxException {
+        for (int i = 0, n = uris.length; i < n; ++i) {
+            String scheme = (new URI(uris[i])).getScheme().toLowerCase();
+            if (!scheme.equals("tcp") &&
+                !scheme.equals("tcp4") &&
+                !scheme.equals("tcp6")) {
+                throw new HproseException("This client doesn't support " + scheme + " scheme.");
+            }
+        }
+        return new HproseTcpClient(uris, mode);
     }
 
     @Override
@@ -505,12 +549,12 @@ public class HproseTcpClient extends HproseClient {
     }
 
     @Override
-    protected final ByteBufferStream sendAndReceive(ByteBufferStream buffer) throws IOException {
+    protected final ByteBuffer sendAndReceive(ByteBuffer request) throws IOException {
         final Result result = new Result();
         final Semaphore sem = new Semaphore(0);
-        send(buffer, new ReceiveCallback() {
-            public void handler(ByteBufferStream istream, Exception e) {
-                result.stream = istream;
+        sendAndReceive(request, new ReceiveCallback() {
+            public void handler(ByteBuffer buffer, Exception e) {
+                result.buffer = buffer;
                 if (e != null) {
                     if (e instanceof IOException) {
                         result.ex = (IOException) e;
@@ -529,18 +573,18 @@ public class HproseTcpClient extends HproseClient {
             Thread.currentThread().interrupt();
         }
         if (result.ex == null) {
-            return result.stream;
+            return result.buffer;
         }
         throw result.ex;
     }
 
     @Override
-    protected final void send(ByteBufferStream buffer, ReceiveCallback callback) throws IOException {
+    protected final void sendAndReceive(ByteBuffer request, ReceiveCallback callback) {
         if (fullDuplex) {
-            fdTrans.send(buffer, callback);
+            fdTrans.send(request, callback);
         }
         else {
-            hdTrans.send(buffer, callback);
+            hdTrans.send(request, callback);
         }
     }
 

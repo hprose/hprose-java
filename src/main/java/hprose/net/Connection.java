@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 25, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -61,9 +61,13 @@ public final class Connection {
     }
 
     public final void connected(Selector selector) throws ClosedChannelException {
-        timer.clear();
+        clearTimeout();
         key = channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, this);
         handler.onConnected(this);
+    }
+
+    public final boolean isConnected() {
+        return channel.isOpen() && channel.isConnected();
     }
 
     public final SocketChannel socketChannel() {
@@ -72,7 +76,7 @@ public final class Connection {
 
     public final void close() {
         try {
-            timer.clear();
+            clearTimeout();
             channel.close();
             key.cancel();
         }
@@ -126,7 +130,7 @@ public final class Connection {
                     data.put(inbuf);
                     inbuf.limit(bufLen);
                     inbuf.compact();
-                    timer.clear();
+                    clearTimeout();
                     handler.onReceived(this, data, id);
                     headerLength = 4;
                     dataLength = -1;
@@ -172,7 +176,7 @@ public final class Connection {
                     packet.writeLength += n;
                 }
                 ByteBufferStream.free(packet.buffers[1]);
-                timer.clear();
+                clearTimeout();
                 handler.onSended(this, packet.id);
                 packet = outqueue.poll();
                 if (packet == null) {
@@ -195,7 +199,7 @@ public final class Connection {
         }
     }
 
-//    public final void clearTimeout() {
-//        timer.clear();
-//    }
+    public final void clearTimeout() {
+        timer.clear();
+    }
 }

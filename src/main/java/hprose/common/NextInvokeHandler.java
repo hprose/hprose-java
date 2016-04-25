@@ -8,23 +8,19 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * Timeout.java                                           *
+ * NextInvokeHandler.java                                 *
  *                                                        *
- * Timeout Annotation for Java.                           *
+ * hprose NextInvokeHandler interface for Java.           *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 24, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
+
 package hprose.common;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.io.IOException;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Timeout {
-    int value();
+public interface NextInvokeHandler {
+    Object handle(String name, Object[] args, HproseContext context) throws IOException;
 }

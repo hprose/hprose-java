@@ -12,17 +12,16 @@
  *                                                        *
  * websocket context class for Java.                      *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
-import hprose.common.HproseContext;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
-public class WebSocketContext extends HproseContext {
+public class WebSocketContext extends ServiceContext {
     private final Session session;
     private final EndpointConfig config;
 

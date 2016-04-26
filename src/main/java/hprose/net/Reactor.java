@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Reactor class for Java.                         *
  *                                                        *
- * LastModified: Apr 14, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,16 +41,16 @@ public final class Reactor extends Thread {
 
     @Override
     public void run() {
-        while (!isInterrupted()) {
-            try {
-                process();
-                dispatch();
-            }
-            catch (IOException e) {}
-            catch (ClosedSelectorException e) {
-                break;
+        try {
+            while (!isInterrupted()) {
+                try {
+                    process();
+                    dispatch();
+                }
+                catch (IOException e) {}
             }
         }
+        catch (ClosedSelectorException e) {}
     }
 
     public void close() {

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 25, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -104,49 +104,36 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 
     @Override
     public void run() {
-        while (!isInterrupted()) {
-            Request request = requests.peek();
-            if (request == null) {
-                try {
+        try {
+            while (!isInterrupted()) {
+                Request request;
+                if (requests.isEmpty()) {
                     request = requests.take();
+                    requests.offer(request);
                 }
-                catch (InterruptedException e) {
-                    break;
-                }
-                requests.offer(request);
-            }
-            Connection conn = idleConnections.poll();
-            if (conn == null) {
-                if (geRealPoolSize() < client.getMaxPoolSize()) {
-                    try {
-                        ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
-                    }
-                    catch (IOException ex) {
-                        while ((request = requests.poll()) != null) {
-                            request.callback.handler(null, ex);
+                if (idleConnections.isEmpty()) {
+                    if (geRealPoolSize() < client.getMaxPoolSize()) {
+                        try {
+                            ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
+                        }
+                        catch (IOException ex) {
+                            while ((request = requests.poll()) != null) {
+                                request.callback.handler(null, ex);
+                            }
                         }
                     }
                 }
-                try {
-                    conn = idleConnections.poll(client.getConnectTimeout(), TimeUnit.MILLISECONDS);
-                }
-                catch (InterruptedException e) {
-                    break;
-                }
-            }
-            if (conn != null) {
-                request = requests.poll();
-                if (request == null) {
-                    try {
+                Connection conn = idleConnections.poll(client.getConnectTimeout(), TimeUnit.MILLISECONDS);
+                if (conn != null) {
+                    request = requests.poll();
+                    if (request == null) {
                         request = requests.take();
                     }
-                    catch (InterruptedException e) {
-                        break;
-                    }
+                    send(conn, request);
                 }
-                send(conn, request);
             }
         }
+        catch (InterruptedException e) {}
     }
 
     protected abstract int geRealPoolSize();
@@ -401,7 +388,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 
 final class Result {
     public volatile ByteBuffer buffer;
-    public volatile IOException ex;
+    public volatile Throwable e;
 }
 
 public class HproseTcpClient extends HproseClient {
@@ -549,20 +536,13 @@ public class HproseTcpClient extends HproseClient {
     }
 
     @Override
-    protected final ByteBuffer sendAndReceive(ByteBuffer request) throws IOException {
+    protected final ByteBuffer sendAndReceive(ByteBuffer request) throws Throwable {
         final Result result = new Result();
         final Semaphore sem = new Semaphore(0);
         sendAndReceive(request, new ReceiveCallback() {
-            public void handler(ByteBuffer buffer, Exception e) {
+            public void handler(ByteBuffer buffer, Throwable e) {
                 result.buffer = buffer;
-                if (e != null) {
-                    if (e instanceof IOException) {
-                        result.ex = (IOException) e;
-                    }
-                    else {
-                        result.ex = new HproseException(e.getMessage());
-                    }
-                }
+                result.e = e;
                 sem.release();
             }
         });
@@ -572,10 +552,10 @@ public class HproseTcpClient extends HproseClient {
         catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
-        if (result.ex == null) {
+        if (result.e == null) {
             return result.buffer;
         }
-        throw result.ex;
+        throw result.e;
     }
 
     @Override

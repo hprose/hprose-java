@@ -12,7 +12,7 @@
  *                                                        *
  * String Util class for Java.                            *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,7 +28,8 @@ public final class StrUtil {
         byte[] bytes = stream.toArray();
         try {
             return new String(bytes, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
+        }
+        catch (UnsupportedEncodingException e) {
             return new String(bytes);
         }
     }
@@ -65,5 +66,5 @@ public final class StrUtil {
         }
         return result;
     }
-    
+
 }

@@ -19,9 +19,8 @@
 
 package hprose.common;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public interface FilterHandler {
-    ByteBuffer handle(ByteBuffer request, HproseContext context, NextFilterHandler next) throws IOException;
+    ByteBuffer handle(ByteBuffer request, HproseContext context, NextFilterHandler next) throws Throwable;
 }

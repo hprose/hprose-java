@@ -19,8 +19,6 @@
 
 package hprose.common;
 
-import java.io.IOException;
-
 public interface NextInvokeHandler {
-    Object handle(String name, Object[] args, HproseContext context) throws IOException;
+    Object handle(String name, Object[] args, HproseContext context) throws Throwable;
 }

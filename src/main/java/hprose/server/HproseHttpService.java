@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Jul 20, 2015                             *
+ * LastModified: Jul 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -104,14 +104,14 @@ public class HproseHttpService extends HproseService {
     }
 
     @Override
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, ServiceContext context) {
         int count = arguments.length;
         HttpContext httpContext = (HttpContext)context;
         if (argumentTypes.length != count) {
             Object[] args = new Object[argumentTypes.length];
             System.arraycopy(arguments, 0, args, 0, count);
             Class<?> argType = (Class<?>) argumentTypes[count];
-            if (argType.equals(HproseContext.class)) {
+            if (argType.equals(HproseContext.class) || argType.equals(ServiceContext.class)) {
                 args[count] = context;
             }
             else if (argType.equals(HttpContext.class)) {
@@ -175,11 +175,12 @@ public class HproseHttpService extends HproseService {
             if (getEnabled) {
                 ByteBufferStream ostream = null;
                 try {
-                    ostream = doFunctionList(methods, httpContext);
+                    httpContext.setMethods(methods);
+                    ostream = doFunctionList(httpContext);
                     httpContext.getResponse().setContentLength(ostream.available());
                     ostream.writeTo(httpContext.getResponse().getOutputStream());
                 }
-                catch (IOException ex) {
+                catch (Throwable ex) {
                     fireErrorEvent(ex, httpContext);
                 }
                 finally {
@@ -209,9 +210,7 @@ public class HproseHttpService extends HproseService {
             public void onComplete(AsyncEvent ae) throws IOException {
             }
             public void onTimeout(AsyncEvent ae) throws IOException {
-                ByteBufferStream ostream = sendError(ae.getThrowable(), httpContext);
-                ae.getSuppliedResponse().setContentLength(ostream.available());
-                ostream.writeTo(ae.getSuppliedResponse().getOutputStream());
+                ((HttpServletResponse)ae.getSuppliedResponse()).sendError(HttpServletResponse.SC_REQUEST_TIMEOUT);
             }
             public void onError(AsyncEvent ae) throws IOException {
             }
@@ -226,11 +225,11 @@ public class HproseHttpService extends HproseService {
                     currentContext.set(httpContext);
                     istream = new ByteBufferStream();
                     istream.readFrom(async.getRequest().getInputStream());
-                    ostream = handle(istream, methods, httpContext);
+                    ostream = new ByteBufferStream(handle(istream.buffer, methods, httpContext));
                     async.getResponse().setContentLength(ostream.available());
                     ostream.writeTo(async.getResponse().getOutputStream());
                 }
-                catch (IOException ex) {
+                catch (Throwable ex) {
                     fireErrorEvent(ex, httpContext);
                 }
                 finally {
@@ -247,18 +246,18 @@ public class HproseHttpService extends HproseService {
         });
     }
 
-    private void syncHandle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
+    private void syncHandle(HttpContext httpContext, HproseHttpMethods methods) {
         ByteBufferStream istream = null;
         ByteBufferStream ostream = null;
         try {
             currentContext.set(httpContext);
             istream = new ByteBufferStream();
             istream.readFrom(httpContext.getRequest().getInputStream());
-            ostream = handle(istream, methods, httpContext);
+            ostream = new ByteBufferStream(handle(istream.buffer, methods, httpContext));
             httpContext.getResponse().setContentLength(ostream.available());
             ostream.writeTo(httpContext.getResponse().getOutputStream());
         }
-        catch (IOException ex) {
+        catch (Throwable ex) {
             fireErrorEvent(ex, httpContext);
         }
         finally {

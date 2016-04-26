@@ -189,7 +189,7 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected ByteBuffer sendAndReceive(ByteBuffer request) throws IOException {
+    protected ByteBuffer sendAndReceive(ByteBuffer request) throws Throwable {
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -286,11 +286,11 @@ public class HproseHttpClient extends HproseClient {
         executor.execute(new Runnable() {
             public void run() {
                 ByteBuffer response = null;
-                Exception e = null;
+                Throwable e = null;
                 try {
                     response = sendAndReceive(request);
                 }
-                catch (Exception ex) {
+                catch (Throwable ex) {
                     e = ex;
                 }
                 finally {

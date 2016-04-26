@@ -12,17 +12,16 @@
  *                                                        *
  * tcp context class for Java.                            *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
-import hprose.common.HproseContext;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
 
-public class TcpContext extends HproseContext {
+public class TcpContext extends ServiceContext {
     private final SocketChannel socketChannel;
     public TcpContext(SocketChannel socketChannel) {
         this.socketChannel = socketChannel;

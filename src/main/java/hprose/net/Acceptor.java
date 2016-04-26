@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Acceptor class for Java.                        *
  *                                                        *
- * LastModified: Apr 15, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -51,17 +51,17 @@ import java.util.Iterator;
         @Override
         public void run() {
             reactor.start();
-            while (!isInterrupted()) {
-                try {
-                    process();
-                }
-                catch (IOException e) {
-                    handler.onError(null, e);
-                }
-                catch (ClosedSelectorException e) {
-                    break;
+            try {
+                while (!isInterrupted()) {
+                    try {
+                        process();
+                    }
+                    catch (IOException e) {
+                        handler.onError(null, e);
+                    }
                 }
             }
+            catch (ClosedSelectorException e) {}
             reactor.close();
         }
 

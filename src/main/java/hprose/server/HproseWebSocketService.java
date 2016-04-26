@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: Apr 19, 2015                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,6 @@ package hprose.server;
 import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import javax.websocket.EndpointConfig;
@@ -30,7 +29,7 @@ import javax.websocket.Session;
 public class HproseWebSocketService extends HproseService {
     private final static ThreadLocal<WebSocketContext> currentContext = new ThreadLocal<WebSocketContext>();
     private EndpointConfig config = null;
-    
+
     public static WebSocketContext getCurrentContext() {
         return currentContext.get();
     }
@@ -54,14 +53,14 @@ public class HproseWebSocketService extends HproseService {
     }
 
     @Override
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, ServiceContext context) {
         int count = arguments.length;
         WebSocketContext wsContext = (WebSocketContext)context;
         if (argumentTypes.length != count) {
             Object[] args = new Object[argumentTypes.length];
             System.arraycopy(arguments, 0, args, 0, count);
             Class<?> argType = (Class<?>) argumentTypes[count];
-            if (argType.equals(HproseContext.class)) {
+            if (argType.equals(HproseContext.class) || argType.equals(ServiceContext.class)) {
                 args[count] = context;
             }
             else if (argType.equals(WebSocketContext.class)) {
@@ -82,29 +81,22 @@ public class HproseWebSocketService extends HproseService {
         this.config = config;
     }
 
-    public void handle(ByteBuffer buf, Session session) throws IOException {
+    public void handle(ByteBuffer buf, Session session) throws Throwable {
         WebSocketContext context = new WebSocketContext(session, config);
-        ByteBufferStream istream = null;
-        ByteBufferStream ostream = null;
         try {
             int id = buf.getInt();
             currentContext.set(context);
-            istream = new ByteBufferStream(buf.slice());
-            ostream = handle(istream, context);
-            buf = ByteBuffer.allocate(ostream.available() + 4);
+            ByteBuffer response = handle(buf.slice(), context);
+            ByteBufferStream.free(buf);
+            buf = ByteBuffer.allocate(4);
             buf.putInt(id);
-            buf.put(ostream.buffer);
             buf.flip();
-            session.getBasicRemote().sendBinary(buf);
+            session.getBasicRemote().sendBinary(buf, false);
+            session.getBasicRemote().sendBinary(response, true);
+            ByteBufferStream.free(response);
         }
         finally {
             currentContext.remove();
-            if (istream != null) {
-                istream.close();
-            }
-            if (ostream != null) {
-                ostream.close();
-            }
         }
     }
 

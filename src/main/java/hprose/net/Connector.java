@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connector class for Java.                       *
  *                                                        *
- * LastModified: Apr 19, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -46,16 +46,16 @@ public final class Connector extends Thread {
     @Override
     public final void run() {
         reactor.start();
-        while (!isInterrupted()) {
-            try {
-                process();
-                dispatch();
-            }
-            catch (IOException e) {}
-            catch (ClosedSelectorException e) {
-                break;
+        try {
+            while (!isInterrupted()) {
+                try {
+                    process();
+                    dispatch();
+                }
+                catch (IOException e) {}
             }
         }
+        catch (ClosedSelectorException e) {}
         reactor.close();
     }
 

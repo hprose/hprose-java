@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 25, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -88,7 +88,7 @@ public abstract class HproseClient implements HproseInvoker {
     private boolean byref = false;
     private boolean simple = false;
     private final NextInvokeHandler defaultInvokeHandler = new NextInvokeHandler() {
-        public Object handle(String name, Object[] args, HproseContext context) throws IOException {
+        public Object handle(String name, Object[] args, HproseContext context) throws Throwable {
             return syncInvokeHandler(name, args, (ClientContext)context);
         }
     };
@@ -98,7 +98,7 @@ public abstract class HproseClient implements HproseInvoker {
         }
     };
     private final NextFilterHandler defaultBeforeFilterHandler = new NextFilterHandler() {
-        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws IOException {
+        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
             return syncBeforeFilterHandler(request, (ClientContext)context);
         }
     };
@@ -108,7 +108,7 @@ public abstract class HproseClient implements HproseInvoker {
         }
     };
     private final NextFilterHandler defaultAfterFilterHandler = new NextFilterHandler() {
-        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws IOException {
+        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
             return syncAfterFilterHandler(request, (ClientContext)context);
         }
     };
@@ -334,6 +334,9 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     private ByteBuffer outputFilter(ByteBuffer request, ClientContext context) {
+        if (request.position() != 0) {
+            request.flip();
+        }
         for (int i = 0, n = filters.size(); i < n; ++i) {
             request = filters.get(i).outputFilter(request, context);
             if (request.position() != 0) {
@@ -344,6 +347,9 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     private ByteBuffer inputFilter(ByteBuffer response, ClientContext context) {
+        if (response.position() != 0) {
+            response.flip();
+        }
         for (int i = filters.size() - 1; i >= 0; --i) {
             response = filters.get(i).inputFilter(response, context);
             if (response.position() != 0) {
@@ -353,13 +359,10 @@ public abstract class HproseClient implements HproseInvoker {
         return response;
     }
 
-    private ByteBuffer syncBeforeFilterHandler(ByteBuffer request, ClientContext context) throws IOException {
+    private ByteBuffer syncBeforeFilterHandler(ByteBuffer request, ClientContext context) throws Throwable {
         request = outputFilter(request, context);
         ByteBuffer response = afterFilterHandler.handle(request, context);
         if (context.getSettings().isOneway()) return null;
-        if (response.position() != 0) {
-            response.flip();
-        }
         response = inputFilter(response, context);
         return response;
     }
@@ -370,23 +373,20 @@ public abstract class HproseClient implements HproseInvoker {
         return (Promise<ByteBuffer>)response.then(new Func<ByteBuffer, ByteBuffer>() {
             public ByteBuffer call(ByteBuffer response) throws Throwable {
                 if (context.getSettings().isOneway()) return null;
-                if (response.position() != 0) {
-                    response.flip();
-                }
                 response = inputFilter(response, context);
                 return response;
             }
         });
     }
 
-    private ByteBuffer syncAfterFilterHandler(ByteBuffer request, ClientContext context) throws IOException {
+    private ByteBuffer syncAfterFilterHandler(ByteBuffer request, ClientContext context) throws Throwable {
         return sendAndReceive(request);
     }
 
     private Promise<ByteBuffer> asyncAfterFilterHandler(ByteBuffer request, ClientContext context) {
         final Promise<ByteBuffer> response = new Promise<ByteBuffer>();
         sendAndReceive(request, new ReceiveCallback() {
-            public void handler(ByteBuffer stream, Exception e) {
+            public void handler(ByteBuffer stream, Throwable e) {
                 if (e != null) {
                     response.reject(e);
                 }
@@ -398,7 +398,7 @@ public abstract class HproseClient implements HproseInvoker {
         return response;
     }
 
-    private ByteBuffer syncSendAndReceive(ByteBuffer request, ClientContext context) throws IOException {
+    private ByteBuffer syncSendAndReceive(ByteBuffer request, ClientContext context) throws Throwable {
         try {
             return beforeFilterHandler.handle(request, context);
         }
@@ -409,7 +409,7 @@ public abstract class HproseClient implements HproseInvoker {
         }
     }
 
-    private ByteBuffer syncRetry(ByteBuffer request, ClientContext context) throws IOException {
+    private ByteBuffer syncRetry(ByteBuffer request, ClientContext context) throws Throwable {
         InvokeSettings settings = context.getSettings();
         if (settings.isFailswitch()) {
             failswitch();
@@ -494,7 +494,6 @@ public abstract class HproseClient implements HproseInvoker {
             }
         }
         stream.write(TagEnd);
-        stream.flip();
         return stream;
     }
 
@@ -568,7 +567,7 @@ public abstract class HproseClient implements HproseInvoker {
         return result;
     }
 
-    private Object syncInvokeHandler(String name, Object[] args, ClientContext context) throws IOException {
+    private Object syncInvokeHandler(String name, Object[] args, ClientContext context) throws Throwable {
         ByteBufferStream stream = encode(name, args, context);
         try {
             ByteBuffer buffer = syncSendAndReceive(stream.buffer, context);
@@ -604,7 +603,7 @@ public abstract class HproseClient implements HproseInvoker {
 
     private NextInvokeHandler getNextInvokeHandler(final NextInvokeHandler next, final InvokeHandler handler) {
         return new NextInvokeHandler() {
-            public Object handle(String name, Object[] args, HproseContext context) throws IOException {
+            public Object handle(String name, Object[] args, HproseContext context) throws Throwable {
                 return handler.handle(name, args, context, next);
             }
         };
@@ -620,7 +619,7 @@ public abstract class HproseClient implements HproseInvoker {
 
     private NextFilterHandler getNextFilterHandler(final NextFilterHandler next, final FilterHandler handler) {
         return new NextFilterHandler() {
-            public ByteBuffer handle(ByteBuffer request, HproseContext context) throws IOException {
+            public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
                 return handler.handle(request, context, next);
             }
         };
@@ -715,7 +714,7 @@ public abstract class HproseClient implements HproseInvoker {
         }
     };
 
-    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer) throws IOException;
+    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer) throws Throwable;
 
     protected abstract void sendAndReceive(ByteBuffer buffer, ReceiveCallback callback);
 
@@ -827,30 +826,30 @@ public abstract class HproseClient implements HproseInvoker {
         );
     }
 
-    public final Object invoke(String name) throws IOException {
+    public final Object invoke(String name) throws Throwable {
         return invoke(name, nullArgs, (Class<?>)null, null);
     }
-    public final Object invoke(String name, InvokeSettings settings) throws IOException {
+    public final Object invoke(String name, InvokeSettings settings) throws Throwable {
         return invoke(name, nullArgs, (Class<?>)null, settings);
     }
-    public final Object invoke(String name, Object[] args) throws IOException {
+    public final Object invoke(String name, Object[] args) throws Throwable {
         return invoke(name, args, (Class<?>)null, null);
     }
-    public final Object invoke(String name, Object[] args, InvokeSettings settings) throws IOException {
+    public final Object invoke(String name, Object[] args, InvokeSettings settings) throws Throwable {
         return invoke(name, args, (Class<?>)null, settings);
     }
 
-    public final <T> T invoke(String name, Class<T> returnType) throws IOException {
+    public final <T> T invoke(String name, Class<T> returnType) throws Throwable {
         return invoke(name, nullArgs, returnType, null);
     }
-    public final <T> T invoke(String name, Class<T> returnType, InvokeSettings settings) throws IOException {
+    public final <T> T invoke(String name, Class<T> returnType, InvokeSettings settings) throws Throwable {
         return invoke(name, nullArgs, returnType, settings);
     }
 
-    public final <T> T invoke(String name, Object[] args, Class<T> returnType) throws IOException {
+    public final <T> T invoke(String name, Object[] args, Class<T> returnType) throws Throwable {
         return invoke(name, args, returnType, null);
     }
-    public final <T> T invoke(String name, Object[] args, Class<T> returnType, InvokeSettings settings) throws IOException {
+    public final <T> T invoke(String name, Object[] args, Class<T> returnType, InvokeSettings settings) throws Throwable {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
         Type type = settings.getReturnType();

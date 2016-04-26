@@ -19,6 +19,7 @@
 package hprose.util.concurrent;
 
 import hprose.util.JdkVersion;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -122,10 +123,10 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return isPromise(value) ? (Promise<?>)value : value(value);
     }
 
-    private static void allHandler(final Promise<Object[]> promise, final AtomicInteger count, final Object[] result, Object element, final int i) {
-        ((Promise<Object>)toPromise(element)).then(
-            new Action<Object>() {
-                public void call(Object value) throws Throwable {
+    private static <T> void allHandler(final Promise<T[]> promise, final AtomicInteger count, final T[] result, Object element, final int i) {
+        ((Promise<T>)toPromise(element)).then(
+            new Action<T>() {
+                public void call(T value) throws Throwable {
                     result[i] = value;
                     if (count.decrementAndGet() == 0) {
                         promise.resolve(result);
@@ -140,24 +141,38 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         );
     }
 
-    public final static Promise<Object[]> all(Object[] array) {
+    public final static <T> Promise<T[]> all(Object[] array, Class<T> type) {
         int n = array.length;
-        Object[] result = new Object[n];
-        if (n == 0) return (Promise<Object[]>)value(result);
+        T[] result = (type == Object.class) ?
+                (T[])(new Object[n]) :
+                (T[])Array.newInstance(type, n);
+        if (n == 0) return (Promise<T[]>)value(result);
         AtomicInteger count = new AtomicInteger(n);
-        Promise<Object[]> promise = new Promise<Object[]>();
+        Promise<T[]> promise = new Promise<T[]>();
         for (int i = 0; i < n; ++i) {
             allHandler(promise, count, result, array[i], i);
         }
         return promise;
     }
 
-    public final static Promise<Object[]> all(Promise<Object[]> promise) {
-        return (Promise<Object[]>) promise.then(new Func<Promise<Object[]>, Object[]>() {
-            public Promise<Object[]> call(Object[] array) throws Throwable {
-                return all(array);
+    public final static Promise<Object[]> all(Object[] array) {
+        return all(array, Object.class);
+    }
+
+    public final static <T> Promise<T[]> all(Promise<Object[]> promise, final Class<T> type) {
+        return (Promise<T[]>) promise.then(new Func<Promise<T[]>, Object[]>() {
+            public Promise<T[]> call(Object[] array) throws Throwable {
+                return all(array, type);
             }
         });
+    }
+
+    public final static Promise<Object[]> all(Promise<Object[]> promise) {
+        return all(promise, Object.class);
+    }
+
+    public final <T> Promise<T[]> all(Class<T> type) {
+        return all((Promise<Object[]>)this, type);
     }
 
     public final Promise<Object[]> all() {
@@ -168,38 +183,50 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return all(args);
     }
 
-    public final static Promise<?> race(Object[] array) {
-        Promise<Object> promise = new Promise<Object>();
+    public final static <T> Promise<T> race(Object[] array, Class<T> type) {
+        Promise<T> promise = new Promise<T>();
         for (int i = 0, n = array.length; i < n; ++i) {
-            ((Promise<Object>)toPromise(array[i])).fill(promise);
+            ((Promise<T>)toPromise(array[i])).fill(promise);
         }
         return promise;
     }
 
-    public final static Promise<?> race(Promise<Object[]> promise) {
-        return promise.then(new Func<Promise<?>, Object[]>() {
-            public Promise<?> call(Object[] array) throws Throwable {
-                return race(array);
+    public final static Promise<?> race(Object[] array) {
+        return race(array, Object.class);
+    }
+
+    public final static <T> Promise<T> race(Promise<Object[]> promise, final Class<T> type) {
+        return (Promise<T>)promise.then(new Func<Promise<T>, Object[]>() {
+            public Promise<T> call(Object[] array) throws Throwable {
+                return race(array, type);
             }
         });
+    }
+
+    public final static Promise<?> race(Promise<Object[]> promise) {
+        return race(promise, Object.class);
+    }
+
+    public final <T> Promise<T> race(Class<T> type) {
+        return race((Promise<Object[]>)this, type);
     }
 
     public final Promise<?> race() {
         return race((Promise<Object[]>)this);
     }
 
-    public final static Promise<?> any(Object[] array) {
+    public final static <T> Promise<T> any(Object[] array, Class<T> type) {
         int n = array.length;
         if (n == 0) {
-            return Promise.error(new IllegalArgumentException("any(): array must not be empty"));
+            return (Promise<T>)Promise.error(new IllegalArgumentException("any(): array must not be empty"));
         }
         final RuntimeException reason = new RuntimeException("any(): all promises failed");
-        final Promise<Object> promise = new Promise<Object>();
+        final Promise<T> promise = new Promise<T>();
         final AtomicInteger count = new AtomicInteger(n);
         for (int i = 0; i < n; ++i) {
-            ((Promise<Object>)toPromise(array[i])).then(
-                new Action<Object>() {
-                    public void call(Object value) throws Throwable {
+            ((Promise<T>)toPromise(array[i])).then(
+                new Action<T>() {
+                    public void call(T value) throws Throwable {
                         promise.resolve(value);
                     }
                 },
@@ -218,12 +245,24 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static Promise<?> any(Promise<Object[]> promise) {
-        return promise.then(new Func<Promise<?>, Object[]>() {
-            public Promise<?> call(Object[] array) throws Throwable {
-                return any(array);
+    public final static Promise<?> any(Object[] array) {
+        return any(array, Object.class);
+    }
+
+    public final static <T> Promise<T> any(Promise<Object[]> promise, final Class<T> type) {
+        return (Promise<T>)promise.then(new Func<Promise<T>, Object[]>() {
+            public Promise<T> call(Object[] array) throws Throwable {
+                return any(array, type);
             }
         });
+    }
+
+    public final static Promise<?> any(Promise<Object[]> promise) {
+        return any(promise, Object.class);
+    }
+
+    public final <T> Promise<T> any(Class<T> type) {
+        return any((Promise<Object[]>)this, type);
     }
 
     public final Promise<?> any() {
@@ -347,29 +386,43 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         });
     }
 
-    private static <V> Func<Object[], Object[]> getFilterHandler(final Handler<Boolean, V> callback) {
-        return new Func<Object[], Object[]>() {
-            public Object[] call(Object[] array) throws Throwable {
+    private static <V, T> Func<T[], T[]> getFilterHandler(final Handler<Boolean, V> callback, final Class<T> type) {
+        return new Func<T[], T[]>() {
+            public T[] call(T[] array) throws Throwable {
                 int n = array.length;
-                ArrayList<Object> result = new ArrayList<Object>(n);
+                ArrayList<T> result = new ArrayList<T>(n);
                 for (int i = 0; i < n; ++i) {
                     if (callback.call((V)array[i], i)) result.add(array[i]);
                 }
-                return result.toArray();
+                return result.toArray((type == Object.class) ?
+                (T[])(new Object[result.size()]) :
+                (T[])Array.newInstance(type, result.size()));
             }
         };
     }
 
+    public final static <V, T> Promise<T[]> filter(Object[] array, Handler<Boolean, V> callback, Class<T> type) {
+        return (Promise<T[]>)all(array, type).then(getFilterHandler(callback, type));
+    }
+
     public final static <V> Promise<Object[]> filter(Object[] array, Handler<Boolean, V> callback) {
-        return (Promise<Object[]>)all(array).then(getFilterHandler(callback));
+        return filter(array, callback, Object.class);
+    }
+
+    public final static <V, T> Promise<T[]> filter(Promise<Object[]> array, Handler<Boolean, V> callback, Class<T> type) {
+        return (Promise<T[]>)all(array, type).then(getFilterHandler(callback, type));
     }
 
     public final static <V> Promise<Object[]> filter(Promise<Object[]> array, Handler<Boolean, V> callback) {
-        return (Promise<Object[]>)all(array).then(getFilterHandler(callback));
+        return filter(array, callback, Object.class);
+    }
+
+    public final <V, T> Promise<T[]> filter(Handler<Boolean, V> callback, Class<T> type) {
+        return (Promise<T[]>)this.all(type).then(getFilterHandler(callback, type));
     }
 
     public final <V> Promise<Object[]> filter(Handler<Boolean, V> callback) {
-        return (Promise<Object[]>)this.all().then(getFilterHandler(callback));
+        return filter(callback, Object.class);
     }
 
     public final static <V> Promise<Object[]> map(final Func<?, V> callback, Object...args) {
@@ -385,6 +438,21 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         });
     }
 
+    private static <V, T> Func<T[], Object[]> getMapHandler(final Handler<T, V> callback, final Class<T> type) {
+        return new Func<T[], Object[]>() {
+            public T[] call(Object[] array) throws Throwable {
+                int n = array.length;
+                T[] result = (type == Object.class) ?
+                (T[])(new Object[n]) :
+                (T[])Array.newInstance(type, n);
+                for (int i = 0; i < n; ++i) {
+                    result[i] = callback.call((V)array[i], i);
+                }
+                return result;
+            }
+        };
+    }
+
     private static <V> Func<Object[], Object[]> getMapHandler(final Handler<?, V> callback) {
         return new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
@@ -398,17 +466,30 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         };
     }
 
+    public final static <V, T> Promise<T[]> map(Object[] array, Handler<T, V> callback, Class<T> type) {
+        return (Promise<T[]>)all(array).then(getMapHandler(callback, type));
+    }
+
     public final static <V> Promise<Object[]> map(Object[] array, Handler<?, V> callback) {
         return (Promise<Object[]>)all(array).then(getMapHandler(callback));
+    }
+
+    public final static <V, T> Promise<T[]> map(Promise<Object[]> array, Handler<T, V> callback, Class<T> type) {
+        return (Promise<T[]>)all(array).then(getMapHandler(callback, type));
     }
 
     public final static <V> Promise<Object[]> map(Promise<Object[]> array, Handler<?, V> callback) {
         return (Promise<Object[]>)all(array).then(getMapHandler(callback));
     }
 
+    public final <V, T> Promise<T[]> map(Handler<T, V> callback, Class<T> type) {
+        return (Promise<T[]>)this.all().then(getMapHandler(callback, type));
+    }
+
     public final <V> Promise<Object[]> map(Handler<?, V> callback) {
         return (Promise<Object[]>)this.all().then(getMapHandler(callback));
     }
+
 
     private static <V> Func<V, Object[]> getReduceHandler(final Reducer<V, V> callback) {
         return new Func<V, Object[]>() {

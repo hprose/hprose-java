@@ -12,7 +12,7 @@
  *                                                        *
  * Class Util class for Java.                             *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,10 +38,12 @@ public final class ClassUtil {
                 type = getInnerClass(className, pos, i + 1, '$');
             }
             return type;
-        } else {
+        }
+        else {
             try {
                 return Class.forName(className.toString());
-            } catch (ClassNotFoundException e) {
+            }
+            catch (ClassNotFoundException e) {
                 return null;
             }
         }
@@ -70,10 +72,12 @@ public final class ClassUtil {
                 }
             }
             return type;
-        } else {
+        }
+        else {
             try {
                 return Class.forName(className.toString());
-            } catch (ClassNotFoundException e) {
+            }
+            catch (ClassNotFoundException e) {
                 return null;
             }
         }
@@ -104,13 +108,14 @@ public final class ClassUtil {
                     if (type == null) {
                         type = getInnerClass(cn, pos, 0, '$');
                     }
-                } catch (Exception e) {
                 }
-            } else {
+                catch (Exception e) {}
+            }
+            else {
                 try {
                     type = Class.forName(className);
-                } catch (ClassNotFoundException e) {
                 }
+                catch (ClassNotFoundException e) {}
             }
             if (type == null) {
                 type = void.class;
@@ -123,9 +128,11 @@ public final class ClassUtil {
     public final static Class<?> toClass(Type type) {
         if (type == null) {
             return null;
-        } else if (type instanceof Class<?>) {
+        }
+        else if (type instanceof Class<?>) {
             return (Class<?>) type;
-        } else if (type instanceof WildcardType) {
+        }
+        else if (type instanceof WildcardType) {
             WildcardType wildcardType = (WildcardType) type;
             if (wildcardType.getUpperBounds().length == 1) {
                 Type upperBoundType = wildcardType.getUpperBounds()[0];
@@ -134,7 +141,8 @@ public final class ClassUtil {
                 }
             }
             return Object.class;
-        } else if (type instanceof TypeVariable) {
+        }
+        else if (type instanceof TypeVariable) {
             TypeVariable typeVariable = (TypeVariable) type;
             Type[] bounds = typeVariable.getBounds();
             if (bounds.length == 1) {
@@ -144,13 +152,16 @@ public final class ClassUtil {
                 }
             }
             return Object.class;
-        } else if (type instanceof ParameterizedType) {
+        }
+        else if (type instanceof ParameterizedType) {
             return toClass(((ParameterizedType) type).getRawType());
-        } else if (type instanceof GenericArrayType) {
+        }
+        else if (type instanceof GenericArrayType) {
             return Array.newInstance(toClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
-        } else {
+        }
+        else {
             return Object.class;
         }
     }
-    
+
 }

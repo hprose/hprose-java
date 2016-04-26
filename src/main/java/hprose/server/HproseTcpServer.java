@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Apr 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -61,23 +61,16 @@ public class HproseTcpServer extends HproseService {
 
         public final void run() {
             TcpContext context = new TcpContext(conn.socketChannel());
-            ByteBufferStream istream = new ByteBufferStream(data);
             try {
                 currentContext.set(context);
-                conn.send(
-                    HproseTcpServer.this.handle(
-                        istream,
-                        context
-                    ).buffer,
-                    id
-                );
+                conn.send(HproseTcpServer.this.handle(data, context), id);
             }
-            catch (Exception e) {
+            catch (Throwable e) {
                 conn.close();
             }
             finally {
                 currentContext.remove();
-                istream.close();
+                ByteBufferStream.free(data);
             }
         }
     }
@@ -212,14 +205,14 @@ public class HproseTcpServer extends HproseService {
     }
 
     @Override
-    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, HproseContext context) {
+    protected Object[] fixArguments(Type[] argumentTypes, Object[] arguments, ServiceContext context) {
         int count = arguments.length;
         TcpContext tcpContext = (TcpContext)context;
         if (argumentTypes.length != count) {
             Object[] args = new Object[argumentTypes.length];
             System.arraycopy(arguments, 0, args, 0, count);
             Class<?> argType = (Class<?>) argumentTypes[count];
-            if (argType.equals(HproseContext.class)) {
+            if (argType.equals(HproseContext.class) || argType.equals(ServiceContext.class)) {
                 args[count] = context;
             }
             else if (argType.equals(TcpContext.class)) {

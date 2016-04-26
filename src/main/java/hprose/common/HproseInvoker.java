@@ -18,8 +18,6 @@
 \**********************************************************/
 package hprose.common;
 
-import java.io.IOException;
-
 public interface HproseInvoker {
     void invoke(String name, HproseCallback1<?> callback);
     void invoke(String name, HproseCallback1<?> callback, HproseErrorEvent errorEvent);
@@ -55,16 +53,16 @@ public interface HproseInvoker {
     <T> void invoke(String name, Object[] args, HproseCallback<T> callback, Class<T> returnType, InvokeSettings settings);
     <T> void invoke(String name, Object[] args, HproseCallback<T> callback, HproseErrorEvent errorEvent, Class<T> returnType, InvokeSettings settings);
 
-    Object invoke(String name) throws IOException;
-    Object invoke(String name, InvokeSettings settings) throws IOException;
+    Object invoke(String name) throws Throwable;
+    Object invoke(String name, InvokeSettings settings) throws Throwable;
 
-    Object invoke(String name, Object[] args) throws IOException;
-    Object invoke(String name, Object[] args, InvokeSettings settings) throws IOException;
+    Object invoke(String name, Object[] args) throws Throwable;
+    Object invoke(String name, Object[] args, InvokeSettings settings) throws Throwable;
 
-    <T> T invoke(String name, Class<T> returnType) throws IOException;
-    <T> T invoke(String name, Class<T> returnType, InvokeSettings settings) throws IOException;
+    <T> T invoke(String name, Class<T> returnType) throws Throwable;
+    <T> T invoke(String name, Class<T> returnType, InvokeSettings settings) throws Throwable;
 
-    <T> T invoke(String name, Object[] args, Class<T> returnType) throws IOException;
-    <T> T invoke(String name, Object[] args, Class<T> returnType, InvokeSettings settings) throws IOException;
+    <T> T invoke(String name, Object[] args, Class<T> returnType) throws Throwable;
+    <T> T invoke(String name, Object[] args, Class<T> returnType, InvokeSettings settings) throws Throwable;
 
 }

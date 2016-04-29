@@ -66,12 +66,12 @@ public abstract class HproseService {
         }
     };
     private final NextFilterHandler defaultBeforeFilterHandler = new NextFilterHandler() {
-        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
+        public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
             return beforeFilter(request, (ServiceContext)context);
         }
     };
     private final NextFilterHandler defaultAfterFilterHandler = new NextFilterHandler() {
-        public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
+        public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
             return afterFilter(request, (ServiceContext)context);
         }
     };
@@ -89,7 +89,7 @@ public abstract class HproseService {
 
     private NextFilterHandler getNextFilterHandler(final NextFilterHandler next, final FilterHandler handler) {
         return new NextFilterHandler() {
-            public ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable {
+            public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
                 return handler.handle(request, context, next);
             }
         };
@@ -804,7 +804,7 @@ public abstract class HproseService {
 
     private ByteBuffer beforeFilter(ByteBuffer request, ServiceContext context) throws Throwable {
         try {
-            return outputFilter(afterFilterHandler.handle(inputFilter(request, context), context), context);
+            return outputFilter((ByteBuffer)afterFilterHandler.handle(inputFilter(request, context), context), context);
         }
         catch (Throwable e) {
             return outputFilter(sendError(e, context), context);
@@ -820,7 +820,7 @@ public abstract class HproseService {
     protected ByteBuffer handle(ByteBuffer buffer, ServiceContext context) throws Throwable {
         try {
             currentContext.set(context);
-            return beforeFilterHandler.handle(buffer, context);
+            return (ByteBuffer)beforeFilterHandler.handle(buffer, context);
         }
         finally {
             currentContext.remove();

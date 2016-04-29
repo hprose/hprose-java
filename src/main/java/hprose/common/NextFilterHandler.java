@@ -22,5 +22,5 @@ package hprose.common;
 import java.nio.ByteBuffer;
 
 public interface NextFilterHandler {
-    ByteBuffer handle(ByteBuffer request, HproseContext context) throws Throwable;
+    Object handle(ByteBuffer request, HproseContext context) throws Throwable;
 }

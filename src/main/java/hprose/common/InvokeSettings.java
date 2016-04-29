@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 
 public final class InvokeSettings {
     private HproseResultMode mode = HproseResultMode.Normal;
+    private boolean async = false;
     private Boolean byref = null;
     private Boolean simple = null;
     private Boolean idempotent = null;
@@ -94,8 +95,17 @@ public final class InvokeSettings {
         this.type = type;
     }
 
+    public boolean isAsync() {
+        return async;
+    }
+
+    public void setAsync(boolean async) {
+        this.async = async;
+    }
+
     public void copyFrom(InvokeSettings settings) {
         mode = settings.mode;
+        async = settings.async;
         if (settings.byref != null) byref = settings.byref;
         if (settings.simple != null) simple = settings.simple;
         if (settings.failswitch != null) failswitch = settings.failswitch;

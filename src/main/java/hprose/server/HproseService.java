@@ -12,13 +12,14 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Apr 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
 import hprose.common.FilterHandler;
+import hprose.common.FilterHandlerManager;
 import hprose.common.HproseContext;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
@@ -123,9 +124,7 @@ public abstract class HproseService {
         addInvokeHandler(handler);
         return this;
     }
-    public interface FilterHandlerManager {
-        FilterHandlerManager use(FilterHandler handler);
-    }
+
     public final FilterHandlerManager beforeFilter = new FilterHandlerManager() {
         public final FilterHandlerManager use(FilterHandler handler) {
             addBeforeFilterHandler(handler);

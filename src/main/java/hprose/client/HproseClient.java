@@ -19,6 +19,7 @@
 package hprose.client;
 
 import hprose.common.FilterHandler;
+import hprose.common.FilterHandlerManager;
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseContext;
@@ -614,9 +615,6 @@ public abstract class HproseClient implements HproseInvoker {
     public final HproseClient use(InvokeHandler handler) {
         addInvokeHandler(handler);
         return this;
-    }
-    public interface FilterHandlerManager {
-        FilterHandlerManager use(FilterHandler handler);
     }
     public final FilterHandlerManager beforeFilter = new FilterHandlerManager() {
         public final FilterHandlerManager use(FilterHandler handler) {

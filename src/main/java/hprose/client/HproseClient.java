@@ -335,6 +335,7 @@ public abstract class HproseClient implements HproseInvoker {
         return response;
     }
 
+    @SuppressWarnings("unchecked")
     private Object beforeFilterHandler(ByteBuffer request, final ClientContext context) throws Throwable {
         request = outputFilter(request, context);
         Object response = afterFilterHandler.handle(request, context);
@@ -375,6 +376,7 @@ public abstract class HproseClient implements HproseInvoker {
         return sendAndReceive(request);
     }
 
+    @SuppressWarnings("unchecked")
     private Object sendAndReceive(final ByteBuffer request, final ClientContext context) throws Throwable {
         try {
             Object response = beforeFilterHandler.handle(request, context);
@@ -543,6 +545,7 @@ public abstract class HproseClient implements HproseInvoker {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     private Object invokeHandler(String name, final Object[] args, final ClientContext context) throws Throwable {
         final ByteBufferStream stream = encode(name, args, context);
         Object buffer = sendAndReceive(stream.buffer, context);
@@ -685,6 +688,7 @@ public abstract class HproseClient implements HproseInvoker {
     public final <T> void invoke(String name, Object[] args, HproseCallback1<T> callback, Class<T> returnType, InvokeSettings settings) {
         invoke(name, args, callback, null, returnType, settings);
     }
+    @SuppressWarnings("unchecked")
     public final <T> void invoke(final String name, Object[] args, final HproseCallback1<T> callback, final HproseErrorEvent errorEvent, Class<T> returnType, InvokeSettings settings) {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
@@ -735,6 +739,7 @@ public abstract class HproseClient implements HproseInvoker {
     public final <T> void invoke(String name, Object[] args, HproseCallback<T> callback, Class<T> returnType, InvokeSettings settings) {
         invoke(name, args, callback, null, returnType, settings);
     }
+    @SuppressWarnings("unchecked")
     public final <T> void invoke(final String name, final Object[] args, final HproseCallback<T> callback, final HproseErrorEvent errorEvent, Class<T> returnType, InvokeSettings settings) {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
@@ -786,6 +791,7 @@ public abstract class HproseClient implements HproseInvoker {
     public final <T> T invoke(String name, Object[] args, Class<T> returnType) throws Throwable {
         return invoke(name, args, returnType, null);
     }
+    @SuppressWarnings("unchecked")
     public final <T> T invoke(String name, Object[] args, Class<T> returnType, InvokeSettings settings) throws Throwable {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
@@ -801,6 +807,7 @@ public abstract class HproseClient implements HproseInvoker {
         return (T)invokeHandler.handle(name, args, getContext(settings));
     }
 
+    @SuppressWarnings("unchecked")
     private Promise<?> asyncInvoke(String name, Object[] args, Type type, InvokeSettings settings) {
         settings.setAsync(true);
         if (type instanceof ParameterizedType) {

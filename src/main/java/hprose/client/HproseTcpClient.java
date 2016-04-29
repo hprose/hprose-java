@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Apr 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -224,6 +224,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public final void close() {
         timer.clear();
         close((Map<Connection, Object>)(Object)responses);
@@ -335,6 +336,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public final void close() {
         timer.clear();
         close((Map<Connection, Object>)(Object)responses);

@@ -2,11 +2,10 @@ package hprose.exam.client;
 
 import hprose.client.HproseHttpClient;
 import hprose.common.InvokeSettings;
-import java.io.IOException;
 import java.util.HashMap;
 
 public class ClientExam3 {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Throwable {
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8084/examserver/Methods");
         HashMap map = new HashMap();

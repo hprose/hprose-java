@@ -2,11 +2,10 @@ package hprose.exam.client;
 
 import hprose.client.HproseHttpClient;
 import hprose.io.HproseClassManager;
-import java.io.IOException;
 import java.util.List;
 
 public class ClientExam4 {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Throwable {
         HproseClassManager.register(User.class, "User");
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8084/examserver/Methods");

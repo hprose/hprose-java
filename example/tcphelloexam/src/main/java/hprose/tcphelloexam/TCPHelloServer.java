@@ -1,12 +1,13 @@
 package hprose.tcphelloexam;
 
 import hprose.server.HproseTcpServer;
+import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class TCPHelloServer {
-    public static String hello(String name) {
-        return "Hello " + name + "!";
+    public static Promise hello(String name) {
+        return Promise.value("Hello " + name + "!");
     }
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         HproseTcpServer server = new HproseTcpServer("tcp://localhost:4321");

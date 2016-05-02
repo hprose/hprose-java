@@ -1,11 +1,10 @@
 package hprose.exam.client;
 
 import hprose.client.HproseHttpClient;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class ClientExam2 {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Throwable {
         HproseHttpClient client = new HproseHttpClient();
         client.useService("http://localhost:8084/examserver/Methods");
         System.out.println(client.invoke("ex1_sum", new Object[] { new int[] {1,2,3,4,5} }));

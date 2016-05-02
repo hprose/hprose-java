@@ -652,23 +652,18 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     private <V> void call(final Callback<V> callback, final Promise<?> next, final V x) {
-        timer.execute(new Runnable() {
-            public void run() {
-                try {
-                    if (callback instanceof Action) {
-                        ((Action<V>)callback).call(x);
-                        next.resolve(null);
-                    }
-                    else {
-                        Object value = ((Func<?, V>)callback).call(x);
-                        next.resolve(value);
-                    }
-                }
-                catch (Throwable e) {
-                    next.reject(e);
-                }
+        try {
+            if (callback instanceof Action) {
+                ((Action<V>)callback).call(x);
+                next.resolve(null);
             }
-        });
+            else {
+                next.resolve(((Func<?, V>)callback).call(x));
+            }
+        }
+        catch (Throwable e) {
+            next.reject(e);
+        }
     }
 
     private void reject(final Callback<Throwable> onreject, final Promise<?> next, final Throwable e) {

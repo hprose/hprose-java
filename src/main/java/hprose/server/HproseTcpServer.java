@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: May 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,6 +25,8 @@ import hprose.net.Acceptor;
 import hprose.net.Connection;
 import hprose.net.ConnectionHandler;
 import hprose.net.TimeoutType;
+import hprose.util.concurrent.Action;
+import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.Socket;
@@ -61,16 +63,44 @@ public class HproseTcpServer extends HproseService {
 
         public final void run() {
             TcpContext context = new TcpContext(conn.socketChannel());
+            currentContext.set(context);
+            Object response;
             try {
-                currentContext.set(context);
-                conn.send(HproseTcpServer.this.handle(data, context), id);
+                response = HproseTcpServer.this.handle(data, context);
             }
             catch (Throwable e) {
                 conn.close();
+                currentContext.remove();
+                return;
             }
             finally {
-                currentContext.remove();
                 ByteBufferStream.free(data);
+            }
+            if (response instanceof Promise) {
+                ((Promise<ByteBuffer>)response).then(new Action<ByteBuffer>() {
+                    public void call(ByteBuffer value) throws Throwable {
+                        conn.send(value, id);
+                    }
+                }, new Action<Throwable>() {
+                    public void call(Throwable e) throws Throwable {
+                        conn.close();
+                    }
+                }).complete(new Action<Object>() {
+                    public void call(Object o) throws Throwable {
+                        currentContext.remove();
+                    }
+                });
+            }
+            else {
+                try {
+                    conn.send((ByteBuffer)response, id);
+                }
+                catch (Throwable e) {
+                    conn.close();
+                }
+                finally {
+                    currentContext.remove();
+                }
             }
         }
     }

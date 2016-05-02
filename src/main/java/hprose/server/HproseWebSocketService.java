@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: May 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,9 +21,12 @@ package hprose.server;
 import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
+import hprose.util.concurrent.Action;
+import hprose.util.concurrent.Promise;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import javax.websocket.EndpointConfig;
+import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
 public class HproseWebSocketService extends HproseService {
@@ -83,20 +86,49 @@ public class HproseWebSocketService extends HproseService {
 
     public void handle(ByteBuffer buf, Session session) throws Throwable {
         WebSocketContext context = new WebSocketContext(session, config);
+        int id;
+        Object response = null;
         try {
-            int id = buf.getInt();
             currentContext.set(context);
-            ByteBuffer response = handle(buf.slice(), context);
-            ByteBufferStream.free(buf);
-            buf = ByteBuffer.allocate(4);
-            buf.putInt(id);
-            buf.flip();
-            session.getBasicRemote().sendBinary(buf, false);
-            session.getBasicRemote().sendBinary(response, true);
-            ByteBufferStream.free(response);
+            id = buf.getInt();
+            response = handle(buf.slice(), context);
+        }
+        catch (Throwable e) {
+            currentContext.remove();
+            return;
         }
         finally {
-            currentContext.remove();
+            ByteBufferStream.free(buf);
+        }
+        buf = ByteBuffer.allocate(4);
+        buf.putInt(id);
+        buf.flip();
+        final RemoteEndpoint.Basic remote = session.getBasicRemote();
+        remote.sendBinary(buf, false);
+        if (response instanceof Promise) {
+            ((Promise<ByteBuffer>)response).then(new Action<ByteBuffer>() {
+                public void call(ByteBuffer value) throws Throwable {
+                    try {
+                        remote.sendBinary(value, true);
+                    }
+                    finally {
+                        ByteBufferStream.free(value);
+                    }
+                }
+            }).complete(new Action<Object>() {
+                public void call(Object o) throws Throwable {
+                    currentContext.remove();
+                }
+            });
+        }
+        else {
+            try {
+                remote.sendBinary((ByteBuffer)response, true);
+            }
+            finally {
+                ByteBufferStream.free((ByteBuffer)response);
+                currentContext.remove();
+            }
         }
     }
 

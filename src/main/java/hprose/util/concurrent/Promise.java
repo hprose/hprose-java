@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Apr 29, 2016                             *
+ * LastModified: May 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -576,18 +576,18 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    public final static <R, V> Promise<V> reduce(Object[] array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)all(array).then(getReduceHandler(callback, initialValue));
+    public final static <R, V> Promise<R> reduce(Object[] array, Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)all(array).then(getReduceHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
-    public final static <R, V> Promise<V> reduce(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)all(array).then(getReduceHandler(callback, initialValue));
+    public final static <R, V> Promise<R> reduce(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)all(array).then(getReduceHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
-    public final <R, V> Promise<V> reduce(Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)this.all().then(getReduceHandler(callback, initialValue));
+    public final <R, V> Promise<R> reduce(Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)this.all().then(getReduceHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
@@ -636,18 +636,18 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    public final static <R, V> Promise<V> reduceRight(Object[] array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)all(array).then(getReduceRightHandler(callback, initialValue));
+    public final static <R, V> Promise<R> reduceRight(Object[] array, Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)all(array).then(getReduceRightHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
-    public final static <R, V> Promise<V> reduceRight(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)all(array).then(getReduceRightHandler(callback, initialValue));
+    public final static <R, V> Promise<R> reduceRight(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)all(array).then(getReduceRightHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
-    public final <R, V> Promise<V> reduceRight(Reducer<R, V> callback, R initialValue) {
-        return (Promise<V>)this.all().then(getReduceRightHandler(callback, initialValue));
+    public final <R, V> Promise<R> reduceRight(Reducer<R, V> callback, R initialValue) {
+        return (Promise<R>)this.all().then(getReduceRightHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")

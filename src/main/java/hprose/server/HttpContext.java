@@ -30,10 +30,12 @@ public class HttpContext extends ServiceContext {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
 
-    public HttpContext(HttpServletRequest request,
+    public HttpContext(HproseClients clients,
+                       HttpServletRequest request,
                        HttpServletResponse response,
                        ServletConfig config,
                        ServletContext application) {
+        super(clients);
         this.request = request;
         this.response = response;
         this.config = config;

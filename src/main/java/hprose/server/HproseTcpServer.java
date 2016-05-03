@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: May 2, 2016                              *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -62,7 +62,7 @@ public class HproseTcpServer extends HproseService {
         }
 
         public final void run() {
-            TcpContext context = new TcpContext(conn.socketChannel());
+            TcpContext context = new TcpContext(HproseTcpServer.this, conn.socketChannel());
             currentContext.set(context);
             Object response;
             try {
@@ -309,13 +309,13 @@ public class HproseTcpServer extends HproseService {
 
     protected void fireAcceptEvent(SocketChannel channel) {
         if (event != null && HproseTcpServiceEvent.class.isInstance(event)) {
-            ((HproseTcpServiceEvent)event).onAccept(new TcpContext(channel));
+            ((HproseTcpServiceEvent)event).onAccept(new TcpContext(this, channel));
         }
     }
 
     protected void fireCloseEvent(SocketChannel channel) {
         if (event != null && HproseTcpServiceEvent.class.isInstance(event)) {
-            ((HproseTcpServiceEvent)event).onClose(new TcpContext(channel));
+            ((HproseTcpServiceEvent)event).onClose(new TcpContext(this, channel));
         }
     }
 

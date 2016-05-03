@@ -8,32 +8,17 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * TcpContext.java                                        *
+ * PushEvent.java                                         *
  *                                                        *
- * tcp context class for Java.                            *
+ * hprose push event interface for Java.                  *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: May 3, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
-
-public class TcpContext extends ServiceContext {
-    private final SocketChannel socketChannel;
-    public TcpContext(HproseClients clients,
-                      SocketChannel socketChannel) {
-        super(clients);
-        this.socketChannel = socketChannel;
-    }
-
-    public SocketChannel getSocketChannel() {
-        return socketChannel;
-    }
-
-    public Socket getSocket() {
-        return socketChannel.socket();
-    }
+public interface PushEvent {
+    void subscribe(String topic, int id, HproseService service);
+    void unsubscribe(String topic, int id, HproseService service);
 }

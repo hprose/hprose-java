@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: May 2, 2016                              *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -43,21 +43,46 @@ import static hprose.io.HproseTags.TagTrue;
 import hprose.io.serialize.Writer;
 import hprose.io.unserialize.Reader;
 import hprose.util.StrUtil;
+import hprose.util.concurrent.Action;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
 import hprose.util.concurrent.Reducer;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class HproseService {
+public abstract class HproseService implements HproseClients {
+
+    public HproseService() {
+        add("call", new Callable<Integer>() {
+            private final AtomicInteger next = new AtomicInteger(0);
+            public Integer call() throws Exception {
+                int nextId = next.getAndIncrement();
+                if (nextId > 0) {
+                    return nextId;
+                }
+                else {
+                    next.set(0);
+                    return 0;
+                }
+            }
+        }, "#", true);
+    }
 
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private HproseMode mode = HproseMode.MemberMode;
@@ -87,23 +112,7 @@ public abstract class HproseService {
     private NextInvokeHandler invokeHandler = defaultInvokeHandler;
     private NextFilterHandler beforeFilterHandler = defaultBeforeFilterHandler;
     private NextFilterHandler afterFilterHandler = defaultAfterFilterHandler;
-    public String getString(ByteBuffer buffer) {
-        Charset charset;
-        CharsetDecoder decoder;
-        CharBuffer charBuffer;
-        try
-        {
-            charset = Charset.forName("UTF-8");
-            decoder = charset.newDecoder();
-            charBuffer = decoder.decode(buffer.asReadOnlyBuffer());
-            return charBuffer.toString();
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-            return "";
-        }
-    }
+
     private NextInvokeHandler getNextInvokeHandler(final NextInvokeHandler next, final InvokeHandler handler) {
         return new NextInvokeHandler() {
             public Object handle(String name, Object[] args, HproseContext context) throws Throwable {
@@ -177,38 +186,38 @@ public abstract class HproseService {
         this.globalMethods = methods;
     }
 
-    public HproseMode getMode() {
+    public final HproseMode getMode() {
         return mode;
     }
 
-    public void setMode(HproseMode mode) {
+    public final void setMode(HproseMode mode) {
         this.mode = mode;
     }
 
-    public boolean isDebugEnabled() {
+    public final boolean isDebugEnabled() {
         return debugEnabled;
     }
 
-    public void setDebugEnabled(boolean enabled) {
+    public final void setDebugEnabled(boolean enabled) {
         debugEnabled = enabled;
     }
 
-    public HproseServiceEvent getEvent() {
+    public final HproseServiceEvent getEvent() {
         return this.event;
     }
 
-    public void setEvent(HproseServiceEvent event) {
+    public final void setEvent(HproseServiceEvent event) {
         this.event = event;
     }
 
-    public HproseFilter getFilter() {
+    public final HproseFilter getFilter() {
         if (filters.isEmpty()) {
             return null;
         }
         return filters.get(0);
     }
 
-    public void setFilter(HproseFilter filter) {
+    public final void setFilter(HproseFilter filter) {
         if (!filters.isEmpty()) {
             filters.clear();
         }
@@ -217,379 +226,379 @@ public abstract class HproseService {
         }
     }
 
-    public void addFilter(HproseFilter filter) {
+    public final void addFilter(HproseFilter filter) {
         filters.add(filter);
     }
 
-    public boolean removeFilter(HproseFilter filter) {
+    public final boolean removeFilter(HproseFilter filter) {
         return filters.remove(filter);
     }
 
-    public void add(Method method, Object obj, String aliasName) {
+    public final void add(Method method, Object obj, String aliasName) {
         getGlobalMethods().addMethod(method, obj, aliasName);
     }
 
-    public void add(Method method, Object obj, String aliasName, HproseResultMode mode) {
+    public final void add(Method method, Object obj, String aliasName, HproseResultMode mode) {
         getGlobalMethods().addMethod(method, obj, aliasName, mode);
     }
 
-    public void add(Method method, Object obj, String aliasName, boolean simple) {
+    public final void add(Method method, Object obj, String aliasName, boolean simple) {
         getGlobalMethods().addMethod(method, obj, aliasName, simple);
     }
 
-    public void add(Method method, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
+    public final void add(Method method, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(method, obj, aliasName, mode, simple);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName, mode);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName, simple);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName, mode, simple);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName, mode);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName, simple);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName, mode, simple);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, mode);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, simple);
     }
 
-    public void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, mode, simple);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, mode);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, simple);
     }
 
-    public void add(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, type, paramTypes, mode, simple);
     }
 
-    public void add(String methodName, Object obj, String aliasName) {
+    public final void add(String methodName, Object obj, String aliasName) {
         getGlobalMethods().addMethod(methodName, obj, aliasName);
     }
 
-    public void add(String methodName, Object obj, String aliasName, HproseResultMode mode) {
+    public final void add(String methodName, Object obj, String aliasName, HproseResultMode mode) {
         getGlobalMethods().addMethod(methodName, obj, aliasName, mode);
     }
 
-    public void add(String methodName, Object obj, String aliasName, boolean simple) {
+    public final void add(String methodName, Object obj, String aliasName, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, aliasName, simple);
     }
 
-    public void add(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
+    public final void add(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, aliasName, mode, simple);
     }
 
-    public void add(String methodName, Class<?> type, String aliasName) {
+    public final void add(String methodName, Class<?> type, String aliasName) {
         getGlobalMethods().addMethod(methodName, type, aliasName);
     }
 
-    public void add(String methodName, Class<?> type, String aliasName, HproseResultMode mode) {
+    public final void add(String methodName, Class<?> type, String aliasName, HproseResultMode mode) {
         getGlobalMethods().addMethod(methodName, type, aliasName, mode);
     }
 
-    public void add(String methodName, Class<?> type, String aliasName, boolean simple) {
+    public final void add(String methodName, Class<?> type, String aliasName, boolean simple) {
         getGlobalMethods().addMethod(methodName, type, aliasName, simple);
     }
 
-    public void add(String methodName, Class<?> type, String aliasName, HproseResultMode mode, boolean simple) {
+    public final void add(String methodName, Class<?> type, String aliasName, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, type, aliasName, mode, simple);
     }
 
-    public void add(String methodName, Object obj) {
+    public final void add(String methodName, Object obj) {
         getGlobalMethods().addMethod(methodName, obj);
     }
 
-    public void add(String methodName, Object obj, HproseResultMode mode) {
+    public final void add(String methodName, Object obj, HproseResultMode mode) {
         getGlobalMethods().addMethod(methodName, obj, mode);
     }
 
-    public void add(String methodName, Object obj, boolean simple) {
+    public final void add(String methodName, Object obj, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, simple);
     }
 
-    public void add(String methodName, Object obj, HproseResultMode mode, boolean simple) {
+    public final void add(String methodName, Object obj, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, mode, simple);
     }
 
-    public void add(String methodName, Class<?> type) {
+    public final void add(String methodName, Class<?> type) {
         getGlobalMethods().addMethod(methodName, type);
     }
 
-    public void add(String methodName, Class<?> type, HproseResultMode mode) {
+    public final void add(String methodName, Class<?> type, HproseResultMode mode) {
         getGlobalMethods().addMethod(methodName, type, mode);
     }
 
-    public void add(String methodName, Class<?> type, boolean simple) {
+    public final void add(String methodName, Class<?> type, boolean simple) {
         getGlobalMethods().addMethod(methodName, type, simple);
     }
 
-    public void add(String methodName, Class<?> type, HproseResultMode mode, boolean simple) {
+    public final void add(String methodName, Class<?> type, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, type, mode, simple);
     }
 
-    public void add(String[] methodNames, Object obj, String[] aliasNames) {
+    public final void add(String[] methodNames, Object obj, String[] aliasNames) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames);
     }
 
-    public void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode) {
+    public final void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames, mode);
     }
 
-    public void add(String[] methodNames, Object obj, String[] aliasNames, boolean simple) {
+    public final void add(String[] methodNames, Object obj, String[] aliasNames, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames, simple);
     }
 
-    public void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames, mode, simple);
     }
 
-    public void add(String[] methodNames, Object obj, String aliasPrefix) {
+    public final void add(String[] methodNames, Object obj, String aliasPrefix) {
         getGlobalMethods().addMethods(methodNames, obj, aliasPrefix);
     }
 
-    public void add(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode) {
+    public final void add(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, obj, aliasPrefix, mode);
     }
 
-    public void add(String[] methodNames, Object obj, String aliasPrefix, boolean simple) {
+    public final void add(String[] methodNames, Object obj, String aliasPrefix, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, aliasPrefix, simple);
     }
 
-    public void add(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, aliasPrefix, mode, simple);
     }
 
-    public void add(String[] methodNames, Object obj) {
+    public final void add(String[] methodNames, Object obj) {
         getGlobalMethods().addMethods(methodNames, obj);
     }
 
-    public void add(String[] methodNames, Object obj, HproseResultMode mode) {
+    public final void add(String[] methodNames, Object obj, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, obj, mode);
     }
 
-    public void add(String[] methodNames, Object obj, boolean simple) {
+    public final void add(String[] methodNames, Object obj, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, simple);
     }
 
-    public void add(String[] methodNames, Object obj, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Object obj, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, mode, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type, String[] aliasNames) {
+    public final void add(String[] methodNames, Class<?> type, String[] aliasNames) {
         getGlobalMethods().addMethods(methodNames, type, aliasNames);
     }
 
-    public void add(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode) {
+    public final void add(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, type, aliasNames, mode);
     }
 
-    public void add(String[] methodNames, Class<?> type, String[] aliasNames, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, String[] aliasNames, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, aliasNames, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, aliasNames, mode, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type, String aliasPrefix) {
+    public final void add(String[] methodNames, Class<?> type, String aliasPrefix) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix);
     }
 
-    public void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode) {
+    public final void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix, mode);
     }
 
-    public void add(String[] methodNames, Class<?> type, String aliasPrefix, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, String aliasPrefix, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix, mode, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type) {
+    public final void add(String[] methodNames, Class<?> type) {
         getGlobalMethods().addMethods(methodNames, type);
     }
 
-    public void add(String[] methodNames, Class<?> type, HproseResultMode mode) {
+    public final void add(String[] methodNames, Class<?> type, HproseResultMode mode) {
         getGlobalMethods().addMethods(methodNames, type, mode);
     }
 
-    public void add(String[] methodNames, Class<?> type, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, simple);
     }
 
-    public void add(String[] methodNames, Class<?> type, HproseResultMode mode, boolean simple) {
+    public final void add(String[] methodNames, Class<?> type, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, mode, simple);
     }
 
-    public void add(Object obj, Class<?> type, String aliasPrefix) {
+    public final void add(Object obj, Class<?> type, String aliasPrefix) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix);
     }
 
-    public void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode) {
+    public final void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix, mode);
     }
 
-    public void add(Object obj, Class<?> type, String aliasPrefix, boolean simple) {
+    public final void add(Object obj, Class<?> type, String aliasPrefix, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix, simple);
     }
 
-    public void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public final void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix, mode, simple);
     }
 
-    public void add(Object obj, Class<?> type) {
+    public final void add(Object obj, Class<?> type) {
         getGlobalMethods().addInstanceMethods(obj, type);
     }
 
-    public void add(Object obj, Class<?> type, HproseResultMode mode) {
+    public final void add(Object obj, Class<?> type, HproseResultMode mode) {
         getGlobalMethods().addInstanceMethods(obj, type, mode);
     }
 
-    public void add(Object obj, Class<?> type, boolean simple) {
+    public final void add(Object obj, Class<?> type, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, type, simple);
     }
 
-    public void add(Object obj, Class<?> type, HproseResultMode mode, boolean simple) {
+    public final void add(Object obj, Class<?> type, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, type, mode, simple);
     }
 
-    public void add(Object obj, String aliasPrefix) {
+    public final void add(Object obj, String aliasPrefix) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix);
     }
 
-    public void add(Object obj, String aliasPrefix, HproseResultMode mode) {
+    public final void add(Object obj, String aliasPrefix, HproseResultMode mode) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix, mode);
     }
 
-    public void add(Object obj, String aliasPrefix, boolean simple) {
+    public final void add(Object obj, String aliasPrefix, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix, simple);
     }
 
-    public void add(Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public final void add(Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix, mode, simple);
     }
 
-    public void add(Object obj) {
+    public final void add(Object obj) {
         getGlobalMethods().addInstanceMethods(obj);
     }
 
-    public void add(Object obj, HproseResultMode mode) {
+    public final void add(Object obj, HproseResultMode mode) {
         getGlobalMethods().addInstanceMethods(obj, mode);
     }
 
-    public void add(Object obj, boolean simple) {
+    public final void add(Object obj, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, simple);
     }
 
-    public void add(Object obj, HproseResultMode mode, boolean simple) {
+    public final void add(Object obj, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, mode, simple);
     }
 
-    public void add(Class<?> type, String aliasPrefix) {
+    public final void add(Class<?> type, String aliasPrefix) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix);
     }
 
-    public void add(Class<?> type, String aliasPrefix, HproseResultMode mode) {
+    public final void add(Class<?> type, String aliasPrefix, HproseResultMode mode) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix, mode);
     }
 
-    public void add(Class<?> type, String aliasPrefix, boolean simple) {
+    public final void add(Class<?> type, String aliasPrefix, boolean simple) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix, simple);
     }
 
-    public void add(Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public final void add(Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix, mode, simple);
     }
 
-    public void add(Class<?> type) {
+    public final void add(Class<?> type) {
         getGlobalMethods().addStaticMethods(type);
     }
 
-    public void add(Class<?> type, HproseResultMode mode) {
+    public final void add(Class<?> type, HproseResultMode mode) {
         getGlobalMethods().addStaticMethods(type, mode);
     }
 
-    public void add(Class<?> type, boolean simple) {
+    public final void add(Class<?> type, boolean simple) {
         getGlobalMethods().addStaticMethods(type, simple);
     }
 
-    public void add(Class<?> type, HproseResultMode mode, boolean simple) {
+    public final void add(Class<?> type, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addStaticMethods(type, mode, simple);
     }
 
-    public void addMissingMethod(String methodName, Object obj) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Object obj) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, obj);
     }
 
-    public void addMissingMethod(String methodName, Object obj, HproseResultMode mode) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Object obj, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, obj, mode);
     }
 
-    public void addMissingMethod(String methodName, Object obj, boolean simple) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Object obj, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, obj, simple);
     }
 
-    public void addMissingMethod(String methodName, Object obj, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Object obj, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, obj, mode, simple);
     }
 
-    public void addMissingMethod(String methodName, Class<?> type) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Class<?> type) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type);
     }
 
-    public void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type, mode);
     }
 
-    public void addMissingMethod(String methodName, Class<?> type, boolean simple) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Class<?> type, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type, simple);
     }
 
-    public void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
+    public final void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type, mode, simple);
     }
 
@@ -927,4 +936,268 @@ public abstract class HproseService {
         return handle(buffer, context);
     }
 
+    private final static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor();
+
+    static {
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                timerService.shutdownNow();
+            }
+        });
+    }
+    private int timeout = 120000;
+    private int heartbeat = 3000;
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    public int getHeartbeat() {
+        return heartbeat;
+    }
+
+    public void setHeartbeat(int heartbeat) {
+        this.heartbeat = heartbeat;
+    }
+
+    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>>();
+    private PushEvent pushEvent = null;
+
+    private ConcurrentHashMap<Integer, Topic> getTopics(String topic) throws HproseException {
+        ConcurrentHashMap<Integer, Topic> topics = allTopics.get(topic);
+        if (topics == null) {
+            throw new HproseException("topic \"" + topic + "\" is not published.");
+        }
+        return topics;
+    }
+
+    private void delTimer(ConcurrentHashMap<Integer, Topic> topics, Integer id) {
+        Topic t = topics.get(id);
+        if (t.timer != null) {
+            t.timer.cancel(false);
+            t.timer = null;
+        }
+    }
+
+    private void offline(ConcurrentHashMap<Integer, Topic> topics, String topic, Integer id) {
+        delTimer(topics, id);
+        ConcurrentLinkedQueue<Message> messages = topics.remove(id).messages;
+        for (Message message: messages) {
+            message.detector.resolve(false);
+        }
+        if (pushEvent != null) {
+            pushEvent.unsubscribe(topic, id, this);
+        }
+    }
+
+    private void setTimer(final ConcurrentHashMap<Integer, Topic> topics, final String topic, final Integer id) {
+        Topic t = topics.get(id);
+        if (t.timer == null) {
+            t.timer = timerService.schedule(new Runnable() {
+                public void run() {
+                    offline(topics, topic, id);
+                }
+            }, t.heartbeat, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void resetTimer(final ConcurrentHashMap<Integer, Topic> topics, final String topic, final Integer id) {
+        delTimer(topics, id);
+        setTimer(topics, topic, id);
+    }
+
+    private Promise<?> setRequestTimer(final String topic, final Integer id, Promise<?> request, int timeout) throws HproseException {
+        final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
+        if (timeout > 0) {
+            return request.timeout(timeout).catchError(new Action<Throwable>() {
+                public void call(Throwable e) throws Throwable {
+                    final Topic t = topics.get(id);
+                    if (e instanceof TimeoutException) {
+                        new Runnable() {
+                            public void run() {
+                                t.timer = timerService.schedule(this, t.heartbeat, TimeUnit.MILLISECONDS);
+                                if (t.count.get() < 0) {
+                                    offline(topics, topic, id);
+                                }
+                                else {
+                                    t.count.decrementAndGet();
+                                }
+                            }
+                        }.run();
+                    }
+                    else {
+                        t.count.decrementAndGet();
+                    }
+                }
+            });
+        }
+        return request;
+    }
+
+    public final void publish(String topic) {
+        publish(topic, -1, -1);
+    }
+
+    public final void publish(String topic, int timeout) {
+        publish(topic, timeout, -1);
+    }
+
+    public final void publish(final String topic, final int timeout, final int heartbeat) {
+        final ConcurrentHashMap<Integer, Topic> topics = new ConcurrentHashMap<Integer, Topic>();
+        allTopics.put(topic, topics);
+        add("call", new Func<Object, Integer>() {
+            public Object call(final Integer id) throws Throwable {
+                Topic t = topics.get(id);
+                if (t != null) {
+                    if (t.count.get() < 0) {
+                        t.count.set(0);
+                    }
+                    ConcurrentLinkedQueue<Message> messages = t.messages;
+                    if (messages.size() > 0) {
+                        Message message = messages.poll();
+                        message.detector.resolve(true);
+                        resetTimer(topics, topic, id);
+                        return message.result;
+                    }
+                    else {
+                        delTimer(topics, id);
+                        t.count.incrementAndGet();
+                    }
+                }
+                else {
+                    t = new Topic((heartbeat < 0) ? HproseService.this.heartbeat : heartbeat);
+                    topics.put(id, t);
+                    if (pushEvent != null) {
+                        pushEvent.subscribe(topic, id, HproseService.this);
+                    }
+                }
+                if (t.request != null) {
+                    t.request.resolve(null);
+                }
+                Promise request = new Promise();
+                request.whenComplete(new Runnable() {
+                    public void run() {
+                        Topic t = topics.get(id);
+                        t.count.decrementAndGet();
+                    }
+                });
+                t.request = request;
+                return setRequestTimer(topic, id, request, (timeout < 0) ? HproseService.this.timeout : timeout);
+            }
+        }, topic);
+    }
+
+    public final void publish(String[] topics) {
+        publish(topics, -1, -1);
+    }
+
+    public final void publish(String[] topics, int timeout) {
+        publish(topics, timeout, -1);
+    }
+
+    public final void publish(String[] topics, int timeout, int heartbeat) {
+        for (int i = 0, n = topics.length; i < n; ++i) {
+            publish(topics[i], timeout, heartbeat);
+        }
+    }
+
+    public final Integer[] idlist(String topic) throws HproseException {
+        return getTopics(topic).keySet().toArray(new Integer[0]);
+    }
+
+    public final boolean exist(String topic, Integer id) throws HproseException {
+        return getTopics(topic).containsKey(id);
+    }
+
+    public final void broadcast(String topic, Object result) throws HproseException {
+        multicast(topic, idlist(topic), result);
+    }
+
+    public final void broadcast(String topic, Object result, Action<Integer[]> callback) throws HproseException {
+        multicast(topic, idlist(topic), result, callback);
+    }
+
+    public final void multicast(String topic, Integer[] ids, Object result) throws HproseException {
+        for (int i = 0, n = ids.length; i < n; ++i) {
+            push(topic, ids[i], result);
+        }
+    }
+
+    public final void multicast(String topic, Integer[] ids, Object result, Action<Integer[]> callback) throws HproseException {
+        if (callback == null) {
+            multicast(topic, ids, result);
+            return;
+        }
+        int n = ids.length;
+        List<Integer> sent = Collections.synchronizedList(new ArrayList<Integer>(n));
+        AtomicInteger count = new AtomicInteger(n);
+        for (int i = 0; i < n; ++i) {
+            Integer id = ids[i];
+            if (id != null) {
+                push(topic, id, result).then(check(sent, id, count, callback));
+            }
+            else {
+                count.decrementAndGet();
+            }
+        }
+    }
+
+    private Action<Boolean> check(final List<Integer> sent, final Integer id, final AtomicInteger count, final Action<Integer[]> callback) {
+        return new Action<Boolean>() {
+            public void call(Boolean success) throws Throwable {
+                if (success) {
+                    sent.add(id);
+                }
+                if (count.decrementAndGet() == 0) {
+                    callback.call(sent.toArray(new Integer[sent.size()]));
+                }
+            }
+        };
+    }
+
+    public final void unicast(String topic, Integer id, Object result) throws HproseException {
+        push(topic, id, result);
+    }
+
+    public final void unicast(String topic, Integer id, Object result, Action<Boolean> callback) throws HproseException {
+        Promise<Boolean> detector = push(topic, id, result);
+        if (callback != null) {
+            detector.then(callback);
+        }
+    }
+
+    public final Promise<Integer[]> push(String topic, Object result) throws HproseException {
+        return push(topic, idlist(topic), result);
+    }
+
+    public final Promise<Integer[]> push(String topic, Integer[] ids, Object result) throws HproseException {
+        final Promise<Integer[]> detector = new Promise<Integer[]>();
+        multicast(topic, ids, result, new Action<Integer[]>() {
+            public void call(Integer[] value) throws Throwable {
+                detector.resolve(value);
+            }
+         });
+        return detector;
+    }
+
+    public final Promise<Boolean> push(String topic, Integer id, Object result) throws HproseException {
+        final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
+        Topic t = topics.get(id);
+        if (t == null) {
+            return (Promise<Boolean>)Promise.value(false);
+        }
+        if (t.request != null) {
+            t.request.resolve(result);
+            t.request = null;
+            return (Promise<Boolean>)Promise.value(true);
+        }
+        Promise<Boolean> detector = new Promise<Boolean>();
+        t.messages.add(new Message(detector, result));
+        setTimer(topics, topic, id);
+        return detector;
+    }
 }

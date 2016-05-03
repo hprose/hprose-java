@@ -8,32 +8,29 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * TcpContext.java                                        *
+ * Topic.java                                             *
  *                                                        *
- * tcp context class for Java.                            *
+ * push topic class for Java.                             *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
+
 package hprose.server;
 
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
+import hprose.util.concurrent.Promise;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class TcpContext extends ServiceContext {
-    private final SocketChannel socketChannel;
-    public TcpContext(HproseClients clients,
-                      SocketChannel socketChannel) {
-        super(clients);
-        this.socketChannel = socketChannel;
-    }
-
-    public SocketChannel getSocketChannel() {
-        return socketChannel;
-    }
-
-    public Socket getSocket() {
-        return socketChannel.socket();
+class Topic {
+    public Future timer;
+    public Promise request;
+    public final ConcurrentLinkedQueue<Message> messages = new ConcurrentLinkedQueue<Message>();
+    public final AtomicInteger count = new AtomicInteger(1);
+    public final int heartbeat;
+    public Topic(int heartbeat) {
+        this.heartbeat = heartbeat;
     }
 }

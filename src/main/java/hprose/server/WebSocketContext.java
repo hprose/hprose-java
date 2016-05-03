@@ -25,8 +25,10 @@ public class WebSocketContext extends ServiceContext {
     private final Session session;
     private final EndpointConfig config;
 
-    public WebSocketContext(Session session,
+    public WebSocketContext(HproseClients clients,
+                       Session session,
                        EndpointConfig config) {
+        super(clients);
         this.session = session;
         this.config = config;
     }

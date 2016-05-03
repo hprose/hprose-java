@@ -8,32 +8,17 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * TcpContext.java                                        *
+ * PushOptions.java                                       *
  *                                                        *
- * tcp context class for Java.                            *
+ * hprose push options class for Java.                    *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: May 3, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
-
-public class TcpContext extends ServiceContext {
-    private final SocketChannel socketChannel;
-    public TcpContext(HproseClients clients,
-                      SocketChannel socketChannel) {
-        super(clients);
-        this.socketChannel = socketChannel;
-    }
-
-    public SocketChannel getSocketChannel() {
-        return socketChannel;
-    }
-
-    public Socket getSocket() {
-        return socketChannel.socket();
-    }
+public class PushOptions {
+    public int timeout;
+    public int heartbeat;
 }

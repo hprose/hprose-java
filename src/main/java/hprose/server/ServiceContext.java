@@ -27,6 +27,11 @@ public class ServiceContext extends HproseContext {
     private HproseMethods methods = null;
     private boolean missingMethod = false;
     private boolean byref = false;
+    public final HproseClients clients;
+
+    protected ServiceContext(HproseClients clients) {
+        this.clients = clients;
+    }
 
     public HproseMethod getRemoteMethod() {
         return remoteMethod;

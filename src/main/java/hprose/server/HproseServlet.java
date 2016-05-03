@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -181,7 +181,8 @@ public class HproseServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        service.handle(new HttpContext(request,
+        service.handle(new HttpContext(service,
+                                       request,
                                       response,
                        this.getServletConfig(),
                     this.getServletContext()));

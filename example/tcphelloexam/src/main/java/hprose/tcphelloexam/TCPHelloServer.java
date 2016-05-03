@@ -1,12 +1,15 @@
 package hprose.tcphelloexam;
 
+import hprose.common.HproseException;
 import hprose.server.HproseTcpServer;
+import hprose.server.ServiceContext;
 import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class TCPHelloServer {
-    public static Promise hello(String name) {
+    public static Promise hello(String name, ServiceContext context) throws HproseException {
+        context.clients.push("news", "this is a pushed message: " + name);
         return Promise.value("Hello " + name + "!");
     }
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
@@ -44,6 +47,7 @@ public class TCPHelloServer {
         });
 */
         server.add("hello", TCPHelloServer.class);
+        server.publish("news");
 //        server.setEnabledThreadPool(true);
 //        ExecutorService pool = Executors.newFixedThreadPool(2);
 //        server.setThreadPool(pool);

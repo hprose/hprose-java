@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: May 2, 2016                              *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -85,7 +85,7 @@ public class HproseWebSocketService extends HproseService {
     }
 
     public void handle(ByteBuffer buf, Session session) throws Throwable {
-        WebSocketContext context = new WebSocketContext(session, config);
+        WebSocketContext context = new WebSocketContext(this, session, config);
         int id;
         Object response = null;
         try {
@@ -133,7 +133,7 @@ public class HproseWebSocketService extends HproseService {
     }
 
     public void handleError(Session session, Throwable error) {
-        WebSocketContext context = new WebSocketContext(session, config);
+        WebSocketContext context = new WebSocketContext(this, session, config);
         fireErrorEvent(error, context);
     }
 }

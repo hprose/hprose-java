@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http methods class for Java.                    *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: May 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,6 +35,7 @@ public class HproseHttpMethods extends HproseMethods {
         if ((i > 0) && (paramTypes[i - 1] instanceof Class<?>)) {
             Class<?> paramType = (Class<?>) paramTypes[i - 1];
             if (paramType.equals(HproseContext.class) ||
+                paramType.equals(ServiceContext.class) ||
                 paramType.equals(HttpContext.class) ||
                 paramType.equals(HttpServletRequest.class) ||
                 paramType.equals(HttpServletResponse.class) ||

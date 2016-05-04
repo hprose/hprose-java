@@ -18,7 +18,8 @@ public class MyHproseServlet2 extends HttpServlet {
         HproseHttpMethods methods = new HproseHttpMethods();
         methods.addInstanceMethods(exam2);
         methods.addInstanceMethods(exam2, Exam1.class);
-        service.handle(new HttpContext(request,
+        service.handle(new HttpContext(service,
+                                      request,
                                       response,
                        this.getServletConfig(),
                      this.getServletContext()),

@@ -61,6 +61,7 @@ public class HproseTcpServer extends HproseService {
             this.id = id;
         }
 
+        @SuppressWarnings("unchecked")
         public final void run() {
             TcpContext context = new TcpContext(HproseTcpServer.this, conn.socketChannel());
             currentContext.set(context);

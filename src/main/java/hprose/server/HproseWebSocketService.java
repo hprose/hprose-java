@@ -84,6 +84,7 @@ public class HproseWebSocketService extends HproseService {
         this.config = config;
     }
 
+    @SuppressWarnings("unchecked")
     public void handle(ByteBuffer buf, Session session) throws Throwable {
         WebSocketContext context = new WebSocketContext(this, session, config);
         int id;

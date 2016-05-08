@@ -197,6 +197,7 @@ public class HproseHttpService extends HproseService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void asyncHandle(final HttpContext httpContext, final HproseHttpMethods methods) {
         final AsyncContext async = httpContext.getRequest().startAsync();
         async.setTimeout(getTimeout());
@@ -277,6 +278,7 @@ public class HproseHttpService extends HproseService {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void syncHandle(final HttpContext httpContext, HproseHttpMethods methods) {
         ByteBufferStream istream = null;
         Object response;

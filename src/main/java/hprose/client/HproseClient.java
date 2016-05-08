@@ -891,6 +891,7 @@ public abstract class HproseClient implements HproseInvoker {
         subscribe(name, id, callback, type, timeout);
     }
 
+    @SuppressWarnings("unchecked")
     public final <T> void subscribe(final String name, final Integer id, Action<T> callback, final Type type, int timeout) {
         Topic<T> topic = (Topic<T>)getTopic(name, id, true);
         if (topic == null) {
@@ -946,6 +947,8 @@ public abstract class HproseClient implements HproseInvoker {
             topic.callbacks.offer(callback);
         }
     }
+
+    @SuppressWarnings("unchecked")
     private <T> void delTopic(ConcurrentHashMap<Integer, Topic<?>> topics, Integer id, Action<T> callback) {
         if (topics != null && topics.size() > 0) {
             if (callback != null) {

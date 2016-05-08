@@ -727,6 +727,7 @@ public abstract class HproseService implements HproseClients {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object invoke(final String name, final Object[] args, final ServiceContext context) throws Throwable {
         Object result =invokeHandler.handle(name, args, context);
         if (result instanceof Promise) {
@@ -782,6 +783,7 @@ public abstract class HproseService implements HproseClients {
         return data.buffer;
     }
 
+    @SuppressWarnings("unchecked")
     protected Promise<ByteBuffer> doInvoke(ByteBufferStream stream, ServiceContext context) throws Throwable {
         HproseMethods methods = context.getMethods();
         Reader reader = new Reader(stream.getInputStream(), mode);
@@ -893,6 +895,7 @@ public abstract class HproseService implements HproseClients {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object beforeFilter(ByteBuffer request, final ServiceContext context) throws Throwable {
         Object response;
         try {
@@ -1184,6 +1187,7 @@ public abstract class HproseService implements HproseClients {
         return detector;
     }
 
+    @SuppressWarnings("unchecked")
     public final Promise<Boolean> push(String topic, Integer id, Object result) throws HproseException {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
         if (topics == null) throw new HproseException("Topic " + topic + " is not published.");

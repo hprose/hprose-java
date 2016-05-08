@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: May 3, 2016                              *
+ * LastModified: Mar 8, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -977,7 +977,7 @@ public abstract class HproseService implements HproseClients {
 
     private void delTimer(ConcurrentHashMap<Integer, Topic> topics, Integer id) {
         Topic t = topics.get(id);
-        if (t.timer != null) {
+        if (t != null && t.timer != null) {
             t.timer.cancel(false);
             t.timer = null;
         }
@@ -996,7 +996,7 @@ public abstract class HproseService implements HproseClients {
 
     private void setTimer(final ConcurrentHashMap<Integer, Topic> topics, final String topic, final Integer id) {
         Topic t = topics.get(id);
-        if (t.timer == null) {
+        if (t != null && t.timer == null) {
             t.timer = timerService.schedule(new Runnable() {
                 public void run() {
                     offline(topics, topic, id);
@@ -1186,6 +1186,7 @@ public abstract class HproseService implements HproseClients {
 
     public final Promise<Boolean> push(String topic, Integer id, Object result) throws HproseException {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
+        if (topics == null) throw new HproseException("Topic " + topic + " is not published.");
         Topic t = topics.get(id);
         if (t == null) {
             return (Promise<Boolean>)Promise.value(false);

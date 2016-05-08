@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Reactor class for Java.                         *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Mar 8, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -32,7 +32,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class Reactor extends Thread {
 
     private final Selector selector;
-    private final Queue<Connection> queue = new ConcurrentLinkedQueue<Connection>();
+    private final Queue<Connection> connQueue = new ConcurrentLinkedQueue<Connection>();
+    private final Queue<Connection> writeQueue = new ConcurrentLinkedQueue<Connection>();
 
     public Reactor() throws IOException {
         super();
@@ -67,14 +68,21 @@ public final class Reactor extends Thread {
 
     private void process() {
         for (;;) {
-            final Connection conn = queue.poll();
+            final Connection conn = connQueue.poll();
             if (conn == null) {
                 break;
             }
             try {
-                conn.connected(selector);
+                conn.connected(this, selector);
             }
             catch (ClosedChannelException e) {}
+        }
+        for (;;) {
+            final Connection conn = writeQueue.poll();
+            if (conn == null) {
+                break;
+            }
+            conn.send();
         }
     }
 
@@ -88,7 +96,7 @@ public final class Reactor extends Thread {
             it.remove();
             try {
                 int readyOps = key.readyOps();
-                if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
+                if ((readyOps & SelectionKey.OP_READ) != 0) {
                     if (!conn.receive()) continue;
                 }
                 if ((readyOps & SelectionKey.OP_WRITE) != 0) {
@@ -102,7 +110,12 @@ public final class Reactor extends Thread {
     }
 
     public void register(Connection conn) {
-        queue.offer(conn);
+        connQueue.offer(conn);
+        selector.wakeup();
+    }
+
+    public void write(Connection conn) {
+        writeQueue.offer(conn);
         selector.wakeup();
     }
 }

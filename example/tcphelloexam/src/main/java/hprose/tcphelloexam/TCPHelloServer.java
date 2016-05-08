@@ -15,38 +15,39 @@ public class TCPHelloServer {
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         HproseTcpServer server = new HproseTcpServer("tcp://localhost:4321");
         server.setReactorThreads(2);
-/*
-        server.addFilter(new HproseFilter() {
-            public String getString(ByteBuffer buffer) {
-                Charset charset;
-                CharsetDecoder decoder;
-                CharBuffer charBuffer;
-                try
-                {
-                    charset = Charset.forName("UTF-8");
-                    decoder = charset.newDecoder();
-                    charBuffer = decoder.decode(buffer.asReadOnlyBuffer());
-                    return charBuffer.toString();
-                }
-                catch (Exception ex)
-                {
-                    ex.printStackTrace();
-                    return "";
-                }
-            }
-            @Override
-            public ByteBuffer inputFilter(ByteBuffer istream, HproseContext context) {
-                System.out.println(getString(istream));
-                return istream;
-            }
-            @Override
-            public ByteBuffer outputFilter(ByteBuffer ostream, HproseContext context) {
-                System.out.println(getString(ostream));
-                return ostream;
-            }
-        });
-*/
+
+//        server.addFilter(new HproseFilter() {
+//            public String getString(ByteBuffer buffer) {
+//                Charset charset;
+//                CharsetDecoder decoder;
+//                CharBuffer charBuffer;
+//                try
+//                {
+//                    charset = Charset.forName("UTF-8");
+//                    decoder = charset.newDecoder();
+//                    charBuffer = decoder.decode(buffer.asReadOnlyBuffer());
+//                    return charBuffer.toString();
+//                }
+//                catch (Exception ex)
+//                {
+//                    ex.printStackTrace();
+//                    return "";
+//                }
+//            }
+//            @Override
+//            public ByteBuffer inputFilter(ByteBuffer istream, HproseContext context) {
+//                System.out.println(getString(istream));
+//                return istream;
+//            }
+//            @Override
+//            public ByteBuffer outputFilter(ByteBuffer ostream, HproseContext context) {
+//                System.out.println(getString(ostream));
+//                return ostream;
+//            }
+//        });
+
         server.add("hello", TCPHelloServer.class);
+        server.setDebugEnabled(true);
         server.publish("news");
 //        server.setEnabledThreadPool(true);
 //        ExecutorService pool = Executors.newFixedThreadPool(2);

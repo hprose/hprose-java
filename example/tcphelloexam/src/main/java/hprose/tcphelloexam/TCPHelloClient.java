@@ -17,7 +17,45 @@ public class TCPHelloClient {
         Thread[] threads = new Thread[threadNumber];
         final HproseTcpClient client = new HproseTcpClient(new String[] {"tcp://localhost:4321", "tcp://localhost:4321"} );
         client.setFullDuplex(true);
-        client.setMaxPoolSize(2);
+        client.setMaxPoolSize(4);
+        client.subscribe("news", new Action<String>() {
+            @Override
+            public void call(String value) throws Throwable {
+                //System.out.println(value);
+            }
+        }, String.class);
+
+//        client.addFilter(new HproseFilter() {
+//            public String getString(ByteBuffer buffer) {
+//                Charset charset;
+//                CharsetDecoder decoder;
+//                CharBuffer charBuffer;
+//                try
+//                {
+//                    charset = Charset.forName("UTF-8");
+//                    decoder = charset.newDecoder();
+//                    charBuffer = decoder.decode(buffer.asReadOnlyBuffer());
+//                    return charBuffer.toString();
+//                }
+//                catch (Exception ex)
+//                {
+//                    ex.printStackTrace();
+//                    return "";
+//                }
+//            }
+//            @Override
+//            public ByteBuffer inputFilter(ByteBuffer istream, HproseContext context) {
+//                System.out.println(getString(istream));
+//                return istream;
+//            }
+//            @Override
+//            public ByteBuffer outputFilter(ByteBuffer ostream, HproseContext context) {
+//                System.out.println(getString(ostream));
+//                return ostream;
+//            }
+//        });
+
+
         System.out.println(client.invoke("hello", new Object[] {"World"}));
         client.invoke("hello", new Object[] {"Async World"}, Promise.class).then(new Action<String>() {
             @Override
@@ -30,13 +68,14 @@ public class TCPHelloClient {
                 Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, value);
             }
         });
+
         for (int i = 0; i < threadNumber; i++) {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
                     try {
                         for (int i = 0; i < roundNumber; i++) {
-                            client.invoke("hello", new Object[] {"World"});
+                            client.invoke("hello", new Object[] {"World" + i});
                         }
                     } catch (Throwable ex) {
                         Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -60,6 +99,7 @@ public class TCPHelloClient {
                 }
             });
         }
+        client.unsubscribe("news");
         //client.close();
         end = System.currentTimeMillis();
         System.out.println(end - start);

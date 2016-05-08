@@ -12,14 +12,16 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: May 3, 2016                              *
+ * LastModified: Mar 8, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.server;
 
+import hprose.common.FilterHandler;
 import hprose.common.HproseFilter;
 import hprose.common.HproseMethods;
+import hprose.common.InvokeHandler;
 import hprose.io.HproseClassManager;
 import hprose.io.HproseMode;
 import hprose.util.StrUtil;
@@ -97,6 +99,42 @@ public class HproseServlet extends HttpServlet {
                 Class<?> type = Class.forName(param);
                 if (HproseFilter.class.isAssignableFrom(type)) {
                     service.setFilter((HproseFilter) type.newInstance());
+                }
+            }
+            catch (Exception ex) {
+                throw new ServletException(ex);
+            }
+        }
+        param = config.getInitParameter("beforeFilter");
+        if (param != null) {
+            try {
+                Class<?> type = Class.forName(param);
+                if (HproseFilter.class.isAssignableFrom(type)) {
+                    service.beforeFilter.use((FilterHandler) type.newInstance());
+                }
+            }
+            catch (Exception ex) {
+                throw new ServletException(ex);
+            }
+        }
+        param = config.getInitParameter("afterFilter");
+        if (param != null) {
+            try {
+                Class<?> type = Class.forName(param);
+                if (HproseFilter.class.isAssignableFrom(type)) {
+                    service.afterFilter.use((FilterHandler) type.newInstance());
+                }
+            }
+            catch (Exception ex) {
+                throw new ServletException(ex);
+            }
+        }
+        param = config.getInitParameter("invoke");
+        if (param != null) {
+            try {
+                Class<?> type = Class.forName(param);
+                if (HproseFilter.class.isAssignableFrom(type)) {
+                    service.use((InvokeHandler) type.newInstance());
                 }
             }
             catch (Exception ex) {
@@ -208,6 +246,6 @@ public class HproseServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "Hprose Servlet 1.4";
+        return "Hprose Servlet 2.0";
     }
 }

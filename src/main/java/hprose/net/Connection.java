@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 25, 2016                             *
+ * LastModified: May 8, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -50,6 +50,7 @@ public final class Connection {
     private Integer id = null;
     private OutPacket packet = null;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
+    private Reactor reactor = null;
     public Connection(SocketChannel channel, ConnectionHandler handler) {
         this.channel = channel;
         this.handler = handler;
@@ -60,9 +61,10 @@ public final class Connection {
         setTimeout(handler.getConnectTimeout(), TimeoutType.CONNECT_TIMEOUT);
     }
 
-    public final void connected(Selector selector) throws ClosedChannelException {
+    public final void connected(Reactor reactor, Selector selector) throws ClosedChannelException {
         clearTimeout();
-        key = channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, this);
+        this.reactor = reactor;
+        key = channel.register(selector, SelectionKey.OP_READ, this);
         handler.onConnected(this);
     }
 
@@ -151,7 +153,8 @@ public final class Connection {
 
     public final void send(ByteBuffer buffer, Integer id) {
         outqueue.offer(new OutPacket(buffer, id));
-        key.selector().wakeup();
+        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        reactor.write(this);
     }
 
     public final void send() {
@@ -171,6 +174,7 @@ public final class Connection {
                         return;
                     }
                     if (n == 0) {
+                        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         return;
                     }
                     packet.writeLength += n;
@@ -178,9 +182,12 @@ public final class Connection {
                 ByteBufferStream.free(packet.buffers[1]);
                 clearTimeout();
                 handler.onSended(this, packet.id);
-                packet = outqueue.poll();
-                if (packet == null) {
-                    return;
+                synchronized (outqueue) {
+                    packet = outqueue.poll();
+                    if (packet == null) {
+                        key.interestOps(SelectionKey.OP_READ);
+                        return;
+                    }
                 }
             }
         }

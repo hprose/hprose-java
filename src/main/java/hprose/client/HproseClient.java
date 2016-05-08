@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Apr 29, 2016                             *
+ * LastModified: May 8, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -60,6 +60,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -552,7 +554,6 @@ public abstract class HproseClient implements HproseInvoker {
         if (buffer instanceof Promise) {
             return ((Promise<ByteBuffer>)buffer).then(new Func<Object, ByteBuffer>() {
                 public Object call(ByteBuffer value) throws Throwable {
-                    ByteBufferStream.free(stream.buffer);
                     stream.buffer = value;
                     try {
                         return decode(stream, args, context);
@@ -564,9 +565,8 @@ public abstract class HproseClient implements HproseInvoker {
             });
         }
         else {
+            stream.buffer = (ByteBuffer)buffer;
             try {
-                ByteBufferStream.free(stream.buffer);
-                stream.buffer = (ByteBuffer)buffer;
                 return decode(stream, args, context);
             }
             finally {
@@ -826,6 +826,173 @@ public abstract class HproseClient implements HproseInvoker {
         catch (Throwable e) {
             return Promise.error(e);
         }
+    }
+
+    private static class Topic<T> {
+        Action<T> handler;
+        final ConcurrentLinkedQueue<Action<T>> callbacks = new ConcurrentLinkedQueue<Action<T>>();
+    }
+
+    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic<?>>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic<?>>>();
+
+    private Topic<?> getTopic(String name, Integer id, boolean create) {
+        ConcurrentHashMap<Integer, Topic<?>> topics = allTopics.get(name);
+        if (topics != null) {
+            return topics.get(id);
+        }
+        if (create) {
+            allTopics.put(name, new ConcurrentHashMap<Integer, Topic<?>>());
+        }
+        return null;
+    }
+
+    private static final InvokeSettings autoIdSettings = new InvokeSettings();
+    private static Integer autoId = null;
+
+    static {
+        autoIdSettings.setReturnType(Integer.class);
+        autoIdSettings.setSimple(true);
+        autoIdSettings.setIdempotent(true);
+        autoIdSettings.setFailswitch(true);
+    }
+
+    private synchronized Integer autoId() throws Throwable {
+        if (autoId == null) {
+            autoId = (Integer)this.invoke("#", autoIdSettings);
+        }
+        return autoId;
+    }
+
+    public final void subscribe(String name, Action<Object> callback) throws Throwable {
+        subscribe(name, callback, Object.class, timeout);
+    }
+
+    public final void subscribe(String name, Action<Object> callback, int timeout) throws Throwable {
+        subscribe(name, callback, Object.class, timeout);
+    }
+
+    public final void subscribe(String name, Integer id, Action<Object> callback) {
+        subscribe(name, id, callback, Object.class, timeout);
+    }
+
+    public final void subscribe(String name, Integer id, Action<Object> callback, int timeout) {
+        subscribe(name, id, callback, Object.class, timeout);
+    }
+
+    public final <T> void subscribe(String name, Action<T> callback, Type type) throws Throwable {
+        subscribe(name, callback, type, timeout);
+    }
+
+    public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout) throws Throwable {
+        subscribe(name, autoId(), callback, type, timeout);
+    }
+
+    public final <T> void subscribe(String name, Integer id, Action<T> callback, Type type) {
+        subscribe(name, id, callback, type, timeout);
+    }
+
+    public final <T> void subscribe(final String name, final Integer id, Action<T> callback, final Type type, int timeout) {
+        Topic<T> topic = (Topic<T>)getTopic(name, id, true);
+        if (topic == null) {
+            final Action<Throwable> cb = new Action<Throwable>() {
+                public void call(Throwable e) throws Throwable {
+                    Topic<T> topic = (Topic<T>)getTopic(name, id, false);
+                    if (topic != null) {
+                        InvokeSettings settings = new InvokeSettings();
+                        settings.setIdempotent(true);
+                        settings.setFailswitch(false);
+                        settings.setReturnType(type);
+                        settings.setAsync(true);
+                        try {
+                            Promise<T> result = (Promise<T>)invokeHandler.handle(name, new Object[] {id}, getContext(settings));
+                            result.then(topic.handler, this);
+                        }
+                        catch (Throwable ex) {
+                            call(ex);
+                        }
+                    }
+                }
+            };
+            topic = new Topic<T>();
+            topic.handler = new Action<T>() {
+                public void call(T result) throws Throwable {
+                    Topic topic = getTopic(name, id, false);
+                    if (topic != null) {
+                        if (result != null) {
+                            ConcurrentLinkedQueue<Action<T>> callbacks = topic.callbacks;
+                            for (Action<T> callback: callbacks) {
+                                try {
+                                    callback.call(result);
+                                }
+                                catch (Throwable e) {}
+                            }
+                        }
+                        cb.call(null);
+                    }
+                }
+            };
+            topic.callbacks.offer(callback);
+            allTopics.get(name).put(id, topic);
+            try {
+                cb.call(null);
+            }
+            catch (Throwable e) {
+                if (onError != null) {
+                    onError.handler(name, e);
+                }
+            }
+        }
+        else if (!topic.callbacks.contains(callback)) {
+            topic.callbacks.offer(callback);
+        }
+    }
+    private <T> void delTopic(ConcurrentHashMap<Integer, Topic<?>> topics, Integer id, Action<T> callback) {
+        if (topics != null && topics.size() > 0) {
+            if (callback != null) {
+                Topic<T> topic = (Topic<T>)topics.get(id);
+                if (topic != null) {
+                    ConcurrentLinkedQueue<Action<T>> callbacks = topic.callbacks;
+                    callbacks.remove(callback);
+                    if (callbacks.isEmpty()) {
+                        topics.remove(id);
+                    }
+                }
+            }
+            else {
+                topics.remove(id);
+            }
+        }
+    }
+    public void unsubscribe(String name) {
+        unsubscribe(name, null, null);
+    }
+    public <T> void unsubscribe(String name, Action<T> callback) {
+        unsubscribe(name, null, callback);
+    }
+    public void unsubscribe(String name, Integer id) {
+        unsubscribe(name, id, null);
+    }
+    public <T> void unsubscribe(String name, Integer id, Action<T> callback) {
+        ConcurrentHashMap<Integer, Topic<?>> topics = (ConcurrentHashMap<Integer, Topic<?>>)allTopics.get(name);
+        if (topics != null) {
+            if (id == null) {
+                if (autoId == null) {
+                    for (Integer i: topics.keySet()) {
+                        delTopic(topics, i, callback);
+                    }
+                }
+                else {
+                    delTopic(topics, autoId, callback);
+                }
+            }
+            else {
+                delTopic(topics, id, callback);
+            }
+        }
+    }
+
+    public Integer getId() {
+        return autoId;
     }
 
 }

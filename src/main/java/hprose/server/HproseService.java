@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 8, 2016                              *
+ * LastModified: Mar 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -130,6 +130,7 @@ public abstract class HproseService implements HproseClients {
     }
 
     public final void addInvokeHandler(InvokeHandler handler) {
+        if (handler == null) return;
         invokeHandlers.add(handler);
         NextInvokeHandler next = defaultInvokeHandler;
         for (int i = invokeHandlers.size() - 1; i >= 0; --i) {
@@ -138,6 +139,7 @@ public abstract class HproseService implements HproseClients {
         invokeHandler = next;
     }
     public final void addBeforeFilterHandler(FilterHandler handler) {
+        if (handler == null) return;
         beforeFilterHandlers.add(handler);
         NextFilterHandler next = defaultBeforeFilterHandler;
         for (int i = beforeFilterHandlers.size() - 1; i >= 0; --i) {
@@ -146,6 +148,7 @@ public abstract class HproseService implements HproseClients {
         beforeFilterHandler = next;
     }
     public final void addAfterFilterHandler(FilterHandler handler) {
+        if (handler == null) return;
         afterFilterHandlers.add(handler);
         NextFilterHandler next = defaultAfterFilterHandler;
         for (int i = afterFilterHandlers.size() - 1; i >= 0; --i) {
@@ -227,7 +230,9 @@ public abstract class HproseService implements HproseClients {
     }
 
     public final void addFilter(HproseFilter filter) {
-        filters.add(filter);
+        if (filter != null) {
+            filters.add(filter);
+        }
     }
 
     public final boolean removeFilter(HproseFilter filter) {

@@ -12,13 +12,15 @@
  *                                                        *
  * HproseTcpServiceExporter for Java Spring Framework.    *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package org.springframework.remoting.hprose;
 
+import hprose.common.FilterHandler;
 import hprose.common.HproseFilter;
+import hprose.common.InvokeHandler;
 import hprose.io.HproseMode;
 import hprose.server.HproseServiceEvent;
 import hprose.server.HproseTcpServer;
@@ -34,6 +36,9 @@ public class HproseTcpServiceExporter extends RemoteExporter implements Initiali
     private HproseServiceEvent event = null;
     private HproseMode mode = HproseMode.MemberMode;
     private HproseFilter filter = null;
+    private InvokeHandler invokeHandler = null;
+    private FilterHandler beforeFilterHandler = null;
+    private FilterHandler afterFilterHandler = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -47,6 +52,9 @@ public class HproseTcpServiceExporter extends RemoteExporter implements Initiali
         tcpServer.setEvent(event);
         tcpServer.setMode(mode);
         tcpServer.setFilter(filter);
+        tcpServer.use(invokeHandler);
+        tcpServer.beforeFilter.use(beforeFilterHandler);
+        tcpServer.afterFilter.use(afterFilterHandler);
     }
 
     public void setDebugEnabled(boolean value) {
@@ -63,6 +71,18 @@ public class HproseTcpServiceExporter extends RemoteExporter implements Initiali
 
     public void setFilter(HproseFilter value) {
         filter = value;
+    }
+
+    public void setInvokeHandler(InvokeHandler value) {
+        invokeHandler = value;
+    }
+
+    public void setBeforeFilterHandler(FilterHandler value) {
+        beforeFilterHandler = value;
+    }
+
+    public void setAfterFilterHandler(FilterHandler value) {
+        afterFilterHandler = value;
     }
 
     public void setHost(String value) {

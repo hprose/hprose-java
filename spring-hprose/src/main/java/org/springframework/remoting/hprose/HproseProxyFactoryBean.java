@@ -12,7 +12,7 @@
  *                                                        *
  * HproseProxyFactoryBean for Java Spring Framework.      *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,9 @@ package org.springframework.remoting.hprose;
 import hprose.client.HproseClient;
 import hprose.client.HproseHttpClient;
 import hprose.client.HproseTcpClient;
+import hprose.common.FilterHandler;
 import hprose.common.HproseFilter;
+import hprose.common.InvokeHandler;
 import hprose.io.HproseMode;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.remoting.support.UrlBasedRemoteAccessor;
@@ -39,6 +41,9 @@ public class HproseProxyFactoryBean extends UrlBasedRemoteAccessor implements Fa
     private String proxyPass = null;
     private HproseMode mode = HproseMode.MemberMode;
     private HproseFilter filter = null;
+    private InvokeHandler invokeHandler = null;
+    private FilterHandler beforeFilterHandler = null;
+    private FilterHandler afterFilterHandler = null;
 
     @Override
     public void afterPropertiesSet() {
@@ -58,10 +63,13 @@ public class HproseProxyFactoryBean extends UrlBasedRemoteAccessor implements Fa
             httpClient.setProxyPort(proxyPort);
             httpClient.setProxyUser(proxyUser);
             httpClient.setProxyPass(proxyPass);
+            httpClient.use(invokeHandler);
+            httpClient.beforeFilter.use(beforeFilterHandler);
+            httpClient.afterFilter.use(afterFilterHandler);
         }
         if (client instanceof HproseTcpClient) {
             HproseTcpClient tcpClient = (HproseTcpClient)client;
-            tcpClient.setTimeout((long)timeout);
+            tcpClient.setTimeout(timeout);
         }
         client.setFilter(filter);
     }
@@ -102,6 +110,18 @@ public class HproseProxyFactoryBean extends UrlBasedRemoteAccessor implements Fa
 
     public void setFilter(HproseFilter filter) {
         this.filter = filter;
+    }
+
+    public void setInvokeHandler(InvokeHandler value) {
+        invokeHandler = value;
+    }
+
+    public void setBeforeFilterHandler(FilterHandler value) {
+        beforeFilterHandler = value;
+    }
+
+    public void setAfterFilterHandler(FilterHandler value) {
+        afterFilterHandler = value;
     }
 
     @Override

@@ -12,13 +12,15 @@
  *                                                        *
  * HproseHttpServiceExporter for Java Spring Framework.   *
  *                                                        *
- * LastModified: Mar 6, 2014                              *
+ * LastModified: Mar 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package org.springframework.remoting.hprose;
 
+import hprose.common.FilterHandler;
 import hprose.common.HproseFilter;
+import hprose.common.InvokeHandler;
 import hprose.io.HproseMode;
 import hprose.server.HproseHttpService;
 import hprose.server.HproseServiceEvent;
@@ -41,6 +43,9 @@ public class HproseHttpServiceExporter extends RemoteExporter implements Initial
     private HproseServiceEvent event = null;
     private HproseMode mode = HproseMode.MemberMode;
     private HproseFilter filter = null;
+    private InvokeHandler invokeHandler = null;
+    private FilterHandler beforeFilterHandler = null;
+    private FilterHandler afterFilterHandler = null;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -57,6 +62,9 @@ public class HproseHttpServiceExporter extends RemoteExporter implements Initial
         httpService.setEvent(event);
         httpService.setMode(mode);
         httpService.setFilter(filter);
+        httpService.use(invokeHandler);
+        httpService.beforeFilter.use(beforeFilterHandler);
+        httpService.afterFilter.use(afterFilterHandler);
     }
 
     public void setCrossDomainEnabled(boolean value) {
@@ -87,9 +95,21 @@ public class HproseHttpServiceExporter extends RemoteExporter implements Initial
         filter = value;
     }
 
+    public void setInvokeHandler(InvokeHandler value) {
+        invokeHandler = value;
+    }
+
+    public void setBeforeFilterHandler(FilterHandler value) {
+        beforeFilterHandler = value;
+    }
+
+    public void setAfterFilterHandler(FilterHandler value) {
+        afterFilterHandler = value;
+    }
+
     @Override
     public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        httpService.handle(new HttpContext(request, response, null, null));
+        httpService.handle(new HttpContext(httpService, request, response, null, null));
     }
 
 }

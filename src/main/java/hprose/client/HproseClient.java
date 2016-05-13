@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: May 8, 2016                              *
+ * LastModified: May 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -255,7 +255,9 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     public final void addFilter(HproseFilter filter) {
-        filters.add(filter);
+        if (filter != null) {
+            filters.add(filter);
+        }
     }
 
     public final boolean removeFilter(HproseFilter filter) {
@@ -592,6 +594,7 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     public final void addInvokeHandler(InvokeHandler handler) {
+        if (handler == null) return;
         invokeHandlers.add(handler);
         NextInvokeHandler next = defaultInvokeHandler;
         for (int i = invokeHandlers.size() - 1; i >= 0; --i) {
@@ -600,6 +603,7 @@ public abstract class HproseClient implements HproseInvoker {
         invokeHandler = next;
     }
     public final void addBeforeFilterHandler(FilterHandler handler) {
+        if (handler == null) return;
         beforeFilterHandlers.add(handler);
         NextFilterHandler next = defaultBeforeFilterHandler;
         for (int i = beforeFilterHandlers.size() - 1; i >= 0; --i) {
@@ -608,6 +612,7 @@ public abstract class HproseClient implements HproseInvoker {
         beforeFilterHandler = next;
     }
     public final void addAfterFilterHandler(FilterHandler handler) {
+        if (handler == null) return;
         afterFilterHandlers.add(handler);
         NextFilterHandler next = defaultAfterFilterHandler;
         for (int i = afterFilterHandlers.size() - 1; i >= 0; --i) {

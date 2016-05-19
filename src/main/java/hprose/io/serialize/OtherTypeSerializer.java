@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: May 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -100,7 +100,7 @@ final class OtherTypeSerializer implements Serializer {
         }
         if (refer != null) refer.set(object);
         stream.write(TagObject);
-        ValueWriter.write(stream, cr);
+        ValueWriter.writeInt(stream, cr);
         stream.write(TagOpenbrace);
         writeObject(writer, object, type);
         stream.write(TagClosebrace);

@@ -503,7 +503,7 @@ public abstract class HproseClient implements HproseInvoker {
         if (settings.isOneway()) {
             return null;
         }
-        if (stream.available() == 0) return new HproseException("EOF");
+        if (stream.available() == 0) throw new HproseException("EOF");
         int tag = stream.buffer.get(stream.buffer.limit() - 1);
         if (tag != TagEnd) {
             throw new HproseException("Wrong Response: \r\n" + StrUtil.toString(stream));

@@ -808,7 +808,9 @@ public abstract class HproseClient implements HproseInvoker {
         if (Future.class.equals(cls)) {
            return (T)asyncInvoke(name, args, type, settings).toFuture();
         }
-        settings.setAsync(false);
+        if (settings.isAsync()) {
+            return (T)asyncInvoke(name, args, type, settings);
+        }
         return (T)invokeHandler.handle(name, args, getContext(settings));
     }
 
@@ -822,7 +824,10 @@ public abstract class HproseClient implements HproseInvoker {
             }
         }
         else {
-            type = null;
+            Class<?> cls = ClassUtil.toClass(type);
+            if (Promise.class.equals(cls) || Future.class.equals(cls)) {
+                type = null;
+            }
         }
         settings.setReturnType(type);
         try {
@@ -852,18 +857,31 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     private static final InvokeSettings autoIdSettings = new InvokeSettings();
-    private volatile Integer autoId = null;
+    private volatile Promise<Integer> autoId = null;
+    private volatile Integer _autoId = null;
 
     static {
         autoIdSettings.setReturnType(Integer.class);
         autoIdSettings.setSimple(true);
         autoIdSettings.setIdempotent(true);
         autoIdSettings.setFailswitch(true);
+        autoIdSettings.setAsync(true);
     }
 
-    private synchronized Integer autoId() throws Throwable {
+    private synchronized Promise<Integer> autoId() throws Throwable {
         if (autoId == null) {
-            autoId = (Integer)this.invoke("#", autoIdSettings);
+            autoId = (Promise<Integer>)this.invoke("#", autoIdSettings);
+            autoId.then(new Action<Integer>() {
+                public void call(Integer value) throws Throwable {
+                    _autoId = value;
+                }
+            }, new Action<Throwable>() {
+                public void call(Throwable e) throws Throwable {
+                    if (onError != null) {
+                        onError.handler("autoId", e);
+                    }
+                }
+            });
         }
         return autoId;
     }
@@ -888,8 +906,12 @@ public abstract class HproseClient implements HproseInvoker {
         subscribe(name, callback, type, timeout);
     }
 
-    public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout) throws Throwable {
-        subscribe(name, autoId(), callback, type, timeout);
+    public final <T> void subscribe(final String name, final Action<T> callback, final Type type, final int timeout) throws Throwable {
+        autoId().then(new Action<Integer>() {
+            public void call(Integer value) throws Throwable {
+                subscribe(name, value, callback, type, timeout);
+            }
+        });
     }
 
     public final <T> void subscribe(String name, Integer id, Action<T> callback, Type type) {
@@ -981,8 +1003,8 @@ public abstract class HproseClient implements HproseInvoker {
     public void unsubscribe(String name, Integer id) {
         unsubscribe(name, id, null);
     }
-    public <T> void unsubscribe(String name, Integer id, Action<T> callback) {
-        ConcurrentHashMap<Integer, Topic<?>> topics = (ConcurrentHashMap<Integer, Topic<?>>)allTopics.get(name);
+    public <T> void unsubscribe(String name, Integer id, final Action<T> callback) {
+        final ConcurrentHashMap<Integer, Topic<?>> topics = (ConcurrentHashMap<Integer, Topic<?>>)allTopics.get(name);
         if (topics != null) {
             if (id == null) {
                 if (autoId == null) {
@@ -991,7 +1013,11 @@ public abstract class HproseClient implements HproseInvoker {
                     }
                 }
                 else {
-                    delTopic(topics, autoId, callback);
+                    autoId.then(new Action<Integer>() {
+                        public void call(Integer value) throws Throwable {
+                            delTopic(topics, value, callback);
+                        }
+                    });
                 }
             }
             else {
@@ -1001,7 +1027,7 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     public Integer getId() {
-        return autoId;
+        return _autoId;
     }
 
 }

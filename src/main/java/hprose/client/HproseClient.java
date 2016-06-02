@@ -852,7 +852,7 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     private static final InvokeSettings autoIdSettings = new InvokeSettings();
-    private static Integer autoId = null;
+    private volatile Integer autoId = null;
 
     static {
         autoIdSettings.setReturnType(Integer.class);

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: May 13, 2016                             *
+ * LastModified: Jun 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -374,10 +374,10 @@ public abstract class HproseClient implements HproseInvoker {
                         response.resolve(stream);
                     }
                 }
-            });
+            }, context.getSettings().getTimeout());
             return response;
         }
-        return sendAndReceive(request);
+        return sendAndReceive(request, context.getSettings().getTimeout());
     }
 
     @SuppressWarnings("unchecked")
@@ -637,9 +637,9 @@ public abstract class HproseClient implements HproseInvoker {
         }
     };
 
-    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer) throws Throwable;
+    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer, int timeout) throws Throwable;
 
-    protected abstract void sendAndReceive(ByteBuffer buffer, ReceiveCallback callback);
+    protected abstract void sendAndReceive(ByteBuffer buffer, ReceiveCallback callback, int timeout);
 
     public final void invoke(String name, HproseCallback1<?> callback) {
         invoke(name, nullArgs, callback, null, null, null);
@@ -897,7 +897,7 @@ public abstract class HproseClient implements HproseInvoker {
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> void subscribe(final String name, final Integer id, Action<T> callback, final Type type, int timeout) {
+    public final <T> void subscribe(final String name, final Integer id, Action<T> callback, final Type type, final int timeout) {
         Topic<T> topic = (Topic<T>)getTopic(name, id, true);
         if (topic == null) {
             final Action<Throwable> cb = new Action<Throwable>() {
@@ -908,6 +908,7 @@ public abstract class HproseClient implements HproseInvoker {
                         settings.setIdempotent(true);
                         settings.setFailswitch(false);
                         settings.setReturnType(type);
+                        settings.setTimeout(timeout);
                         settings.setAsync(true);
                         try {
                             Promise<T> result = (Promise<T>)invokeHandler.handle(name, new Object[] {id}, getContext(settings));

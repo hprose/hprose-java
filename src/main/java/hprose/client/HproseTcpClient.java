@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Apr 29, 2016                             *
+ * LastModified: Jun 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -46,18 +46,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class Request {
     public final ByteBuffer buffer;
     public final ReceiveCallback callback;
-    public Request(ByteBuffer buffer, ReceiveCallback callback) {
+    public final int timeout;
+    public Request(ByteBuffer buffer, ReceiveCallback callback, int timeout) {
         this.buffer = buffer;
         this.callback = callback;
+        this.timeout = timeout;
     }
 }
 
 final class Response {
     public final ReceiveCallback callback;
     public final long createTime;
-    public Response(ReceiveCallback callback) {
+    public final int timeout;
+    public Response(ReceiveCallback callback, int timeout) {
         this.callback = callback;
         this.createTime = System.currentTimeMillis();
+        this.timeout = timeout;
     }
 }
 
@@ -92,6 +96,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
         super();
         this.client = client;
     }
+
     public final int getReadTimeout() {
         return client.getReadTimeout();
     }
@@ -140,8 +145,8 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 
     protected abstract void send(Connection conn, Request request);
 
-    public final synchronized void send(ByteBuffer buffer, ReceiveCallback callback) {
-        requests.offer(new Request(buffer, callback));
+    public final synchronized void send(ByteBuffer buffer, ReceiveCallback callback, int timeout) {
+        requests.offer(new Request(buffer, callback, timeout));
     }
 
     protected void close(Map<Connection, Object> responses) {
@@ -182,7 +187,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                 while (it.hasNext()) {
                     Map.Entry<Integer, Response> e = it.next();
                     Response response = e.getValue();
-                    if ((currentTime - response.createTime) >= client.getTimeout()) {
+                    if ((currentTime - response.createTime) >=  response.timeout) {
                         it.remove();
                         response.callback.handler(null, new TimeoutException("timeout"));
                     }
@@ -196,7 +201,15 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 
     public FullDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
-        timer.setInterval((client.getTimeout() + 1) >> 1);
+        init();
+    }
+
+    private void init() {
+        int timeout = Math.min(client.getTimeout(), client.getConnectTimeout());
+        timeout =  Math.min(timeout, client.getReadTimeout());
+        timeout =  Math.min(timeout, client.getWriteTimeout());
+        timeout = Math.max(timeout, 1000);
+        timer.setInterval((timeout + 1) >> 1);
         start();
     }
 
@@ -209,7 +222,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         if (res != null) {
             if (res.size() < 10) {
                 int id = nextId.incrementAndGet() & 0x7fffffff;
-                res.put(id, new Response(request.callback));
+                res.put(id, new Response(request.callback, request.timeout));
                 conn.send(request.buffer, id);
             }
             else {
@@ -296,7 +309,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 }
 
 final class HalfDuplexSocketTransporter extends SocketTransporter {
-    private final static Response nullResponse = new Response(null);
+    private final static Response nullResponse = new Response(null, 0);
     private final Map<Connection, Response> responses = new ConcurrentHashMap<Connection, Response>();
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
@@ -306,7 +319,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
                 Map.Entry<Connection, Response> entry = it.next();
                 Connection conn = entry.getKey();
                 Response response = entry.getValue();
-                if ((currentTime - response.createTime) >= client.getTimeout()) {
+                if ((currentTime - response.createTime) >= response.timeout) {
                     it.remove();
                     response.callback.handler(null, new TimeoutException("timeout"));
                     conn.close();
@@ -317,7 +330,15 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 
     public HalfDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
-        timer.setInterval((client.getTimeout() + 1) >> 1);
+        init();
+    }
+
+    private void init() {
+        int timeout = Math.min(client.getTimeout(), client.getConnectTimeout());
+        timeout =  Math.min(timeout, client.getReadTimeout());
+        timeout =  Math.min(timeout, client.getWriteTimeout());
+        timeout = Math.max(timeout, 1000);
+        timer.setInterval((timeout + 1) >> 1);
         start();
     }
 
@@ -327,7 +348,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     }
 
     protected final void send(Connection conn, Request request) {
-        responses.put(conn, new Response(request.callback));
+        responses.put(conn, new Response(request.callback, request.timeout));
         conn.send(request.buffer, null);
     }
 
@@ -538,7 +559,7 @@ public class HproseTcpClient extends HproseClient {
     }
 
     @Override
-    protected final ByteBuffer sendAndReceive(ByteBuffer request) throws Throwable {
+    protected final ByteBuffer sendAndReceive(ByteBuffer request, int timeout) throws Throwable {
         final Result result = new Result();
         final Semaphore sem = new Semaphore(0);
         sendAndReceive(request, new ReceiveCallback() {
@@ -547,7 +568,7 @@ public class HproseTcpClient extends HproseClient {
                 result.e = e;
                 sem.release();
             }
-        });
+        }, timeout);
         try {
             sem.acquire();
         }
@@ -561,12 +582,12 @@ public class HproseTcpClient extends HproseClient {
     }
 
     @Override
-    protected final void sendAndReceive(ByteBuffer request, ReceiveCallback callback) {
+    protected final void sendAndReceive(ByteBuffer request, ReceiveCallback callback, int timeout) {
         if (fullDuplex) {
-            fdTrans.send(request, callback);
+            fdTrans.send(request, callback, timeout);
         }
         else {
-            hdTrans.send(request, callback);
+            hdTrans.send(request, callback, timeout);
         }
     }
 

@@ -12,7 +12,7 @@
  *                                                        *
  * client context class for Java.                         *
  *                                                        *
- * LastModified: Apr 22, 2016                             *
+ * LastModified: Jun 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,6 +33,7 @@ public class ClientContext extends HproseContext {
         settings.setFailswitch(client.isFailswitch());
         settings.setIdempotent(client.isIdempontent());
         settings.setRetry(client.getRetry());
+        settings.setTimeout(client.getTimeout());
         settings.setOneway(false);
     }
 

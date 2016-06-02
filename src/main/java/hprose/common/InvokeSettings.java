@@ -12,7 +12,7 @@
  *                                                        *
  * hprose invoke settings class for Java.                 *
  *                                                        *
- * LastModified: Apr 23, 2016                             *
+ * LastModified: Jun 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,6 +29,7 @@ public final class InvokeSettings {
     private Boolean failswitch = null;
     private Boolean oneway = null;
     private Integer retry = null;
+    private Integer timeout = null;
     private Type type = null;
 
     public HproseResultMode getMode() {
@@ -79,6 +80,14 @@ public final class InvokeSettings {
         this.retry = retry;
     }
 
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
     public boolean isOneway() {
         return oneway;
     }
@@ -112,6 +121,7 @@ public final class InvokeSettings {
         if (settings.idempotent != null) idempotent = settings.idempotent;
         if (settings.oneway != null) oneway = settings.oneway;
         if (settings.retry != null) retry = settings.retry;
+        if (settings.timeout != null) timeout = settings.timeout;
         if (settings.type != null) type = settings.type;
     }
 }

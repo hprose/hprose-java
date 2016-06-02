@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Apr 22, 2016                             *
+ * LastModified: Jun 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -189,7 +189,7 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected ByteBuffer sendAndReceive(ByteBuffer request) throws Throwable {
+    protected ByteBuffer sendAndReceive(ByteBuffer request, int timeout) throws Throwable {
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -206,8 +206,8 @@ public class HproseHttpClient extends HproseClient {
             if (hv != null) ((HttpsURLConnection)conn).setHostnameVerifier(hv);
             if (sslsf != null) ((HttpsURLConnection)conn).setSSLSocketFactory(sslsf);
         }
-        conn.setConnectTimeout(getTimeout());
-        conn.setReadTimeout(getTimeout());
+        conn.setConnectTimeout(timeout);
+        conn.setReadTimeout(timeout);
         conn.setRequestProperty("Cookie", cookieManager.getCookie(url.getHost(),
                                                                   url.getFile(),
                                                                   url.getProtocol().equals("https")));
@@ -282,13 +282,13 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected void sendAndReceive(final ByteBuffer request, final ReceiveCallback callback) {
+    protected void sendAndReceive(final ByteBuffer request, final ReceiveCallback callback, final int timeout) {
         executor.execute(new Runnable() {
             public void run() {
                 ByteBuffer response = null;
                 Throwable e = null;
                 try {
-                    response = sendAndReceive(request);
+                    response = sendAndReceive(request, timeout);
                 }
                 catch (Throwable ex) {
                     e = ex;

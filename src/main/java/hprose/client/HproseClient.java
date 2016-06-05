@@ -276,8 +276,8 @@ public abstract class HproseClient implements HproseInvoker {
         }
         if (n > 0) {
             index.set((int)Math.floor(Math.random() * n));
+            this.uri = uris[index.get()];
         }
-        this.uri = uris[index.get()];
     }
 
     public final <T> T useService(Class<T> type) {

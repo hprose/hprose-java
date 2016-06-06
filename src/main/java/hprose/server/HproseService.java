@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Mar 13, 2016                             *
+ * LastModified: Jun 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -255,6 +255,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethod(method, obj, aliasName, mode, simple);
     }
 
+    public final void add(Method method, Object obj, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(method, obj, aliasName, mode, simple, oneway);
+    }
+
     public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName);
     }
@@ -269,6 +273,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName, mode, simple);
+    }
+
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMethod(methodName, obj, paramTypes, aliasName, mode, simple, oneway);
     }
 
     public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
@@ -287,6 +295,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName, mode, simple);
     }
 
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMethod(methodName, type, paramTypes, aliasName, mode, simple, oneway);
+    }
+
     public final void add(String methodName, Object obj, Class<?>[] paramTypes) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes);
     }
@@ -301,6 +313,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMethod(methodName, obj, paramTypes, mode, simple);
+    }
+
+    public final void add(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMethod(methodName, obj, paramTypes, mode, simple, oneway);
     }
 
     public final void add(String methodName, Class<?> type, Class<?>[] paramTypes) throws NoSuchMethodException {
@@ -319,6 +335,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethod(methodName, type, paramTypes, mode, simple);
     }
 
+    public final void add(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMethod(methodName, type, paramTypes, mode, simple, oneway);
+    }
+
     public final void add(String methodName, Object obj, String aliasName) {
         getGlobalMethods().addMethod(methodName, obj, aliasName);
     }
@@ -333,6 +353,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, aliasName, mode, simple);
+    }
+
+    public final void add(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(methodName, obj, aliasName, mode, simple, oneway);
     }
 
     public final void add(String methodName, Class<?> type, String aliasName) {
@@ -351,6 +375,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethod(methodName, type, aliasName, mode, simple);
     }
 
+    public final void add(String methodName, Class<?> type, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(methodName, type, aliasName, mode, simple, oneway);
+    }
+
     public final void add(String methodName, Object obj) {
         getGlobalMethods().addMethod(methodName, obj);
     }
@@ -365,6 +393,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String methodName, Object obj, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethod(methodName, obj, mode, simple);
+    }
+
+    public final void add(String methodName, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(methodName, obj, mode, simple, oneway);
     }
 
     public final void add(String methodName, Class<?> type) {
@@ -383,6 +415,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethod(methodName, type, mode, simple);
     }
 
+    public final void add(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(methodName, type, mode, simple, oneway);
+    }
+
     public final void add(String[] methodNames, Object obj, String[] aliasNames) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames);
     }
@@ -397,6 +433,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, aliasNames, mode, simple);
+    }
+
+    public final void add(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, obj, aliasNames, mode, simple, oneway);
     }
 
     public final void add(String[] methodNames, Object obj, String aliasPrefix) {
@@ -415,6 +455,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethods(methodNames, obj, aliasPrefix, mode, simple);
     }
 
+    public final void add(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, obj, aliasPrefix, mode, simple, oneway);
+    }
+
     public final void add(String[] methodNames, Object obj) {
         getGlobalMethods().addMethods(methodNames, obj);
     }
@@ -429,6 +473,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String[] methodNames, Object obj, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, obj, mode, simple);
+    }
+
+    public final void add(String[] methodNames, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, obj, mode, simple, oneway);
     }
 
     public final void add(String[] methodNames, Class<?> type, String[] aliasNames) {
@@ -447,6 +495,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethods(methodNames, type, aliasNames, mode, simple);
     }
 
+    public final void add(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, type, aliasNames, mode, simple, oneway);
+    }
+
     public final void add(String[] methodNames, Class<?> type, String aliasPrefix) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix);
     }
@@ -461,6 +513,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addMethods(methodNames, type, aliasPrefix, mode, simple);
+    }
+
+    public final void add(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, type, aliasPrefix, mode, simple, oneway);
     }
 
     public final void add(String[] methodNames, Class<?> type) {
@@ -479,6 +535,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMethods(methodNames, type, mode, simple);
     }
 
+    public final void add(String[] methodNames, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethods(methodNames, type, mode, simple, oneway);
+    }
+
     public final void add(Object obj, Class<?> type, String aliasPrefix) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix);
     }
@@ -493,6 +553,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix, mode, simple);
+    }
+
+    public final void add(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addInstanceMethods(obj, type, aliasPrefix, mode, simple, oneway);
     }
 
     public final void add(Object obj, Class<?> type) {
@@ -511,6 +575,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addInstanceMethods(obj, type, mode, simple);
     }
 
+    public final void add(Object obj, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addInstanceMethods(obj, type, mode, simple, oneway);
+    }
+
     public final void add(Object obj, String aliasPrefix) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix);
     }
@@ -525,6 +593,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addInstanceMethods(obj, aliasPrefix, mode, simple);
+    }
+
+    public final void add(Object obj, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addInstanceMethods(obj, aliasPrefix, mode, simple, oneway);
     }
 
     public final void add(Object obj) {
@@ -543,6 +615,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addInstanceMethods(obj, mode, simple);
     }
 
+    public final void add(Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addInstanceMethods(obj, mode, simple, oneway);
+    }
+
     public final void add(Class<?> type, String aliasPrefix) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix);
     }
@@ -557,6 +633,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         getGlobalMethods().addStaticMethods(type, aliasPrefix, mode, simple);
+    }
+
+    public final void add(Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addStaticMethods(type, aliasPrefix, mode, simple, oneway);
     }
 
     public final void add(Class<?> type) {
@@ -575,6 +655,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addStaticMethods(type, mode, simple);
     }
 
+    public final void add(Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addStaticMethods(type, mode, simple, oneway);
+    }
+
     public final void addMissingMethod(String methodName, Object obj) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, obj);
     }
@@ -591,6 +675,10 @@ public abstract class HproseService implements HproseClients {
         getGlobalMethods().addMissingMethod(methodName, obj, mode, simple);
     }
 
+    public final void addMissingMethod(String methodName, Object obj, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMissingMethod(methodName, obj, mode, simple, oneway);
+    }
+
     public final void addMissingMethod(String methodName, Class<?> type) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type);
     }
@@ -605,6 +693,10 @@ public abstract class HproseService implements HproseClients {
 
     public final void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         getGlobalMethods().addMissingMethod(methodName, type, mode, simple);
+    }
+
+    public final void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        getGlobalMethods().addMissingMethod(methodName, type, mode, simple, oneway);
     }
 
     private ByteBuffer outputFilter(ByteBuffer response, ServiceContext context) {
@@ -708,7 +800,7 @@ public abstract class HproseService implements HproseClients {
         }
     }
 
-    private Object invokeHandler(String name, Object[] args, ServiceContext context) throws Throwable {
+    private Object callService(String name, Object[] args, ServiceContext context) throws Throwable {
         HproseMethod remoteMethod = context.getRemoteMethod();
         try {
             if (context.isMissingMethod()) {
@@ -730,6 +822,24 @@ public abstract class HproseService implements HproseClients {
             }
             throw ex;
         }
+    }
+
+    private Object invokeHandler(final String name, final Object[] args, final ServiceContext context) throws Throwable {
+        boolean oneway = context.getRemoteMethod().oneway;
+        if (oneway) {
+            Promise promise = new Promise(new Callable() {
+                public Object call() throws Exception {
+                    try {
+                        return callService(name, args, context);
+                    }
+                    catch (Throwable e) {
+                        return null;
+                    }
+                }
+            });
+            return null;
+        }
+        return callService(name, args, context);
     }
 
     @SuppressWarnings("unchecked")

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose remote methods class for Java.                  *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Jun 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -59,7 +59,7 @@ public class HproseMethods {
         return i;
     }
 
-    void addMethod(String aliasName, HproseMethod method) {
+    public void addMethod(String aliasName, HproseMethod method) {
         ConcurrentHashMap<Integer, HproseMethod> methods;
         String name = aliasName.toLowerCase();
         if (remoteMethods.containsKey(name)) {
@@ -96,6 +96,10 @@ public class HproseMethods {
         addMethod(aliasName, new HproseMethod(method, obj, mode, simple));
     }
 
+    public void addMethod(Method method, Object obj, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(aliasName, new HproseMethod(method, obj, mode, simple, oneway));
+    }
+
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
         addMethod(aliasName, new HproseMethod(methodName, obj, paramTypes));
     }
@@ -110,6 +114,10 @@ public class HproseMethods {
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         addMethod(aliasName, new HproseMethod(methodName, obj, paramTypes, mode, simple));
+    }
+
+    public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(aliasName, new HproseMethod(methodName, obj, paramTypes, mode, simple, oneway));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
@@ -128,6 +136,10 @@ public class HproseMethods {
         addMethod(aliasName, new HproseMethod(methodName, type, paramTypes, mode, simple));
     }
 
+    public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(aliasName, new HproseMethod(methodName, type, paramTypes, mode, simple, oneway));
+    }
+
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes) throws NoSuchMethodException {
         addMethod(methodName, new HproseMethod(methodName, obj, paramTypes));
     }
@@ -142,6 +154,10 @@ public class HproseMethods {
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
         addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, mode, simple));
+    }
+
+    public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, mode, simple, oneway));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes) throws NoSuchMethodException {
@@ -160,18 +176,62 @@ public class HproseMethods {
         addMethod(methodName, new HproseMethod(methodName, type, paramTypes, mode, simple));
     }
 
-    private void addMethod(String methodName, Object obj, Class<?> type, String aliasName, HproseResultMode mode, boolean simple) {
+    public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(methodName, new HproseMethod(methodName, type, paramTypes, mode, simple, oneway));
+    }
+
+    interface HproseMethodCreator {
+        HproseMethod create(Method method);
+    }
+
+    private void addMethod(String methodName, Object obj, Class<?> type, String aliasName, HproseMethodCreator creator) {
         Method[] methods = type.getMethods();
         for (Method method : methods) {
             if (methodName.equals(method.getName()) &&
                 ((obj == null) == Modifier.isStatic(method.getModifiers()))) {
-                addMethod(aliasName, new HproseMethod(method, obj, mode, simple));
+                addMethod(aliasName, creator.create(method));
             }
         }
     }
 
-    private void addMethod(String methodName, Object obj, Class<?> type, String aliasName) {
-        addMethod(methodName, obj, type, aliasName, HproseResultMode.Normal, false);
+    private void addMethod(String methodName, final Object obj, Class<?> type, String aliasName, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addMethod(methodName, obj, type, aliasName, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, String aliasName, final HproseResultMode mode, final boolean simple) {
+        addMethod(methodName, obj, type, aliasName, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, String aliasName, final HproseResultMode mode) {
+        addMethod(methodName, obj, type, aliasName, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, String aliasName, final boolean simple) {
+        addMethod(methodName, obj, type, aliasName, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, String aliasName) {
+        addMethod(methodName, obj, type, aliasName, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
     }
 
     public void addMethod(String methodName, Object obj, String aliasName) {
@@ -179,15 +239,19 @@ public class HproseMethods {
     }
 
     public void addMethod(String methodName, Object obj, String aliasName, HproseResultMode mode) {
-        addMethod(methodName, obj, obj.getClass(), aliasName, mode, false);
+        addMethod(methodName, obj, obj.getClass(), aliasName, mode);
     }
 
     public void addMethod(String methodName, Object obj, String aliasName, boolean simple) {
-        addMethod(methodName, obj, obj.getClass(), aliasName, HproseResultMode.Normal, simple);
+        addMethod(methodName, obj, obj.getClass(), aliasName, simple);
     }
 
     public void addMethod(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple) {
         addMethod(methodName, obj, obj.getClass(), aliasName, mode, simple);
+    }
+
+    public void addMethod(String methodName, Object obj, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(methodName, obj, obj.getClass(), aliasName, mode, simple, oneway);
     }
 
     public void addMethod(String methodName, Class<?> type, String aliasName) {
@@ -195,15 +259,19 @@ public class HproseMethods {
     }
 
     public void addMethod(String methodName, Class<?> type, String aliasName, HproseResultMode mode) {
-        addMethod(methodName, null, type, aliasName, mode, false);
+        addMethod(methodName, null, type, aliasName, mode);
     }
 
     public void addMethod(String methodName, Class<?> type, String aliasName, boolean simple) {
-        addMethod(methodName, null, type, aliasName, HproseResultMode.Normal, simple);
+        addMethod(methodName, null, type, aliasName, simple);
     }
 
     public void addMethod(String methodName, Class<?> type, String aliasName, HproseResultMode mode, boolean simple) {
         addMethod(methodName, null, type, aliasName, mode, simple);
+    }
+
+    public void addMethod(String methodName, Class<?> type, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(methodName, null, type, aliasName, mode, simple, oneway);
     }
 
     public void addMethod(String methodName, Object obj) {
@@ -211,15 +279,19 @@ public class HproseMethods {
     }
 
     public void addMethod(String methodName, Object obj, HproseResultMode mode) {
-        addMethod(methodName, obj, methodName, mode, false);
+        addMethod(methodName, obj, methodName, mode);
     }
 
     public void addMethod(String methodName, Object obj, boolean simple) {
-        addMethod(methodName, obj, methodName, HproseResultMode.Normal, simple);
+        addMethod(methodName, obj, methodName, simple);
     }
 
     public void addMethod(String methodName, Object obj, HproseResultMode mode, boolean simple) {
         addMethod(methodName, obj, methodName, mode, simple);
+    }
+
+    public void addMethod(String methodName, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(methodName, obj, methodName, mode, simple, oneway);
     }
 
     public void addMethod(String methodName, Class<?> type) {
@@ -227,18 +299,22 @@ public class HproseMethods {
     }
 
     public void addMethod(String methodName, Class<?> type, HproseResultMode mode) {
-        addMethod(methodName, type, methodName, mode, false);
+        addMethod(methodName, type, methodName, mode);
     }
 
     public void addMethod(String methodName, Class<?> type, boolean simple) {
-        addMethod(methodName, type, methodName, HproseResultMode.Normal, simple);
+        addMethod(methodName, type, methodName, simple);
     }
 
     public void addMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple) {
         addMethod(methodName, type, methodName, mode, simple);
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple) {
+    public void addMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(methodName, type, methodName, mode, simple, oneway);
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, String[] aliasNames, HproseMethodCreator creator) {
         Method[] methods = type.getMethods();
         for (int i = 0; i < methodNames.length; ++i) {
             String methodName = methodNames[i];
@@ -246,34 +322,98 @@ public class HproseMethods {
             for (Method method : methods) {
                 if (methodName.equals(method.getName()) &&
                     ((obj == null) == Modifier.isStatic(method.getModifiers()))) {
-                    addMethod(aliasName, new HproseMethod(method, obj, mode, simple));
+                    addMethod(aliasName, creator.create(method));
                 }
             }
         }
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String[] aliasNames) {
-        addMethods(methodNames, obj, type, aliasNames, HproseResultMode.Normal, false);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String[] aliasNames, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addMethods(methodNames, obj, type, aliasNames, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
+    }
+
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String[] aliasNames, final HproseResultMode mode, final boolean simple) {
+        addMethods(methodNames, obj, type, aliasNames, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
+    }
+
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String[] aliasNames, final HproseResultMode mode) {
+        addMethods(methodNames, obj, type, aliasNames, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
+    }
+
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String[] aliasNames, final boolean simple) {
+        addMethods(methodNames, obj, type, aliasNames, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
+    }
+
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String[] aliasNames) {
+        addMethods(methodNames, obj, type, aliasNames, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
+    }
+
+    private String[] getAliasNames(String[] methodNames1, String aliasPrefix) {
+        String[] aliasNames = new String[methodNames1.length];
+        for (int i = 0; i < methodNames1.length; ++i) {
+            aliasNames[i] = aliasPrefix + "_" + methodNames1[i];
+        }
+        return aliasNames;
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode, simple, oneway);
     }
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
-        String[] aliasNames = new String[methodNames.length];
-        for (int i = 0; i < methodNames.length; ++i) {
-            aliasNames[i] = aliasPrefix + "_" + methodNames[i];
-        }
-        addMethods(methodNames, obj, type, aliasNames, mode, simple);
+        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode, simple);
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode) {
+        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode);
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, boolean simple) {
+        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), simple);
     }
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix) {
-        addMethods(methodNames, obj, type, aliasPrefix, HproseResultMode.Normal, false);
+        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix));
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, obj, type, methodNames, mode, simple, oneway);
     }
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, obj, type, methodNames, mode, simple);
     }
 
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode) {
+        addMethods(methodNames, obj, type, methodNames, mode);
+    }
+
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, boolean simple) {
+        addMethods(methodNames, obj, type, methodNames, simple);
+    }
+
     private void addMethods(String[] methodNames, Object obj, Class<?> type) {
-        addMethods(methodNames, obj, type, methodNames, HproseResultMode.Normal, false);
+        addMethods(methodNames, obj, type, methodNames);
     }
 
     public void addMethods(String[] methodNames, Object obj, String[] aliasNames) {
@@ -281,15 +421,19 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode) {
-        addMethods(methodNames, obj, obj.getClass(), aliasNames, mode, false);
+        addMethods(methodNames, obj, obj.getClass(), aliasNames, mode);
     }
 
     public void addMethods(String[] methodNames, Object obj, String[] aliasNames, boolean simple) {
-        addMethods(methodNames, obj, obj.getClass(), aliasNames, HproseResultMode.Normal, simple);
+        addMethods(methodNames, obj, obj.getClass(), aliasNames, simple);
     }
 
     public void addMethods(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, obj, obj.getClass(), aliasNames, mode, simple);
+    }
+
+    public void addMethods(String[] methodNames, Object obj, String[] aliasNames, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, obj, obj.getClass(), aliasNames, mode, simple, oneway);
     }
 
     public void addMethods(String[] methodNames, Object obj, String aliasPrefix) {
@@ -297,15 +441,19 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode) {
-        addMethods(methodNames, obj, obj.getClass(), aliasPrefix, mode, false);
+        addMethods(methodNames, obj, obj.getClass(), aliasPrefix, mode);
     }
 
     public void addMethods(String[] methodNames, Object obj, String aliasPrefix, boolean simple) {
-        addMethods(methodNames, obj, obj.getClass(), aliasPrefix, HproseResultMode.Normal, simple);
+        addMethods(methodNames, obj, obj.getClass(), aliasPrefix, simple);
     }
 
     public void addMethods(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, obj, obj.getClass(), aliasPrefix, mode, simple);
+    }
+
+    public void addMethods(String[] methodNames, Object obj, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, obj, obj.getClass(), aliasPrefix, mode, simple, oneway);
     }
 
     public void addMethods(String[] methodNames, Object obj) {
@@ -313,15 +461,19 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Object obj, HproseResultMode mode) {
-        addMethods(methodNames, obj, obj.getClass(), mode, false);
+        addMethods(methodNames, obj, obj.getClass(), mode);
     }
 
     public void addMethods(String[] methodNames, Object obj, boolean simple) {
-        addMethods(methodNames, obj, obj.getClass(), HproseResultMode.Normal, simple);
+        addMethods(methodNames, obj, obj.getClass(), simple);
     }
 
     public void addMethods(String[] methodNames, Object obj, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, obj, obj.getClass(), mode, simple);
+    }
+
+    public void addMethods(String[] methodNames, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, obj, obj.getClass(), mode, simple, oneway);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String[] aliasNames) {
@@ -329,15 +481,19 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode) {
-        addMethods(methodNames, null, type, aliasNames, mode, false);
+        addMethods(methodNames, null, type, aliasNames, mode);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String[] aliasNames, boolean simple) {
-        addMethods(methodNames, null, type, aliasNames, HproseResultMode.Normal, simple);
+        addMethods(methodNames, null, type, aliasNames, simple);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, null, type, aliasNames, mode, simple);
+    }
+
+    public void addMethods(String[] methodNames, Class<?> type, String[] aliasNames, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, null, type, aliasNames, mode, simple, oneway);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String aliasPrefix) {
@@ -345,15 +501,19 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode) {
-        addMethods(methodNames, null, type, aliasPrefix, mode, false);
+        addMethods(methodNames, null, type, aliasPrefix, mode);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String aliasPrefix, boolean simple) {
-        addMethods(methodNames, null, type, aliasPrefix, HproseResultMode.Normal, simple);
+        addMethods(methodNames, null, type, aliasPrefix, simple);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, null, type, aliasPrefix, mode, simple);
+    }
+
+    public void addMethods(String[] methodNames, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, null, type, aliasPrefix, mode, simple, oneway);
     }
 
     public void addMethods(String[] methodNames, Class<?> type) {
@@ -361,63 +521,124 @@ public class HproseMethods {
     }
 
     public void addMethods(String[] methodNames, Class<?> type, HproseResultMode mode) {
-        addMethods(methodNames, null, type, mode, false);
+        addMethods(methodNames, null, type, mode);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, boolean simple) {
-        addMethods(methodNames, null, type, HproseResultMode.Normal, simple);
+        addMethods(methodNames, null, type, simple);
     }
 
     public void addMethods(String[] methodNames, Class<?> type, HproseResultMode mode, boolean simple) {
         addMethods(methodNames, null, type, mode, simple);
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public void addMethods(String[] methodNames, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethods(methodNames, null, type, mode, simple, oneway);
+    }
+
+    private void addInstanceMethods(Object obj, Class<?> type, String aliasPrefix, HproseMethodCreator creator) {
         if (obj != null) {
             Method[] methods = type.getDeclaredMethods();
             for (Method method : methods) {
                 int mod = method.getModifiers();
                 if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-                    addMethod(method, obj, aliasPrefix + "_" + method.getName(), mode, simple);
+                    addMethod(aliasPrefix + "_" + method.getName(), creator.create(method));
                 }
             }
         }
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, String aliasPrefix, boolean simple) {
-        addInstanceMethods(obj, type, aliasPrefix, HproseResultMode.Normal, simple);
+    public void addInstanceMethods(final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addInstanceMethods(obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode) {
-        addInstanceMethods(obj, type, aliasPrefix, mode, false);
+    public void addInstanceMethods(final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple) {
+        addInstanceMethods(obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, String aliasPrefix) {
-        addInstanceMethods(obj, type, aliasPrefix, HproseResultMode.Normal, false);
+    public void addInstanceMethods(final Object obj, Class<?> type, String aliasPrefix, final boolean simple) {
+        addInstanceMethods(obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, HproseResultMode mode, boolean simple) {
+    public void addInstanceMethods(final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode) {
+        addInstanceMethods(obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
+    }
+
+    public void addInstanceMethods(final Object obj, Class<?> type, String aliasPrefix) {
+        addInstanceMethods(obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
+
+    }
+
+    private void addInstanceMethods(Object obj, Class<?> type, HproseMethodCreator creator) {
         if (obj != null) {
             Method[] methods = type.getDeclaredMethods();
             for (Method method : methods) {
                 int mod = method.getModifiers();
                 if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-                    addMethod(method, obj, method.getName(), mode, simple);
+                    addMethod(method.getName(), creator.create(method));
                 }
             }
         }
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, boolean simple) {
-        addInstanceMethods(obj, type, HproseResultMode.Normal, simple);
+    public void addInstanceMethods(final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addInstanceMethods(obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type, HproseResultMode mode) {
-        addInstanceMethods(obj, type, mode, false);
+    public void addInstanceMethods(final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple) {
+        addInstanceMethods(obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
     }
 
-    public void addInstanceMethods(Object obj, Class<?> type) {
-        addInstanceMethods(obj, type, HproseResultMode.Normal, false);
+    public void addInstanceMethods(final Object obj, Class<?> type, final boolean simple) {
+        addInstanceMethods(obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
+    }
+
+    public void addInstanceMethods(final Object obj, Class<?> type, final HproseResultMode mode) {
+        addInstanceMethods(obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
+    }
+
+    public void addInstanceMethods(final Object obj, Class<?> type) {
+        addInstanceMethods(obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
     }
 
     public void addInstanceMethods(Object obj, String aliasPrefix) {
@@ -436,6 +657,10 @@ public class HproseMethods {
         addInstanceMethods(obj, obj.getClass(), aliasPrefix, mode, simple);
     }
 
+    public void addInstanceMethods(Object obj, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
+        addInstanceMethods(obj, obj.getClass(), aliasPrefix, mode, simple, oneway);
+    }
+
     public void addInstanceMethods(Object obj) {
         addInstanceMethods(obj, obj.getClass());
     }
@@ -452,48 +677,106 @@ public class HproseMethods {
         addInstanceMethods(obj, obj.getClass(), mode, simple);
     }
 
-    public void addStaticMethods(Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
+    public void addInstanceMethods(Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        addInstanceMethods(obj, obj.getClass(), mode, simple, oneway);
+    }
+
+    private void addStaticMethods(Class<?> type, String aliasPrefix, HproseMethodCreator creator) {
         Method[] methods = type.getDeclaredMethods();
         for (Method method : methods) {
             int mod = method.getModifiers();
             if (Modifier.isPublic(mod) && Modifier.isStatic(mod)) {
-                addMethod(method, null, aliasPrefix + "_" + method.getName(), mode, simple);
+                addMethod(aliasPrefix + "_" + method.getName(), creator.create(method));
             }
         }
     }
 
-    public void addStaticMethods(Class<?> type, String aliasPrefix, boolean simple) {
-        addStaticMethods(type, aliasPrefix, HproseResultMode.Normal, simple);
+    public void addStaticMethods(Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addStaticMethods(type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode, simple, oneway);
+            }
+        });
     }
 
-    public void addStaticMethods(Class<?> type, String aliasPrefix, HproseResultMode mode) {
-        addStaticMethods(type, aliasPrefix, mode, false);
+    public void addStaticMethods(Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple) {
+        addStaticMethods(type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode, simple);
+            }
+        });
+    }
+
+    public void addStaticMethods(Class<?> type, String aliasPrefix, final boolean simple) {
+        addStaticMethods(type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, simple);
+            }
+        });
+    }
+
+    public void addStaticMethods(Class<?> type, String aliasPrefix, final HproseResultMode mode) {
+        addStaticMethods(type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode);
+            }
+        });
     }
 
     public void addStaticMethods(Class<?> type, String aliasPrefix) {
-        addStaticMethods(type, aliasPrefix, HproseResultMode.Normal, false);
+        addStaticMethods(type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null);
+            }
+        });
     }
 
-    public void addStaticMethods(Class<?> type, HproseResultMode mode, boolean simple) {
+    private void addStaticMethods(Class<?> type, HproseMethodCreator creator) {
         Method[] methods = type.getDeclaredMethods();
         for (Method method : methods) {
             int mod = method.getModifiers();
             if (Modifier.isPublic(mod) && Modifier.isStatic(mod)) {
-                addMethod(method, null, method.getName(), mode, simple);
+                addMethod(method.getName(), creator.create(method));
             }
         }
     }
-
-    public void addStaticMethods(Class<?> type, boolean simple) {
-        addStaticMethods(type, HproseResultMode.Normal, simple);
+    public void addStaticMethods(Class<?> type, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addStaticMethods(type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode, simple, oneway);
+            }
+        });
     }
 
-    public void addStaticMethods(Class<?> type, HproseResultMode mode) {
-        addStaticMethods(type, mode, false);
+    public void addStaticMethods(Class<?> type, final HproseResultMode mode, final boolean simple) {
+        addStaticMethods(type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode, simple);
+            }
+        });
+    }
+    public void addStaticMethods(Class<?> type, final boolean simple) {
+        addStaticMethods(type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, simple);
+            }
+        });
+    }
+
+    public void addStaticMethods(Class<?> type, final HproseResultMode mode) {
+        addStaticMethods(type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null, mode);
+            }
+        });
     }
 
     public void addStaticMethods(Class<?> type) {
-        addStaticMethods(type, HproseResultMode.Normal, false);
+        addStaticMethods(type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, null);
+            }
+        });
     }
 
     public void addMissingMethod(String methodName, Object obj) throws NoSuchMethodException {
@@ -512,6 +795,10 @@ public class HproseMethods {
         addMethod(methodName, obj, new Class<?>[] { String.class, Object[].class }, "*", mode, simple);
     }
 
+    public void addMissingMethod(String methodName, Object obj, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(methodName, obj, new Class<?>[] { String.class, Object[].class }, "*", mode, simple, oneway);
+    }
+
     public void addMissingMethod(String methodName, Class<?> type) throws NoSuchMethodException {
         addMethod(methodName, type, new Class<?>[] { String.class, Object[].class }, "*");
     }
@@ -528,4 +815,7 @@ public class HproseMethods {
         addMethod(methodName, type, new Class<?>[] { String.class, Object[].class }, "*", mode, simple);
     }
 
+    public void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
+        addMethod(methodName, type, new Class<?>[] { String.class, Object[].class }, "*", mode, simple, oneway);
+    }
 }

@@ -205,6 +205,14 @@ public abstract class HproseService implements HproseClients {
         debugEnabled = enabled;
     }
 
+    public int getErrorDelay() {
+        return errorDelay;
+    }
+
+    public void setErrorDelay(int errorDelay) {
+        this.errorDelay = errorDelay;
+    }
+
     public final HproseServiceEvent getEvent() {
         return this.event;
     }
@@ -1320,4 +1328,5 @@ public abstract class HproseService implements HproseClients {
         setTimer(topics, topic, id);
         return detector;
     }
+
 }

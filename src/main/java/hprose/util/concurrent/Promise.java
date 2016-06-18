@@ -854,6 +854,14 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return reason;
     }
 
+    public final Promise<?> catchError(final Action<Throwable> onreject) {
+        return then((Callback)null, onreject);
+    }
+
+    public final Promise<?> catchError(final Func<?, Throwable> onreject) {
+        return then((Callback)null, onreject);
+    }
+
     public final Promise<?> catchError(final Action<Throwable> onreject, final Func<Boolean, Throwable> test) {
         return catchError((Callback<Throwable>)onreject, test);
     }
@@ -876,16 +884,12 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return then(null, onreject);
     }
 
-    public final Promise<?> catchError(final Action<Throwable> onreject) {
-        return then((Callback)null, onreject);
+    public final void fail(final Action<Throwable> onreject) {
+        done((Callback)null, onreject);
     }
 
-    public final Promise<?> catchError(final Func<?, Throwable> onreject) {
-        return then((Callback)null, onreject);
-    }
-
-    public final void fail(final Callback<Throwable> onreject) {
-        done(null, onreject);
+    public final void fail(final Func<?, Throwable> onreject) {
+        done((Callback)null, onreject);
     }
 
     @SuppressWarnings("unchecked")

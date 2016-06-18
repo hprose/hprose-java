@@ -4,3 +4,5 @@
 *.war
 *.ear
 target
+/promise/nbproject/private/
+/promise/build/

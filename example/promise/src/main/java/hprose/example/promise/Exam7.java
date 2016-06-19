@@ -16,7 +16,7 @@ public class Exam7 {
     }
     public static void delayed() {
         System.out.println(System.currentTimeMillis() + ": before Promise.delayed");
-        Promise<String> promise = (Promise<String>)Promise.delayed(300, () -> {
+        Promise<String> promise = Promise.delayed(300, () -> {
             System.out.println(System.currentTimeMillis() + ": running Promise.delayed");
             return "promise from Promise.delayed";
         });

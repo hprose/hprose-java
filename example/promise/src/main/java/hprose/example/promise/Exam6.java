@@ -17,7 +17,7 @@ public class Exam6 {
     }
     public static void sync() {
         System.out.println("before Promise.sync");
-        Promise<String> promise = (Promise<String>)Promise.sync(() -> {
+        Promise<String> promise = Promise.sync(() -> {
             Thread.sleep(100);
             System.out.println("running Promise.sync");
             return "promise from Promise.sync";

@@ -6,7 +6,7 @@ import hprose.util.concurrent.Resolver;
 
 public class Exam3 {
     public static void main(String[] args) {
-        Promise<Integer> promise = new Promise<>((Resolver resolver, Rejector rejector) -> {
+        Promise<Integer> promise = new Promise<>((Resolver<Integer> resolver, Rejector rejector) -> {
             resolver.resolve(100);
         });
         promise.then((Integer value) -> {

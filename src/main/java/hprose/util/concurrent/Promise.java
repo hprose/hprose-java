@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jun 18, 2016                             *
+ * LastModified: Jun 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,8 +31,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
-
+public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private final static ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
     static {
         Threads.registerShutdownHandler(new Runnable() {
@@ -62,24 +61,30 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         });
     }
 
-    public Promise(Executor executor) {
-        executor.exec((Resolver)this, (Rejector)this);
+    public Promise(Executor<V> executor) {
+        executor.exec((Resolver<V>)this, (Rejector)this);
     }
 
-    public final static Promise<?> value(Object value) {
-        Promise<?> promise = new Promise<Object>();
+    public final static <T> Promise<T> value(T value) {
+        Promise<T> promise = new Promise<T>();
         promise.resolve(value);
         return promise;
     }
 
-    public final static Promise<?> error(Throwable reason) {
-        Promise<?> promise = new Promise<Object>();
+    public final static <T> Promise<T> value(Promise<T> value) {
+        Promise<T> promise = new Promise<T>();
+        promise.resolve(value);
+        return promise;
+    }
+
+    public final static <T> Promise<T> error(Throwable reason) {
+        Promise<T> promise = new Promise<T>();
         promise.reject(reason);
         return promise;
     }
 
-    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Callable<?> computation) {
-        final Promise<?> promise = new Promise<Object>();
+    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final Callable<T> computation) {
+        final Promise<T> promise = new Promise<T>();
         timer.schedule(new Runnable() {
             public void run() {
                 try {
@@ -93,8 +98,8 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Object value) {
-        final Promise<?> promise = new Promise<Object>();
+    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final T value) {
+        final Promise<T> promise = new Promise<T>();
         timer.schedule(new Runnable() {
             public void run() {
                 promise.resolve(value);
@@ -103,15 +108,29 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static Promise<?> delayed(long duration, Callable<?> computation) {
+    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final Promise<T> value) {
+        final Promise<T> promise = new Promise<T>();
+        timer.schedule(new Runnable() {
+            public void run() {
+                promise.resolve(value);
+            }
+        }, duration, timeunit);
+        return promise;
+    }
+
+    public final static <T> Promise<T> delayed(long duration, Callable<T> computation) {
         return delayed(duration, TimeUnit.MILLISECONDS, computation);
     }
 
-    public final static Promise<?> delayed(long duration, Object value) {
+    public final static <T> Promise<T> delayed(long duration, T value) {
         return delayed(duration, TimeUnit.MILLISECONDS, value);
     }
 
-    public final static Promise<?> sync(Callable<?> computation) {
+    public final static <T> Promise<T> delayed(long duration, Promise<T> value) {
+        return delayed(duration, TimeUnit.MILLISECONDS, value);
+    }
+
+    public final static <T> Promise<T> sync(Callable<T> computation) {
         try {
             return value(computation.call());
         }
@@ -172,9 +191,9 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final static <T> Promise<T[]> all(Promise<Object[]> promise, final Class<T> type) {
-        return (Promise<T[]>) promise.then(new Func<Promise<T[]>, Object[]>() {
-            public Promise<T[]> call(Object[] array) throws Throwable {
-                return all(array, type);
+        return (Promise<T[]>)promise.then(new Func() {
+            public Object call(Object array) throws Throwable {
+                return all((Object[])array, type);
             }
         });
     }
@@ -664,14 +683,14 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <V> void call(final Callback<V> callback, final Promise<?> next, final V x) {
+    private <V, U> void call(final Callback<V> callback, final Promise<U> next, final V x) {
         try {
             if (callback instanceof Action) {
                 ((Action<V>)callback).call(x);
-                next.resolve(null);
+                next.resolve((U)null);
             }
             else {
-                next.resolve(((Func<?, V>)callback).call(x));
+                next.resolve(((Func<U, V>)callback).call(x));
             }
         }
         catch (Throwable e) {
@@ -689,7 +708,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private void resolve(final Callback<V> onfulfill, final Callback<Throwable> onreject, final Promise<?> next, final Object x) {
+    private <U> void resolve(final Callback<V> onfulfill, final Callback<Throwable> onreject, final Promise<U> next, final Object x) {
         if (x instanceof Promise) {
             if (x == this) {
                 reject(onreject, next, new TypeException("Self resolution"));
@@ -737,12 +756,12 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
                 call(onfulfill, next, (V)x);
             }
             else {
-                next.resolve(x);
+                next.resolve((U)x);
             }
         }
     }
 
-    public final void resolve(Object value) {
+    public final void resolve(V value) {
         if (state == State.PENDING) {
             state = State.FULFILLED;
             this.value = value;
@@ -751,6 +770,10 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
                 resolve(subscriber.onfulfill, subscriber.onreject, subscriber.next, value);
             }
         }
+    }
+
+    public final void resolve(Promise<V> value) {
+        value.fill(this);
     }
 
     public final void reject(Throwable e) {
@@ -773,24 +796,24 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return then((Callback<V>)onfulfill, null);
     }
 
-    public final Promise<?> then(Func<?, V> onfulfill) {
-        return then((Callback<V>)onfulfill, null);
+    public final <U> Promise<U> then(Func<U, V> onfulfill) {
+        return (Promise<U>)then((Callback<V>)onfulfill, null);
     }
 
     public final Promise<?> then(Action<V> onfulfill, Action<Throwable> onreject) {
         return then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
     }
 
-    public final Promise<?> then(Action<V> onfulfill, Func<?, Throwable> onreject) {
-        return then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+    public final <U> Promise<U> then(Action<V> onfulfill, Func<U, Throwable> onreject) {
+        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
     }
 
-    public final Promise<?> then(Func<?, V> onfulfill, Action<Throwable> onreject) {
-        return then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+    public final <U> Promise<U> then(Func<U, V> onfulfill, Action<Throwable> onreject) {
+        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
     }
 
-    public final Promise<?> then(Func<?, V> onfulfill, Func<?, Throwable> onreject) {
-        return then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+    public final <U> Promise<U> then(Func<U, V> onfulfill, Func<U, Throwable> onreject) {
+        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
     }
 
     public final Promise<?> then(Callback<V> onfulfill, Callback<Throwable> onreject) {
@@ -867,7 +890,7 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return then((Callback)null, onreject);
     }
 
-    public final Promise<?> catchError(final Func<?, Throwable> onreject) {
+    public final <U> Promise<U> catchError(final Func<U, Throwable> onreject) {
         return then((Callback)null, onreject);
     }
 
@@ -875,8 +898,8 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return catchError((Callback<Throwable>)onreject, test);
     }
 
-    public final Promise<?> catchError(final Func<?, Throwable> onreject, final Func<Boolean, Throwable> test) {
-        return catchError((Callback<Throwable>)onreject, test);
+    public final <U> Promise<U> catchError(final Func<U, Throwable> onreject, final Func<Boolean, Throwable> test) {
+        return (Promise<U>)catchError((Callback<Throwable>)onreject, test);
     }
 
     private Promise<?> catchError(final Callback<Throwable> onreject, final Func<Boolean, Throwable> test) {

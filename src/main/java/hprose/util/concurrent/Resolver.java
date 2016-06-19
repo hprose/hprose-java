@@ -12,12 +12,13 @@
  *                                                        *
  * Resolver interface for Java.                           *
  *                                                        *
- * LastModified: Apr 10, 2016                             *
+ * LastModified: Jun 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-public interface Resolver {
-    void resolve(Object value);
+public interface Resolver<V> {
+    void resolve(V value);
+    void resolve(Promise<V> value);
 }

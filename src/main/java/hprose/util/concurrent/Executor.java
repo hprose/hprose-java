@@ -12,12 +12,12 @@
  *                                                        *
  * Executor interface for Java.                           *
  *                                                        *
- * LastModified: Apr 10, 2016                             *
+ * LastModified: Jun 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-public interface Executor {
-    void exec(Resolver resolver, Rejector rejector);
+public interface Executor<V> {
+    void exec(Resolver<V> resolver, Rejector rejector);
 }

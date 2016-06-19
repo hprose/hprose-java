@@ -78,17 +78,12 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Object value) {
+    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Callable<?> computation) {
         final Promise<?> promise = new Promise<Object>();
         timer.schedule(new Runnable() {
             public void run() {
                 try {
-                    if (value instanceof Callable) {
-                        promise.resolve(((Callable)value).call());
-                    }
-                    else {
-                        promise.resolve(value);
-                    }
+                    promise.resolve(computation.call());
                 }
                 catch (Throwable e) {
                     promise.reject(e);
@@ -96,6 +91,20 @@ public final class Promise<V> implements Resolver, Rejector, Thenable<V> {
             }
         }, duration, timeunit);
         return promise;
+    }
+
+    public final static Promise<?> delayed(long duration, TimeUnit timeunit, final Object value) {
+        final Promise<?> promise = new Promise<Object>();
+        timer.schedule(new Runnable() {
+            public void run() {
+                promise.resolve(value);
+            }
+        }, duration, timeunit);
+        return promise;
+    }
+
+    public final static Promise<?> delayed(long duration, Callable<?> computation) {
+        return delayed(duration, TimeUnit.MILLISECONDS, computation);
     }
 
     public final static Promise<?> delayed(long duration, Object value) {

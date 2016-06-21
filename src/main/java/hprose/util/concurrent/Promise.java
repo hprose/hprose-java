@@ -1059,7 +1059,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final Promise<V> tap(final Action<V> onfulfilledSideEffect) {
-        return (Promise<V>) then(new Func<V, V>() {
+        return then(new Func<V, V>() {
             public V call(V value) throws Throwable {
                 onfulfilledSideEffect.call(value);
                 return value;

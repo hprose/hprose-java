@@ -12,12 +12,12 @@
  *                                                        *
  * Action interface for Java.                             *
  *                                                        *
- * LastModified: Apr 10, 2016                             *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-public interface Action<V> extends Callback<V> {
+public interface Action<V> extends Callback<Void, V> {
     void call(V value) throws Throwable;
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jun 19, 2016                             *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         });
     }
 
-    private final ConcurrentLinkedQueue<Subscriber<V>> subscribers = new ConcurrentLinkedQueue<Subscriber<V>>();
+    private final ConcurrentLinkedQueue<Subscriber<?, V>> subscribers = new ConcurrentLinkedQueue<Subscriber<?, V>>();
     private volatile State state = State.PENDING;
     private volatile Object value;
     private volatile Throwable reason;
@@ -683,14 +683,14 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <V, U> void call(final Callback<V> callback, final Promise<U> next, final V x) {
+    private <R, V> void call(final Callback<R, V> callback, final Promise<R> next, final V x) {
         try {
             if (callback instanceof Action) {
                 ((Action<V>)callback).call(x);
-                next.resolve((U)null);
+                next.resolve((R)null);
             }
             else {
-                next.resolve(((Func<U, V>)callback).call(x));
+                next.resolve(((Func<R, V>)callback).call(x));
             }
         }
         catch (Throwable e) {
@@ -698,7 +698,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         }
     }
 
-    private void reject(final Callback<Throwable> onreject, final Promise<?> next, final Throwable e) {
+    private <R> void reject(final Callback<R, Throwable> onreject, final Promise<R> next, final Throwable e) {
         if (onreject != null) {
             call(onreject, next, e);
         }
@@ -708,7 +708,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <U> void resolve(final Callback<V> onfulfill, final Callback<Throwable> onreject, final Promise<U> next, final Object x) {
+    private <R> void resolve(final Callback<R, V> onfulfill, final Callback<R, Throwable> onreject, final Promise<R> next, final Object x) {
         if (x instanceof Promise) {
             if (x == this) {
                 reject(onreject, next, new TypeException("Self resolution"));
@@ -756,17 +756,22 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
                 call(onfulfill, next, (V)x);
             }
             else {
-                next.resolve((U)x);
+                next.resolve((R)x);
             }
         }
     }
 
     public final void resolve(V value) {
+        _resolve(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <R> void _resolve(V value) {
         if (state == State.PENDING) {
             state = State.FULFILLED;
             this.value = value;
             while (!subscribers.isEmpty()) {
-                Subscriber<V> subscriber = subscribers.poll();
+                Subscriber<R, V> subscriber = (Subscriber<R, V>)subscribers.poll();
                 resolve(subscriber.onfulfill, subscriber.onreject, subscriber.next, value);
             }
         }
@@ -777,11 +782,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final void reject(Throwable e) {
+        _reject(e);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <R> void _reject(Throwable e) {
         if (state == State.PENDING) {
             state = State.REJECTED;
             this.reason = e;
             while (!subscribers.isEmpty()) {
-                Subscriber<V> subscriber = subscribers.poll();
+                Subscriber<R, V> subscriber = (Subscriber<R, V>)subscribers.poll();
                 if (subscriber.onreject != null) {
                     call(subscriber.onreject, subscriber.next, e);
                 }
@@ -793,32 +803,25 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final Promise<?> then(Action<V> onfulfill) {
-        return then((Callback<V>)onfulfill, null);
+        return then(onfulfill, null);
     }
 
-    public final <U> Promise<U> then(Func<U, V> onfulfill) {
-        return (Promise<U>)then((Callback<V>)onfulfill, null);
+    public final <R> Promise<R> then(Func<R, V> onfulfill) {
+        return then(onfulfill, null);
     }
 
     public final Promise<?> then(Action<V> onfulfill, Action<Throwable> onreject) {
-        return then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+        return then((Callback<Void, V>)onfulfill, (Callback<Void, Throwable>)onreject);
     }
 
-    public final <U> Promise<U> then(Action<V> onfulfill, Func<U, Throwable> onreject) {
-        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+    public final <R> Promise<R> then(Func<R, V> onfulfill, Func<R, Throwable> onreject) {
+        return then((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
     }
 
-    public final <U> Promise<U> then(Func<U, V> onfulfill, Action<Throwable> onreject) {
-        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
-    }
-
-    public final <U> Promise<U> then(Func<U, V> onfulfill, Func<U, Throwable> onreject) {
-        return (Promise<U>)then((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
-    }
-
-    public final Promise<?> then(Callback<V> onfulfill, Callback<Throwable> onreject) {
+    @SuppressWarnings("unchecked")
+    private <R, T extends Callback<R, V>, E extends Callback<R, Throwable>> Promise<R> then(T onfulfill, E onreject) {
         if ((onfulfill != null) || (onreject != null)) {
-            Promise<?> next = new Promise<Object>();
+            Promise<R> next = new Promise<R>();
             if (state == State.FULFILLED) {
                 resolve(onfulfill, onreject, next, value);
             }
@@ -831,39 +834,31 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
                 }
             }
             else {
-                subscribers.offer(new Subscriber<V>(onfulfill, onreject, next));
+                subscribers.offer(new Subscriber<R, V>(onfulfill, onreject, next));
             }
             return next;
         }
-        return this;
+        return (Promise<R>)this;
     }
 
     public final void done(Action<V> onfulfill) {
-        done((Callback<V>)onfulfill, null);
+        done(onfulfill, null);
     }
 
     public final void done(Func<?, V> onfulfill) {
-        done((Callback<V>)onfulfill, null);
+        done(onfulfill, null);
     }
 
     public final void done(Action<V> onfulfill, Action<Throwable> onreject) {
-        done((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+        done((Callback<Void, V>)onfulfill, (Callback<Void, Throwable>)onreject);
     }
 
-    public final void done(Action<V> onfulfill, Func<?, Throwable> onreject) {
-        done((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
+    public final <R> void done(Func<R, V> onfulfill, Func<R, Throwable> onreject) {
+        done((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
     }
 
-    public final void done(Func<?, V> onfulfill, Action<Throwable> onreject) {
-        done((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
-    }
-
-    public final void done(Func<?, V> onfulfill, Func<?, Throwable> onreject) {
-        done((Callback<V>)onfulfill, (Callback<Throwable>)onreject);
-    }
-
-    private void done(Callback<V> onfulfill, Callback<Throwable> onreject) {
-        then(onfulfill, onreject).then((Callback)null, new Action<Throwable>() {
+    private <R, T extends Callback<R, V>, E extends Callback<R, Throwable>> void done(T onfulfill, E onreject) {
+         then(onfulfill, onreject).then(null, new Action<Throwable>() {
             public void call(final Throwable e) {
                 timer.execute(new Runnable() {
                     public void run() {
@@ -887,25 +882,26 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final Promise<?> catchError(final Action<Throwable> onreject) {
-        return then((Callback)null, onreject);
+        return then(null, onreject);
     }
 
-    public final <U> Promise<U> catchError(final Func<U, Throwable> onreject) {
-        return then((Callback)null, onreject);
+    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject) {
+        return then(null, onreject);
     }
 
     public final Promise<?> catchError(final Action<Throwable> onreject, final Func<Boolean, Throwable> test) {
-        return catchError((Callback<Throwable>)onreject, test);
+        return catchError((Callback<Void, Throwable>)onreject, test);
     }
 
-    public final <U> Promise<U> catchError(final Func<U, Throwable> onreject, final Func<Boolean, Throwable> test) {
-        return (Promise<U>)catchError((Callback<Throwable>)onreject, test);
+    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject, final Func<Boolean, Throwable> test) {
+        return catchError((Callback<R, Throwable>)onreject, test);
     }
 
-    private Promise<?> catchError(final Callback<Throwable> onreject, final Func<Boolean, Throwable> test) {
+    @SuppressWarnings("unchecked")
+    private <R, E extends Callback<R, Throwable>> Promise<R> catchError(final E onreject, final Func<Boolean, Throwable> test) {
         if (test != null) {
-            return then((Callback)null, new Func<Promise<?>, Throwable>() {
-                public Promise<?> call(Throwable e) throws Throwable {
+            return (Promise<R>)then(null, new Func<Object, Throwable>() {
+                public Object call(Throwable e) throws Throwable {
                     if (test.call(e)) {
                         return then(null, onreject);
                     }
@@ -917,11 +913,11 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final void fail(final Action<Throwable> onreject) {
-        done((Callback)null, onreject);
+        done(null, onreject);
     }
 
     public final void fail(final Func<?, Throwable> onreject) {
-        done((Callback)null, onreject);
+        done(null, onreject);
     }
 
     @SuppressWarnings("unchecked")
@@ -972,22 +968,22 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final Promise<?> complete(Action<?> oncomplete) {
-        return then((Callback<V>)oncomplete, (Callback<Throwable>)oncomplete);
+        return then((Action<V>)oncomplete, (Action<Throwable>)oncomplete);
     }
 
     @SuppressWarnings("unchecked")
-    public final Promise<?> complete(Func<?, ?> oncomplete) {
-        return then((Callback<V>)oncomplete, (Callback<Throwable>)oncomplete);
+    public final <R> Promise<R> complete(Func<R, ?> oncomplete) {
+        return then((Func<R, V>)oncomplete, (Func<R, Throwable>)oncomplete);
     }
 
     @SuppressWarnings("unchecked")
     public final void always(Action<?> oncomplete) {
-        done((Callback<V>)oncomplete, (Callback<Throwable>)oncomplete);
+        done((Action<V>)oncomplete, (Action<Throwable>)oncomplete);
     }
 
     @SuppressWarnings("unchecked")
-    public final void always(Func<?, ?> oncomplete) {
-        done((Callback<V>)oncomplete, (Callback<Throwable>)oncomplete);
+    public final <R> void always(Func<R, ?> oncomplete) {
+        done((Func<R, V>)oncomplete, (Func<R, Throwable>)oncomplete);
     }
 
     public final void fill(final Promise<V> promise) {

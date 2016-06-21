@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jun 2, 2016                              *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -380,12 +380,11 @@ public abstract class HproseClient implements HproseInvoker {
         return sendAndReceive(request, context.getSettings().getTimeout());
     }
 
-    @SuppressWarnings("unchecked")
     private Object sendAndReceive(final ByteBuffer request, final ClientContext context) throws Throwable {
         try {
             Object response = beforeFilterHandler.handle(request, context);
             if (response instanceof Promise) {
-                return ((Promise) response).catchError(
+                return ((Promise<?>)response).catchError(
                     new Func<Object, Throwable>() {
                         public Object call(Throwable e) throws Throwable {
                             Object response = retry(request, context);
@@ -868,6 +867,7 @@ public abstract class HproseClient implements HproseInvoker {
         autoIdSettings.setAsync(true);
     }
 
+    @SuppressWarnings("unchecked")
     private synchronized Promise<Integer> autoId() throws Throwable {
         if (autoId == null) {
             autoId = (Promise<Integer>)this.invoke("#", autoIdSettings);

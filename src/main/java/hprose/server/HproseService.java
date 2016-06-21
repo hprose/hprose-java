@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jun 6, 2016                              *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -835,7 +835,7 @@ public abstract class HproseService implements HproseClients {
     private Object invokeHandler(final String name, final Object[] args, final ServiceContext context) throws Throwable {
         boolean oneway = context.getRemoteMethod().oneway;
         if (oneway) {
-            Promise promise = new Promise(new Callable() {
+            Promise<Object> promise = new Promise<Object>(new Callable<Object>() {
                 public Object call() throws Exception {
                     try {
                         return callService(name, args, context);
@@ -975,7 +975,7 @@ public abstract class HproseService implements HproseClients {
                 results.add(beforeInvoke(name, args, context));
             }
         } while (tag == TagCall);
-        return (Promise<ByteBuffer>)Promise.reduce(results.toArray(),
+        return Promise.reduce(results.toArray(),
             new Reducer<ByteBufferStream, ByteBuffer>() {
                 public ByteBufferStream call(ByteBufferStream output, ByteBuffer result, int index) throws Throwable {
                     output.write(result);
@@ -1202,9 +1202,9 @@ public abstract class HproseService implements HproseClients {
                     }
                 }
                 if (t.request != null) {
-                    t.request.resolve(null);
+                    t.request.resolve((Object)null);
                 }
-                Promise request = new Promise();
+                Promise<Object> request = new Promise<Object>();
                 request.whenComplete(new Runnable() {
                     public void run() {
                         Topic t = topics.get(id);
@@ -1306,22 +1306,21 @@ public abstract class HproseService implements HproseClients {
             public void call(Integer[] value) throws Throwable {
                 detector.resolve(value);
             }
-         });
+        });
         return detector;
     }
 
-    @SuppressWarnings("unchecked")
     public final Promise<Boolean> push(String topic, Integer id, Object result) throws HproseException {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
         if (topics == null) throw new HproseException("Topic " + topic + " is not published.");
         Topic t = topics.get(id);
         if (t == null) {
-            return (Promise<Boolean>)Promise.value(false);
+            return Promise.value(false);
         }
         if (t.request != null) {
             t.request.resolve(result);
             t.request = null;
-            return (Promise<Boolean>)Promise.value(true);
+            return Promise.value(true);
         }
         Promise<Boolean> detector = new Promise<Boolean>();
         t.messages.add(new Message(detector, result));

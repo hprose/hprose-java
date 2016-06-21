@@ -12,10 +12,10 @@
  *                                                        *
  * Callback interface for Java.                           *
  *                                                        *
- * LastModified: Apr 10, 2016                             *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-public interface Callback<V> {}
+interface Callback<R, V> {}

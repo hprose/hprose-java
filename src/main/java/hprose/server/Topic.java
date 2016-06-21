@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class Topic {
     public Future timer;
-    public Promise request;
+    public Promise<Object> request;
     public final ConcurrentLinkedQueue<Message> messages = new ConcurrentLinkedQueue<Message>();
     public final AtomicInteger count = new AtomicInteger(1);
     public final int heartbeat;

@@ -12,7 +12,7 @@
  *                                                        *
  * value reader class for Java.                           *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jun 22, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -373,10 +373,10 @@ public final class ValueReader {
                         b2 = buffer.get();
                         b3 = buffer.get();
                         b4 = buffer.get();
-                        int s = ((b1 & 0x07) << 18) |
-                                ((b2 & 0x3f) << 12) |
-                                ((b3 & 0x3f) << 6)  |
-                                 (b4 & 0x3f) - 0x10000;
+                        int s = (((b1 & 0x07) << 18) |
+                                 ((b2 & 0x3f) << 12) |
+                                 ((b3 & 0x3f) << 6)  |
+                                  (b4 & 0x3f)) - 0x10000;
                         if (0 <= s && s <= 0xfffff) {
                             buf[i] = (char)(((s >> 10) & 0x03ff) | 0xd800);
                             buf[++i] = (char)((s & 0x03ff) | 0xdc00);
@@ -430,10 +430,10 @@ public final class ValueReader {
                         b2 = stream.read();
                         b3 = stream.read();
                         b4 = stream.read();
-                        int s = ((b1 & 0x07) << 18) |
-                                ((b2 & 0x3f) << 12) |
-                                ((b3 & 0x3f) << 6)  |
-                                 (b4 & 0x3f) - 0x10000;
+                        int s = (((b1 & 0x07) << 18) |
+                                 ((b2 & 0x3f) << 12) |
+                                 ((b3 & 0x3f) << 6)  |
+                                  (b4 & 0x3f)) - 0x10000;
                         if (0 <= s && s <= 0xfffff) {
                             buf[i] = (char)(((s >> 10) & 0x03ff) | 0xd800);
                             buf[++i] = (char)((s & 0x03ff) | 0xdc00);

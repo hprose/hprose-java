@@ -398,7 +398,7 @@ public class Reader {
                                  DoubleObjectUnserializer.read(this, stream));
     }
 
-    public final <T> T readEnum(Class<T> type) throws HproseException {
+    public final <T> T readEnum(Class<T> type) throws IOException {
         return (buffer != null ? EnumUnserializer.read(this, buffer, type) :
                                  EnumUnserializer.read(this, stream, type));
     }

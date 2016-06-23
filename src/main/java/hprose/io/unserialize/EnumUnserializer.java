@@ -29,7 +29,7 @@ final class EnumUnserializer implements Unserializer {
 
     public final static EnumUnserializer instance = new EnumUnserializer();
 
-    final static <T> T read(Reader reader, ByteBuffer buffer, Class<T> type) throws HproseException {
+    final static <T> T read(Reader reader, ByteBuffer buffer, Class<T> type) throws IOException {
         try {
             return type.getEnumConstants()[IntUnserializer.read(reader, buffer)];
         }
@@ -38,7 +38,7 @@ final class EnumUnserializer implements Unserializer {
         }
     }
 
-    final static <T> T read(Reader reader, InputStream stream, Class<T> type) throws HproseException {
+    final static <T> T read(Reader reader, InputStream stream, Class<T> type) throws IOException {
         try {
             return type.getEnumConstants()[IntUnserializer.read(reader, stream)];
         }

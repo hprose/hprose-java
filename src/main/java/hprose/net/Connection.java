@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: May 8, 2016                              *
+ * LastModified: Jun 27, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -79,13 +79,11 @@ public final class Connection {
     public final void close() {
         try {
             clearTimeout();
+            handler.onClose(this);
             channel.close();
             key.cancel();
         }
         catch (IOException e) {}
-        finally {
-            handler.onClose(this);
-        }
     }
 
     public final boolean receive() {

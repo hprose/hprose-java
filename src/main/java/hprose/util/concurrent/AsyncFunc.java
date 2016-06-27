@@ -8,20 +8,16 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * Thenable.java                                          *
+ * AsyncFunc.java                                         *
  *                                                        *
- * Thenable interface for Java.                           *
+ * AsyncFunc interface for Java.                          *
  *                                                        *
- * LastModified: Jun 27, 2016                             *
+ * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-public interface Thenable<V> {
-    Promise<?> then(Action<V> onfulfill, Action<Throwable> onreject);
-    <R> Promise<R> then(Func<R, V> onfulfill, Func<R, Throwable> onreject);
-    <R> Promise<R> then(AsyncFunc<R, V> onfulfill, Func<R, Throwable> onreject);
-    <R> Promise<R> then(AsyncFunc<R, V> onfulfill, AsyncFunc<R, Throwable> onreject);
-    <R> Promise<R> then(Func<R, V> onfulfill, AsyncFunc<R, Throwable> onreject);
+public interface AsyncFunc<R, V> extends Callback<R, V> {
+    Promise<R> call(V value) throws Throwable;
 }

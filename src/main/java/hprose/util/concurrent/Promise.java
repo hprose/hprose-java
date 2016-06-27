@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jun 21, 2016                             *
+ * LastModified: Jun 27, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -189,11 +189,10 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return all(array, Object.class);
     }
 
-    @SuppressWarnings("unchecked")
     public final static <T> Promise<T[]> all(Promise<Object[]> promise, final Class<T> type) {
-        return (Promise<T[]>)promise.then(new Func() {
-            public Object call(Object array) throws Throwable {
-                return all((Object[])array, type);
+        return promise.then(new AsyncFunc<T[], Object[]>() {
+            public Promise<T[]> call(Object[] array) throws Throwable {
+                return all(array, type);
             }
         });
     }
@@ -229,9 +228,8 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return race(array, Object.class);
     }
 
-    @SuppressWarnings("unchecked")
     public final static <T> Promise<T> race(Promise<Object[]> promise, final Class<T> type) {
-        return (Promise<T>)promise.then(new Func<Promise<T>, Object[]>() {
+        return promise.then(new AsyncFunc<T, Object[]>() {
             public Promise<T> call(Object[] array) throws Throwable {
                 return race(array, type);
             }
@@ -287,9 +285,8 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return any(array, Object.class);
     }
 
-    @SuppressWarnings("unchecked")
     public final static <T> Promise<T> any(Promise<Object[]> promise, final Class<T> type) {
-        return (Promise<T>)promise.then(new Func<Promise<T>, Object[]>() {
+        return promise.then(new AsyncFunc<T, Object[]>() {
             public Promise<T> call(Object[] array) throws Throwable {
                 return any(array, type);
             }
@@ -314,8 +311,24 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return all(args).then(handler);
     }
 
-    public final static Promise<?> run(Func<?, Object[]> handler, Object...args) {
+    public final static <V> Promise<V> run(Func<V, Object[]> handler, Object...args) {
         return all(args).then(handler);
+    }
+
+    public final static <V> Promise<V> run(AsyncFunc<V, Object[]> handler, Object...args) {
+        return all(args).then(handler);
+    }
+
+    public final static <T> Promise<?> run(Class<T> type, Action<T[]> handler, Object...args) {
+        return all(args, type).then(handler);
+    }
+
+    public final static <V, T> Promise<V> run(Class<T> type, Func<V, T[]> handler, Object...args) {
+        return all(args, type).then(handler);
+    }
+
+    public final static <V, T> Promise<V> run(Class<T> type, AsyncFunc<V, T[]> handler, Object...args) {
+        return all(args, type).then(handler);
     }
 
     @SuppressWarnings("unchecked")
@@ -354,7 +367,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> every(final Func<Boolean, V> callback, Object...args) {
-        return (Promise<Boolean>) all(args).then(new Func<Boolean, Object[]>() {
+        return all(args).then(new Func<Boolean, Object[]>() {
             public Boolean call(Object[] array) throws Throwable {
                 for (int i = 0, n = array.length; i < n; ++i) {
                     if (!callback.call((V)array[i])) return false;
@@ -376,24 +389,21 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> every(Object[] array, Handler<Boolean, V> callback) {
-        return (Promise<Boolean>) all(array).then(getEveryHandler(callback));
+        return all(array).then(getEveryHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> every(Promise<Object[]> array, Handler<Boolean, V> callback) {
-        return (Promise<Boolean>) all(array).then(getEveryHandler(callback));
+        return all(array).then(getEveryHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V> Promise<Boolean> every(Handler<Boolean, V> callback) {
-        return (Promise<Boolean>) this.all().then(getEveryHandler(callback));
+        return all().then(getEveryHandler(callback));
     }
 
     @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> some(final Func<Boolean, V> callback, Object...args) {
-        return (Promise<Boolean>) all(args).then(new Func<Boolean, Object[]>() {
+        return all(args).then(new Func<Boolean, Object[]>() {
             public Boolean call(Object[] array) throws Throwable {
                 for (int i = 0, n = array.length; i < n; ++i) {
                     if (callback.call((V)array[i])) return true;
@@ -415,24 +425,21 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> some(Object[] array, Handler<Boolean, V> callback) {
-        return (Promise<Boolean>)all(array).then(getSomeHandler(callback));
+        return all(array).then(getSomeHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Boolean> some(Promise<Object[]> array, Handler<Boolean, V> callback) {
-        return (Promise<Boolean>)all(array).then(getSomeHandler(callback));
+        return all(array).then(getSomeHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V> Promise<Boolean> some(Handler<Boolean, V> callback) {
-        return (Promise<Boolean>)this.all().then(getSomeHandler(callback));
+        return this.all().then(getSomeHandler(callback));
     }
 
     @SuppressWarnings("unchecked")
     public final static <V> Promise<Object[]> filter(final Func<Boolean, V> callback, Object...args) {
-        return (Promise<Object[]>) all(args).then(new Func<Object[], Object[]>() {
+        return all(args).then(new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
                 int n = array.length;
                 ArrayList<Object> result = new ArrayList<Object>(n);
@@ -460,27 +467,25 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
+
     public final static <V, T> Promise<T[]> filter(Object[] array, Handler<Boolean, V> callback, Class<T> type) {
-        return (Promise<T[]>)all(array, type).then(getFilterHandler(callback, type));
+        return all(array, type).then(getFilterHandler(callback, type));
     }
 
     public final static <V> Promise<Object[]> filter(Object[] array, Handler<Boolean, V> callback) {
         return filter(array, callback, Object.class);
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V, T> Promise<T[]> filter(Promise<Object[]> array, Handler<Boolean, V> callback, Class<T> type) {
-        return (Promise<T[]>)all(array, type).then(getFilterHandler(callback, type));
+        return all(array, type).then(getFilterHandler(callback, type));
     }
 
     public final static <V> Promise<Object[]> filter(Promise<Object[]> array, Handler<Boolean, V> callback) {
         return filter(array, callback, Object.class);
     }
 
-    @SuppressWarnings("unchecked")
     public final <V, T> Promise<T[]> filter(Handler<Boolean, V> callback, Class<T> type) {
-        return (Promise<T[]>)this.all(type).then(getFilterHandler(callback, type));
+        return all(type).then(getFilterHandler(callback, type));
     }
 
     public final <V> Promise<Object[]> filter(Handler<Boolean, V> callback) {
@@ -489,7 +494,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final static <V> Promise<Object[]> map(final Func<?, V> callback, Object...args) {
-        return (Promise<Object[]>)all(args).then(new Func<Object[], Object[]>() {
+        return all(args).then(new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
                 int n = array.length;
                 Object[] result = new Object[n];
@@ -531,34 +536,28 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V, T> Promise<T[]> map(Object[] array, Handler<T, V> callback, Class<T> type) {
-        return (Promise<T[]>)all(array).then(getMapHandler(callback, type));
+        return all(array).then(getMapHandler(callback, type));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Object[]> map(Object[] array, Handler<?, V> callback) {
-        return (Promise<Object[]>)all(array).then(getMapHandler(callback));
+        return all(array).then(getMapHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V, T> Promise<T[]> map(Promise<Object[]> array, Handler<T, V> callback, Class<T> type) {
-        return (Promise<T[]>)all(array).then(getMapHandler(callback, type));
+        return all(array).then(getMapHandler(callback, type));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<Object[]> map(Promise<Object[]> array, Handler<?, V> callback) {
-        return (Promise<Object[]>)all(array).then(getMapHandler(callback));
+        return all(array).then(getMapHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V, T> Promise<T[]> map(Handler<T, V> callback, Class<T> type) {
-        return (Promise<T[]>)this.all().then(getMapHandler(callback, type));
+        return all().then(getMapHandler(callback, type));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V> Promise<Object[]> map(Handler<?, V> callback) {
-        return (Promise<Object[]>)this.all().then(getMapHandler(callback));
+        return all().then(getMapHandler(callback));
     }
 
 
@@ -577,19 +576,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<V> reduce(Object[] array, Reducer<V, V> callback) {
-        return (Promise<V>)all(array).then(getReduceHandler(callback));
+        return all(array).then(getReduceHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<V> reduce(Promise<Object[]> array, Reducer<V, V> callback) {
-        return (Promise<V>)all(array).then(getReduceHandler(callback));
+        return all(array).then(getReduceHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V> Promise<V> reduce(Reducer<V, V> callback) {
-        return (Promise<V>)this.all().then(getReduceHandler(callback));
+        return all().then(getReduceHandler(callback));
     }
 
     @SuppressWarnings("unchecked")
@@ -607,19 +603,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <R, V> Promise<R> reduce(Object[] array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)all(array).then(getReduceHandler(callback, initialValue));
+        return all(array).then(getReduceHandler(callback, initialValue));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <R, V> Promise<R> reduce(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)all(array).then(getReduceHandler(callback, initialValue));
+        return all(array).then(getReduceHandler(callback, initialValue));
     }
 
-    @SuppressWarnings("unchecked")
     public final <R, V> Promise<R> reduce(Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)this.all().then(getReduceHandler(callback, initialValue));
+        return all().then(getReduceHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
@@ -637,19 +630,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<V> reduceRight(Object[] array, Reducer<V, V> callback) {
-        return (Promise<V>)all(array).then(getReduceRightHandler(callback));
+        return all(array).then(getReduceRightHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <V> Promise<V> reduceRight(Promise<Object[]> array, Reducer<V, V> callback) {
-        return (Promise<V>)all(array).then(getReduceRightHandler(callback));
+        return all(array).then(getReduceRightHandler(callback));
     }
 
-    @SuppressWarnings("unchecked")
     public final <V> Promise<V> reduceRight(Reducer<V, V> callback) {
-        return (Promise<V>)this.all().then(getReduceRightHandler(callback));
+        return all().then(getReduceRightHandler(callback));
     }
 
     @SuppressWarnings("unchecked")
@@ -667,19 +657,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     public final static <R, V> Promise<R> reduceRight(Object[] array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)all(array).then(getReduceRightHandler(callback, initialValue));
+        return all(array).then(getReduceRightHandler(callback, initialValue));
     }
 
-    @SuppressWarnings("unchecked")
     public final static <R, V> Promise<R> reduceRight(Promise<Object[]> array, Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)all(array).then(getReduceRightHandler(callback, initialValue));
+        return all(array).then(getReduceRightHandler(callback, initialValue));
     }
 
-    @SuppressWarnings("unchecked")
     public final <R, V> Promise<R> reduceRight(Reducer<R, V> callback, R initialValue) {
-        return (Promise<R>)this.all().then(getReduceRightHandler(callback, initialValue));
+        return all().then(getReduceRightHandler(callback, initialValue));
     }
 
     @SuppressWarnings("unchecked")
@@ -689,8 +676,11 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
                 ((Action<V>)callback).call(x);
                 next.resolve((R)null);
             }
-            else {
-                next.resolve(((Func<R, V>)callback).call(x));
+            else if (callback instanceof Func) {
+                next.resolve((R)((Func<R, V>)callback).call(x));
+            }
+            else if (callback instanceof AsyncFunc) {
+                next.resolve((Promise<R>)((AsyncFunc<R, V>)callback).call(x));
             }
         }
         catch (Throwable e) {
@@ -807,7 +797,11 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final <R> Promise<R> then(Func<R, V> onfulfill) {
-        return then(onfulfill, null);
+        return then((Callback<R, V>)onfulfill, null);
+    }
+
+    public final <R> Promise<R> then(AsyncFunc<R, V> onfulfill) {
+        return then((Callback<R, V>)onfulfill, null);
     }
 
     public final Promise<?> then(Action<V> onfulfill, Action<Throwable> onreject) {
@@ -818,8 +812,20 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return then((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
     }
 
+    public final <R> Promise<R> then(AsyncFunc<R, V> onfulfill, Func<R, Throwable> onreject) {
+        return then((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
+    }
+
+    public final <R> Promise<R> then(AsyncFunc<R, V> onfulfill, AsyncFunc<R, Throwable> onreject) {
+        return then((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
+    }
+
+    public final <R> Promise<R> then(Func<R, V> onfulfill, AsyncFunc<R, Throwable> onreject) {
+        return then((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
+    }
+
     @SuppressWarnings("unchecked")
-    private <R, T extends Callback<R, V>, E extends Callback<R, Throwable>> Promise<R> then(T onfulfill, E onreject) {
+    private <R> Promise<R> then(Callback<R, V> onfulfill, Callback<R, Throwable> onreject) {
         if ((onfulfill != null) || (onreject != null)) {
             Promise<R> next = new Promise<R>();
             if (state == State.FULFILLED) {
@@ -845,19 +851,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         done(onfulfill, null);
     }
 
-    public final void done(Func<?, V> onfulfill) {
-        done(onfulfill, null);
-    }
-
     public final void done(Action<V> onfulfill, Action<Throwable> onreject) {
-        done((Callback<Void, V>)onfulfill, (Callback<Void, Throwable>)onreject);
-    }
-
-    public final <R> void done(Func<R, V> onfulfill, Func<R, Throwable> onreject) {
-        done((Callback<R, V>)onfulfill, (Callback<R, Throwable>)onreject);
-    }
-
-    private <R, T extends Callback<R, V>, E extends Callback<R, Throwable>> void done(T onfulfill, E onreject) {
          then(onfulfill, onreject).then(null, new Action<Throwable>() {
             public void call(final Throwable e) {
                 timer.execute(new Runnable() {
@@ -886,7 +880,11 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final <R> Promise<R> catchError(final Func<R, Throwable> onreject) {
-        return then(null, onreject);
+        return then((Callback<R, V>)null, onreject);
+    }
+
+    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject) {
+        return then((Callback<R, V>)null, onreject);
     }
 
     public final Promise<?> catchError(final Action<Throwable> onreject, final Func<Boolean, Throwable> test) {
@@ -897,11 +895,27 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return catchError((Callback<R, Throwable>)onreject, test);
     }
 
+    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject, final Func<Boolean, Throwable> test) {
+        return catchError((Callback<R, Throwable>)onreject, test);
+    }
+
+    public final Promise<?> catchError(final Action<Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+        return catchError((Callback<Void, Throwable>)onreject, test);
+    }
+
+    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+        return catchError((Callback<R, Throwable>)onreject, test);
+    }
+
+    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+        return catchError((Callback<R, Throwable>)onreject, test);
+    }
+
     @SuppressWarnings("unchecked")
-    private <R, E extends Callback<R, Throwable>> Promise<R> catchError(final E onreject, final Func<Boolean, Throwable> test) {
+    private <R> Promise<R> catchError(final Callback<R, Throwable> onreject, final Func<Boolean, Throwable> test) {
         if (test != null) {
-            return (Promise<R>)then(null, new Func<Object, Throwable>() {
-                public Object call(Throwable e) throws Throwable {
+            return then((Callback<R, V>)null, new AsyncFunc<R, Throwable>() {
+                public Promise<R> call(Throwable e) throws Throwable {
                     if (test.call(e)) {
                         return then(null, onreject);
                     }
@@ -912,21 +926,36 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return then(null, onreject);
     }
 
-    public final void fail(final Action<Throwable> onreject) {
-        done(null, onreject);
+    @SuppressWarnings("unchecked")
+    private <R> Promise<R> catchError(final Callback<R, Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+        if (test != null) {
+            return then((Callback<R, V>)null, new AsyncFunc<R, Throwable>() {
+                public Promise<R> call(final Throwable e) throws Throwable {
+                    return test.call(e).then(new AsyncFunc<R, Boolean>() {
+                        public Promise<R> call(Boolean value) throws Throwable {
+                            if (value) {
+                                return then(null, onreject);
+                            }
+                            throw e;
+                        }
+                    });
+                }
+            });
+        }
+        return then(null, onreject);
     }
 
-    public final void fail(final Func<?, Throwable> onreject) {
+    public final void fail(final Action<Throwable> onreject) {
         done(null, onreject);
     }
 
     @SuppressWarnings("unchecked")
     public final Promise<V> whenComplete(final Callable<?> action) {
-        return (Promise<V>)then(
-            new Func<Object, V>() {
-                public Object call(final V value) throws Throwable {
+        return then(
+            new AsyncFunc<V, V>() {
+                public Promise<V> call(final V value) throws Throwable {
                     Object f = action.call();
-                    if (f == null || !isThenable(f)) return value;
+                    if (f == null || !isThenable(f)) return Promise.value(value);
                     return ((Promise<Object>)toPromise(f)).then(new Func<V, Object>() {
                         public V call(Object __) throws Throwable {
                             return value;
@@ -934,8 +963,8 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
                     });
                 }
             },
-            new Func<Object, Throwable>() {
-                public Object call(final Throwable e) throws Throwable {
+            new AsyncFunc<V, Throwable>() {
+                public Promise<V> call(final Throwable e) throws Throwable {
                     Object f = action.call();
                     if (f == null || !isThenable(f)) throw e;
                     return ((Promise<Object>)toPromise(f)).then(new Func<V, Object>() {
@@ -950,15 +979,15 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final Promise<V> whenComplete(final Runnable action) {
-        return (Promise<V>)then(
-            new Func<Object, V>() {
-                public Object call(final V value) throws Throwable {
+        return then(
+            new Func<V, V>() {
+                public V call(final V value) throws Throwable {
                     action.run();
                     return value;
                 }
             },
-            new Func<Object, Throwable>() {
-                public Object call(final Throwable e) throws Throwable {
+            new Func<V, Throwable>() {
+                public V call(final Throwable e) throws Throwable {
                     action.run();
                     throw e;
                 }
@@ -977,13 +1006,13 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    public final void always(Action<?> oncomplete) {
-        done((Action<V>)oncomplete, (Action<Throwable>)oncomplete);
+    public final <R> Promise<R> complete(AsyncFunc<R, ?> oncomplete) {
+        return then((AsyncFunc<R, V>)oncomplete, (AsyncFunc<R, Throwable>)oncomplete);
     }
 
     @SuppressWarnings("unchecked")
-    public final <R> void always(Func<R, ?> oncomplete) {
-        done((Func<R, V>)oncomplete, (Func<R, Throwable>)oncomplete);
+    public final void always(Action<?> oncomplete) {
+        done((Action<V>)oncomplete, (Action<Throwable>)oncomplete);
     }
 
     public final void fill(final Promise<V> promise) {

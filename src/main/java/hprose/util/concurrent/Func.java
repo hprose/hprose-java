@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * Function.java                                          *
+ * Func.java                                              *
  *                                                        *
- * Function interface for Java.                           *
+ * Func interface for Java.                               *
  *                                                        *
  * LastModified: Jun 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *

@@ -12,7 +12,7 @@
  *                                                        *
  * String Util class for Java.                            *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Jun 27, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,18 +20,31 @@ package hprose.util;
 
 import hprose.io.ByteBufferStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public final class StrUtil {
 
-    public final static String toString(ByteBufferStream stream) {
-        byte[] bytes = stream.toArray();
+    public final static String toString(byte[] bytes) {
         try {
             return new String(bytes, "UTF-8");
         }
         catch (UnsupportedEncodingException e) {
             return new String(bytes);
         }
+    }
+
+    public final static String toString(ByteBuffer buffer) {
+        if (buffer.position() != 0) {
+            buffer.flip();
+        }
+        byte[] bytes = new byte[buffer.limit()];
+        buffer.get(bytes);
+        return toString(bytes);
+    }
+
+    public final static String toString(ByteBufferStream stream) {
+        return toString(stream.toArray());
     }
 
     public final static String[] split(String s, char c, int limit) {

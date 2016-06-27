@@ -552,6 +552,7 @@ public abstract class HproseClient implements HproseInvoker {
     private Object invokeHandler(String name, final Object[] args, final ClientContext context) throws Throwable {
         final ByteBufferStream stream = encode(name, args, context);
         Object buffer = sendAndReceive(stream.buffer, context);
+        final InvokeSettings settings = context.getSettings();
         if (buffer instanceof Promise) {
             return ((Promise<ByteBuffer>)buffer).then(new Func<Object, ByteBuffer>() {
                 public Object call(ByteBuffer value) throws Throwable {
@@ -560,7 +561,11 @@ public abstract class HproseClient implements HproseInvoker {
                         return decode(stream, args, context);
                     }
                     finally {
-                        stream.close();
+                        if (settings.getMode() == HproseResultMode.Normal ||
+                            settings.getMode() == HproseResultMode.Serialized ||
+                            settings.getReturnType() == byte[].class) {
+                            stream.close();
+                        }
                     }
                 }
             });
@@ -571,7 +576,11 @@ public abstract class HproseClient implements HproseInvoker {
                 return decode(stream, args, context);
             }
             finally {
-                stream.close();
+                if (settings.getMode() == HproseResultMode.Normal ||
+                    settings.getMode() == HproseResultMode.Serialized ||
+                    settings.getReturnType() == byte[].class) {
+                    stream.close();
+                }
             }
         }
     }

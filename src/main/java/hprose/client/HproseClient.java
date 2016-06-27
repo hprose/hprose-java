@@ -458,6 +458,9 @@ public abstract class HproseClient implements HproseInvoker {
     private ClientContext getContext(InvokeSettings settings) {
         ClientContext context = new ClientContext(this);
         context.getSettings().copyFrom(settings);
+        if (settings.getUserData() != null) {
+            context.getUserData().putAll(settings.getUserData());
+        }
         return context;
     }
 

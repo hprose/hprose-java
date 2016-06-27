@@ -133,13 +133,5 @@ public final class InvokeSettings {
         if (settings.retry != null) retry = settings.retry;
         if (settings.timeout != null) timeout = settings.timeout;
         if (settings.type != null) type = settings.type;
-        if (settings.userdata != null) {
-            if (userdata != null) {
-                userdata = settings.userdata;
-            }
-            else {
-                userdata.putAll(settings.userdata);
-            }
-        }
     }
 }

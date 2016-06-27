@@ -19,6 +19,7 @@
 package hprose.common;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 
 public final class InvokeSettings {
     private HproseResultMode mode = HproseResultMode.Normal;
@@ -31,6 +32,7 @@ public final class InvokeSettings {
     private Integer retry = null;
     private Integer timeout = null;
     private Type type = null;
+    private Map<String, Object> userdata = null;
 
     public HproseResultMode getMode() {
         return mode;
@@ -112,6 +114,14 @@ public final class InvokeSettings {
         this.async = async;
     }
 
+    public Map<String, Object> getUserData() {
+        return userdata;
+    }
+
+    public void setUserData(Map<String, Object> userdata) {
+        this.userdata = userdata;
+    }
+
     public void copyFrom(InvokeSettings settings) {
         mode = settings.mode;
         async = settings.async;
@@ -123,5 +133,13 @@ public final class InvokeSettings {
         if (settings.retry != null) retry = settings.retry;
         if (settings.timeout != null) timeout = settings.timeout;
         if (settings.type != null) type = settings.type;
+        if (settings.userdata != null) {
+            if (userdata != null) {
+                userdata = settings.userdata;
+            }
+            else {
+                userdata.putAll(settings.userdata);
+            }
+        }
     }
 }

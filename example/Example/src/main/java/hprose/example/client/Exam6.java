@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 interface IExam6 {
-    @ByRef(true)
+    @ByRef
     void swapKeyAndValue(Map<String, String> map, HproseCallback<Map<String, String>> callback);
 }
 

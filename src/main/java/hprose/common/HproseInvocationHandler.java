@@ -12,7 +12,7 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Apr 24, 2016                             *
+ * LastModified: Jun 27, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -39,6 +39,7 @@ public class HproseInvocationHandler implements InvocationHandler {
         ByRef byref = method.getAnnotation(ByRef.class);
         SimpleMode simple = method.getAnnotation(SimpleMode.class);
         Retry retry = method.getAnnotation(Retry.class);
+        Timeout timeout = method.getAnnotation(Timeout.class);
         Idempotent idempotent = method.getAnnotation(Idempotent.class);
         Failswitch failswitch = method.getAnnotation(Failswitch.class);
         Oneway oneway = method.getAnnotation(Oneway.class);
@@ -51,6 +52,7 @@ public class HproseInvocationHandler implements InvocationHandler {
         if (simple != null) settings.setSimple(simple.value());
         if (byref != null) settings.setByref(byref.value());
         if (retry != null) settings.setRetry(retry.value());
+        if (timeout != null) settings.setTimeout(timeout.value());
         if (idempotent != null) settings.setIdempotent(idempotent.value());
         if (failswitch != null) settings.setFailswitch(failswitch.value());
         if (oneway != null) settings.setOneway(oneway.value());

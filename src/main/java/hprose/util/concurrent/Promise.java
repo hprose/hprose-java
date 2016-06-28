@@ -172,11 +172,12 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     public final static <T> Promise<T[]> all(Object[] array, Class<T> type) {
+        if (array == null) return value((T[])null);
         int n = array.length;
         T[] result = (type == Object.class) ?
                 (T[])(new Object[n]) :
                 (T[])Array.newInstance(type, n);
-        if (n == 0) return (Promise<T[]>)value(result);
+        if (n == 0) return value(result);
         AtomicInteger count = new AtomicInteger(n);
         Promise<T[]> promise = new Promise<T[]>();
         for (int i = 0; i < n; ++i) {
@@ -335,6 +336,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     public final static <V> Promise<?> forEach(final Action<V> callback, Object...args) {
         return all(args).then(new Action<Object[]>() {
             public void call(Object[] array) throws Throwable {
+                if (array == null) return;
                 for (int i = 0, n = array.length; i < n; ++i) {
                     callback.call((V)array[i]);
                 }
@@ -346,6 +348,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V> Action<Object[]> getForEachHandler(final Handler<?, V> callback) {
         return new Action<Object[]>() {
             public void call(Object[] array) throws Throwable {
+                if (array == null) return;
                 for (int i = 0, n = array.length; i < n; ++i) {
                     callback.call((V)array[i], i);
                 }
@@ -405,6 +408,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     public final static <V> Promise<Boolean> some(final Func<Boolean, V> callback, Object...args) {
         return all(args).then(new Func<Boolean, Object[]>() {
             public Boolean call(Object[] array) throws Throwable {
+                if (array == null) return false;
                 for (int i = 0, n = array.length; i < n; ++i) {
                     if (callback.call((V)array[i])) return true;
                 }
@@ -417,6 +421,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V> Func<Boolean, Object[]> getSomeHandler(final Handler<Boolean, V> callback) {
         return new Func<Boolean, Object[]>() {
             public Boolean call(Object[] array) throws Throwable {
+                if (array == null) return false;
                 for (int i = 0, n = array.length; i < n; ++i) {
                     if (callback.call((V)array[i], i)) return true;
                 }
@@ -441,6 +446,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     public final static <V> Promise<Object[]> filter(final Func<Boolean, V> callback, Object...args) {
         return all(args).then(new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 ArrayList<Object> result = new ArrayList<Object>(n);
                 for (int i = 0; i < n; ++i) {
@@ -455,6 +461,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V, T> Func<T[], T[]> getFilterHandler(final Handler<Boolean, V> callback, final Class<T> type) {
         return new Func<T[], T[]>() {
             public T[] call(T[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 ArrayList<T> result = new ArrayList<T>(n);
                 for (int i = 0; i < n; ++i) {
@@ -496,6 +503,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     public final static <V> Promise<Object[]> map(final Func<?, V> callback, Object...args) {
         return all(args).then(new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 Object[] result = new Object[n];
                 for (int i = 0; i < n; ++i) {
@@ -510,6 +518,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V, T> Func<T[], Object[]> getMapHandler(final Handler<T, V> callback, final Class<T> type) {
         return new Func<T[], Object[]>() {
             public T[] call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 T[] result = (type == Object.class) ?
                 (T[])(new Object[n]) :
@@ -526,6 +535,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V> Func<Object[], Object[]> getMapHandler(final Handler<?, V> callback) {
         return new Func<Object[], Object[]>() {
             public Object[] call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 Object[] result = new Object[n];
                 for (int i = 0; i < n; ++i) {
@@ -565,6 +575,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V> Func<V, Object[]> getReduceHandler(final Reducer<V, V> callback) {
         return new Func<V, Object[]>() {
             public V call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 if (n == 0) return null;
                 V result = (V)array[0];
@@ -592,6 +603,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <R, V> Func<R, Object[]> getReduceHandler(final Reducer<R, V> callback, final R initialValue) {
         return new Func<R, Object[]>() {
             public R call(Object[] array) throws Throwable {
+                if (array == null) return initialValue;
                 int n = array.length;
                 if (n == 0) return initialValue;
                 R result = initialValue;
@@ -619,6 +631,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <V> Func<V, Object[]> getReduceRightHandler(final Reducer<V, V> callback) {
         return new Func<V, Object[]>() {
             public V call(Object[] array) throws Throwable {
+                if (array == null) return null;
                 int n = array.length;
                 if (n == 0) return null;
                 V result = (V)array[n - 1];
@@ -646,6 +659,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private static <R, V> Func<R, Object[]> getReduceRightHandler(final Reducer<R, V> callback, final R initialValue) {
         return new Func<R, Object[]>() {
             public R call(Object[] array) throws Throwable {
+                if (array == null) return initialValue;
                 int n = array.length;
                 if (n == 0) return initialValue;
                 R result = initialValue;

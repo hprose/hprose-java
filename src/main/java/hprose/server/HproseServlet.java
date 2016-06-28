@@ -67,6 +67,13 @@ public class HproseServlet extends HttpServlet {
                 service.setCrossDomainEnabled(true);
             }
         }
+        param = config.getInitParameter("origin");
+        if (param != null) {
+            String[] origins = StrUtil.split(param, ',', 0);
+            for (int i = 0, n = origins.length; i < n; ++i) {
+                service.addAccessControlAllowOrigin(origins[i]);
+            }
+        }
         param = config.getInitParameter("p3p");
         if (param != null) {
             param = param.toLowerCase();

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Mar 8, 2016                              *
+ * LastModified: Jun 28, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -96,9 +96,12 @@ public class HproseServlet extends HttpServlet {
         param = config.getInitParameter("filter");
         if (param != null) {
             try {
-                Class<?> type = Class.forName(param);
-                if (HproseFilter.class.isAssignableFrom(type)) {
-                    service.setFilter((HproseFilter) type.newInstance());
+                String[] classNames = StrUtil.split(param, ',', 0);
+                for (int i = 0, n = classNames.length; i < n; ++i) {
+                    Class<?> type = Class.forName(classNames[i]);
+                    if (HproseFilter.class.isAssignableFrom(type)) {
+                        service.addFilter((HproseFilter) type.newInstance());
+                    }
                 }
             }
             catch (Exception ex) {
@@ -108,9 +111,12 @@ public class HproseServlet extends HttpServlet {
         param = config.getInitParameter("beforeFilter");
         if (param != null) {
             try {
-                Class<?> type = Class.forName(param);
-                if (HproseFilter.class.isAssignableFrom(type)) {
-                    service.beforeFilter.use((FilterHandler) type.newInstance());
+                String[] classNames = StrUtil.split(param, ',', 0);
+                for (int i = 0, n = classNames.length; i < n; ++i) {
+                    Class<?> type = Class.forName(classNames[i]);
+                    if (HproseFilter.class.isAssignableFrom(type)) {
+                        service.beforeFilter.use((FilterHandler) type.newInstance());
+                    }
                 }
             }
             catch (Exception ex) {
@@ -120,9 +126,12 @@ public class HproseServlet extends HttpServlet {
         param = config.getInitParameter("afterFilter");
         if (param != null) {
             try {
-                Class<?> type = Class.forName(param);
-                if (HproseFilter.class.isAssignableFrom(type)) {
-                    service.afterFilter.use((FilterHandler) type.newInstance());
+                String[] classNames = StrUtil.split(param, ',', 0);
+                for (int i = 0, n = classNames.length; i < n; ++i) {
+                    Class<?> type = Class.forName(classNames[i]);
+                    if (HproseFilter.class.isAssignableFrom(type)) {
+                        service.afterFilter.use((FilterHandler) type.newInstance());
+                    }
                 }
             }
             catch (Exception ex) {
@@ -132,9 +141,12 @@ public class HproseServlet extends HttpServlet {
         param = config.getInitParameter("invoke");
         if (param != null) {
             try {
-                Class<?> type = Class.forName(param);
-                if (HproseFilter.class.isAssignableFrom(type)) {
-                    service.use((InvokeHandler) type.newInstance());
+                String[] classNames = StrUtil.split(param, ',', 0);
+                for (int i = 0, n = classNames.length; i < n; ++i) {
+                    Class<?> type = Class.forName(classNames[i]);
+                    if (HproseFilter.class.isAssignableFrom(type)) {
+                        service.use((InvokeHandler) type.newInstance());
+                    }
                 }
             }
             catch (Exception ex) {

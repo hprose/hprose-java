@@ -493,7 +493,7 @@ public class HproseTcpClient extends HproseClient {
         return fullDuplex;
     }
 
-    public final synchronized void setFullDuplex(boolean fullDuplex) {
+    public final void setFullDuplex(boolean fullDuplex) {
         this.fullDuplex = fullDuplex;
     }
 

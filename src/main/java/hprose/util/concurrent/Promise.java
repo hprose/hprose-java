@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jun 27, 2016                             *
+ * LastModified: Jun 28, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -875,39 +875,39 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return reason;
     }
 
-    public final Promise<?> catchError(final Action<Throwable> onreject) {
+    public final Promise<?> catchError(Action<Throwable> onreject) {
         return then(null, onreject);
     }
 
-    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject) {
+    public final <R> Promise<R> catchError(Func<R, Throwable> onreject) {
         return then((Callback<R, V>)null, onreject);
     }
 
-    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject) {
+    public final <R> Promise<R> catchError(AsyncFunc<R, Throwable> onreject) {
         return then((Callback<R, V>)null, onreject);
     }
 
-    public final Promise<?> catchError(final Action<Throwable> onreject, final Func<Boolean, Throwable> test) {
+    public final Promise<?> catchError(Action<Throwable> onreject, Func<Boolean, Throwable> test) {
         return catchError((Callback<Void, Throwable>)onreject, test);
     }
 
-    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject, final Func<Boolean, Throwable> test) {
+    public final <R> Promise<R> catchError(Func<R, Throwable> onreject, Func<Boolean, Throwable> test) {
         return catchError((Callback<R, Throwable>)onreject, test);
     }
 
-    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject, final Func<Boolean, Throwable> test) {
+    public final <R> Promise<R> catchError(AsyncFunc<R, Throwable> onreject, Func<Boolean, Throwable> test) {
         return catchError((Callback<R, Throwable>)onreject, test);
     }
 
-    public final Promise<?> catchError(final Action<Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+    public final Promise<?> catchError(Action<Throwable> onreject, AsyncFunc<Boolean, Throwable> test) {
         return catchError((Callback<Void, Throwable>)onreject, test);
     }
 
-    public final <R> Promise<R> catchError(final Func<R, Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+    public final <R> Promise<R> catchError(Func<R, Throwable> onreject, AsyncFunc<Boolean, Throwable> test) {
         return catchError((Callback<R, Throwable>)onreject, test);
     }
 
-    public final <R> Promise<R> catchError(final AsyncFunc<R, Throwable> onreject, final AsyncFunc<Boolean, Throwable> test) {
+    public final <R> Promise<R> catchError(AsyncFunc<R, Throwable> onreject, AsyncFunc<Boolean, Throwable> test) {
         return catchError((Callback<R, Throwable>)onreject, test);
     }
 
@@ -945,7 +945,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return then(null, onreject);
     }
 
-    public final void fail(final Action<Throwable> onreject) {
+    public final void fail(Action<Throwable> onreject) {
         done(null, onreject);
     }
 

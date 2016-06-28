@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jun 21, 2016                             *
+ * LastModified: Jun 28, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -46,6 +46,7 @@ import hprose.net.ReceiveCallback;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import hprose.util.concurrent.Action;
+import hprose.util.concurrent.AsyncFunc;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
 import hprose.util.concurrent.Threads;
@@ -65,6 +66,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class HproseClient implements HproseInvoker {
@@ -464,7 +466,7 @@ public abstract class HproseClient implements HproseInvoker {
         return context;
     }
 
-    private ByteBufferStream encode(String name, Object[] args, ClientContext context) throws IOException {
+    private ByteBufferStream encode(String name, Object[] args, ClientContext context) throws Throwable {
         ByteBufferStream stream = new ByteBufferStream();
         InvokeSettings settings = context.getSettings();
         Writer writer = new Writer(stream.getOutputStream(), mode, settings.isSimple());
@@ -472,6 +474,11 @@ public abstract class HproseClient implements HproseInvoker {
         writer.writeString(name);
         if ((args != null) && (args.length > 0 || settings.isByref())) {
             writer.reset();
+            for (int i = 0, n = args.length; i < n; ++i) {
+                if (args[i] instanceof Future) {
+                    args[i] = ((Future)args[i]).get(settings.getTimeout(), TimeUnit.MILLISECONDS);
+                }
+            }
             writer.writeArray(args);
             if (settings.isByref()) {
                 writer.writeBoolean(true);
@@ -710,27 +717,33 @@ public abstract class HproseClient implements HproseInvoker {
         if (returnType != null) settings.setReturnType(returnType);
         final HproseErrorEvent errEvent = (errorEvent == null) ? onError : errorEvent;
         settings.setAsync(true);
-        try {
-            ((Promise<T>) invokeHandler.handle(name, args, getContext(settings))).then(
-                    new Action<T>() {
-                        public void call(T value) throws Throwable {
-                            callback.handler(value);
-                        }
-                    },
-                    new Action<Throwable>() {
-                        public void call(Throwable e) throws Throwable {
-                            if (errEvent != null) {
-                                errEvent.handler(name, e);
+        final HproseContext context = getContext(settings);
+        Promise.all(args).then(new Action<Object[]>() {
+            public void call(Object[] args) throws Throwable {
+                try {
+                    ((Promise<T>) invokeHandler.handle(name, args, context)).then(
+                            new Action<T>() {
+                                public void call(T value) throws Throwable {
+                                    callback.handler(value);
+                                }
+                            },
+                            new Action<Throwable>() {
+                                public void call(Throwable e) throws Throwable {
+                                    if (errEvent != null) {
+                                        errEvent.handler(name, e);
+                                    }
+                                }
                             }
-                        }
+                    );
+                }
+                catch (Throwable e) {
+                    if (errEvent != null) {
+                        errEvent.handler(name, e);
                     }
-            );
-        }
-        catch (Throwable e) {
-            if (errEvent != null) {
-                errEvent.handler(name, e);
+                }
             }
-        }
+        });
+
     }
 
     public final void invoke(String name, Object[] args, HproseCallback<?> callback) {
@@ -761,27 +774,32 @@ public abstract class HproseClient implements HproseInvoker {
         if (returnType != null) settings.setReturnType(returnType);
         final HproseErrorEvent errEvent = (errorEvent == null) ? onError : errorEvent;
         settings.setAsync(true);
-        try {
-            ((Promise<T>) invokeHandler.handle(name, args, getContext(settings))).then(
-                new Action<T>() {
-                    public void call(T value) throws Throwable {
-                        callback.handler(value, args);
-                    }
-                },
-                new Action<Throwable>() {
-                    public void call(Throwable e) throws Throwable {
-                        if (errEvent != null) {
-                            errEvent.handler(name, e);
+        final HproseContext context = getContext(settings);
+        Promise.all(args).then(new Action<Object[]>() {
+            public void call(final Object[] args) throws Throwable {
+                try {
+                    ((Promise<T>) invokeHandler.handle(name, args, context)).then(
+                        new Action<T>() {
+                            public void call(T value) throws Throwable {
+                                callback.handler(value, args);
+                            }
+                        },
+                        new Action<Throwable>() {
+                            public void call(Throwable e) throws Throwable {
+                                if (errEvent != null) {
+                                    errEvent.handler(name, e);
+                                }
+                            }
                         }
+                    );
+                }
+                catch (Throwable e) {
+                    if (errEvent != null) {
+                        errEvent.handler(name, e);
                     }
                 }
-            );
-        }
-        catch (Throwable e) {
-            if (errEvent != null) {
-                errEvent.handler(name, e);
             }
-        }
+        });
     }
 
     public final Object invoke(String name) throws Throwable {
@@ -822,11 +840,18 @@ public abstract class HproseClient implements HproseInvoker {
         if (settings.isAsync()) {
             return (T)asyncInvoke(name, args, type, settings);
         }
+        if (args != null) {
+            for (int i = 0, n = args.length; i < n; ++i) {
+                if (args[i] instanceof Promise) {
+                    args[i] = ((Promise)args[i]).toFuture();
+                }
+            }
+        }
         return (T)invokeHandler.handle(name, args, getContext(settings));
     }
 
     @SuppressWarnings("unchecked")
-    private Promise<?> asyncInvoke(String name, Object[] args, Type type, InvokeSettings settings) {
+    private Promise<?> asyncInvoke(final String name, Object[] args, Type type, InvokeSettings settings) {
         settings.setAsync(true);
         if (type instanceof ParameterizedType) {
             type = ((ParameterizedType)type).getActualTypeArguments()[0];
@@ -841,12 +866,17 @@ public abstract class HproseClient implements HproseInvoker {
             }
         }
         settings.setReturnType(type);
-        try {
-            return (Promise<?>)invokeHandler.handle(name, args, getContext(settings));
-        }
-        catch (Throwable e) {
-            return Promise.error(e);
-        }
+        final HproseContext context = getContext(settings);
+        return Promise.all(args).then(new AsyncFunc<Object, Object[]>() {
+            public Promise<Object> call(Object[] args) throws Throwable {
+                try {
+                    return (Promise<Object>)invokeHandler.handle(name, args, context);
+                }
+                catch (Throwable e) {
+                    return Promise.error(e);
+                }
+            }
+        });
     }
 
     private static class Topic<T> {

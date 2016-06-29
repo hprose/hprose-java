@@ -12,7 +12,7 @@
  *                                                        *
  * hprose remote methods class for Java.                  *
  *                                                        *
- * LastModified: Jun 6, 2016                              *
+ * LastModified: Jun 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -100,6 +100,30 @@ public class HproseMethods {
         addMethod(aliasName, new HproseMethod(method, obj, mode, simple, oneway));
     }
 
+    public void addMethod(HproseMethod method) {
+        addMethod(method.aliasName, method);
+    }
+
+    public void addMethod(Method method, Object obj) {
+        addMethod(new HproseMethod(method, obj));
+    }
+
+    public void addMethod(Method method, Object obj, HproseResultMode mode) {
+        addMethod(new HproseMethod(method, obj, mode));
+    }
+
+    public void addMethod(Method method, Object obj, boolean simple) {
+        addMethod(new HproseMethod(method, obj, simple));
+    }
+
+    public void addMethod(Method method, Object obj, HproseResultMode mode, boolean simple) {
+        addMethod(new HproseMethod(method, obj, mode, simple));
+    }
+
+    public void addMethod(Method method, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        addMethod(new HproseMethod(method, obj, mode, simple, oneway));
+    }
+
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {
         addMethod(aliasName, new HproseMethod(methodName, obj, paramTypes));
     }
@@ -141,43 +165,43 @@ public class HproseMethods {
     }
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes));
+        addMethod(new HproseMethod(methodName, obj, paramTypes));
     }
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, mode));
+        addMethod(new HproseMethod(methodName, obj, paramTypes, mode));
     }
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, simple));
+        addMethod(new HproseMethod(methodName, obj, paramTypes, simple));
     }
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, mode, simple));
+        addMethod(new HproseMethod(methodName, obj, paramTypes, mode, simple));
     }
 
     public void addMethod(String methodName, Object obj, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, obj, paramTypes, mode, simple, oneway));
+        addMethod(new HproseMethod(methodName, obj, paramTypes, mode, simple, oneway));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, type, paramTypes));
+        addMethod(new HproseMethod(methodName, type, paramTypes));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, type, paramTypes, mode));
+        addMethod(new HproseMethod(methodName, type, paramTypes, mode));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, boolean simple) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, type, paramTypes, simple));
+        addMethod(new HproseMethod(methodName, type, paramTypes, simple));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, type, paramTypes, mode, simple));
+        addMethod(new HproseMethod(methodName, type, paramTypes, mode, simple));
     }
 
     public void addMethod(String methodName, Class<?> type, Class<?>[] paramTypes, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
-        addMethod(methodName, new HproseMethod(methodName, type, paramTypes, mode, simple, oneway));
+        addMethod(new HproseMethod(methodName, type, paramTypes, mode, simple, oneway));
     }
 
     interface HproseMethodCreator {
@@ -274,44 +298,94 @@ public class HproseMethods {
         addMethod(methodName, null, type, aliasName, mode, simple, oneway);
     }
 
+    private void addMethod(String methodName, Object obj, Class<?> type, HproseMethodCreator creator) {
+        Method[] methods = type.getMethods();
+        for (Method method : methods) {
+            if (methodName.equals(method.getName()) &&
+                ((obj == null) == Modifier.isStatic(method.getModifiers()))) {
+                addMethod(creator.create(method));
+            }
+        }
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addMethod(methodName, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple) {
+        addMethod(methodName, obj, type,  new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, final HproseResultMode mode) {
+        addMethod(methodName, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type, final boolean simple) {
+        addMethod(methodName, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
+    }
+
+    private void addMethod(String methodName, final Object obj, Class<?> type) {
+        addMethod(methodName, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
+    }
+
     public void addMethod(String methodName, Object obj) {
-        addMethod(methodName, obj, methodName);
+        addMethod(methodName, obj, obj.getClass());
     }
 
     public void addMethod(String methodName, Object obj, HproseResultMode mode) {
-        addMethod(methodName, obj, methodName, mode);
+        addMethod(methodName, obj, obj.getClass(), mode);
     }
 
     public void addMethod(String methodName, Object obj, boolean simple) {
-        addMethod(methodName, obj, methodName, simple);
+        addMethod(methodName, obj, obj.getClass(), simple);
     }
 
     public void addMethod(String methodName, Object obj, HproseResultMode mode, boolean simple) {
-        addMethod(methodName, obj, methodName, mode, simple);
+        addMethod(methodName, obj, obj.getClass(), mode, simple);
     }
 
     public void addMethod(String methodName, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
-        addMethod(methodName, obj, methodName, mode, simple, oneway);
+        addMethod(methodName, obj, obj.getClass(), mode, simple, oneway);
     }
 
     public void addMethod(String methodName, Class<?> type) {
-        addMethod(methodName, type, methodName);
+        addMethod(methodName, null, type);
     }
 
     public void addMethod(String methodName, Class<?> type, HproseResultMode mode) {
-        addMethod(methodName, type, methodName, mode);
+        addMethod(methodName, null, type, mode);
     }
 
     public void addMethod(String methodName, Class<?> type, boolean simple) {
-        addMethod(methodName, type, methodName, simple);
+        addMethod(methodName, null, type, simple);
     }
 
     public void addMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple) {
-        addMethod(methodName, type, methodName, mode, simple);
+        addMethod(methodName, null, type, mode, simple);
     }
 
     public void addMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
-        addMethod(methodName, type, methodName, mode, simple, oneway);
+        addMethod(methodName, null, type, mode, simple, oneway);
     }
 
     private void addMethods(String[] methodNames, Object obj, Class<?> type, String[] aliasNames, HproseMethodCreator creator) {
@@ -368,52 +442,111 @@ public class HproseMethods {
         });
     }
 
-    private String[] getAliasNames(String[] methodNames1, String aliasPrefix) {
-        String[] aliasNames = new String[methodNames1.length];
-        for (int i = 0; i < methodNames1.length; ++i) {
-            aliasNames[i] = aliasPrefix + "_" + methodNames1[i];
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseMethodCreator creator) {
+        Method[] methods = type.getMethods();
+        for (int i = 0; i < methodNames.length; ++i) {
+            String methodName = methodNames[i];
+            for (Method method : methods) {
+                if (methodName.equals(method.getName()) &&
+                    ((obj == null) == Modifier.isStatic(method.getModifiers()))) {
+                    HproseMethod m = creator.create(method);
+                    addMethod(aliasPrefix + "_" + m.aliasName, m);
+                }
+            }
         }
-        return aliasNames;
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple, boolean oneway) {
-        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode, simple, oneway);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addMethods(methodNames, obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode, boolean simple) {
-        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode, simple);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode, final boolean simple) {
+        addMethods(methodNames, obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, HproseResultMode mode) {
-        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), mode);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String aliasPrefix, final HproseResultMode mode) {
+        addMethods(methodNames, obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix, boolean simple) {
-        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix), simple);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String aliasPrefix, final boolean simple) {
+        addMethods(methodNames, obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, String aliasPrefix) {
-        addMethods(methodNames, obj, type, getAliasNames(methodNames, aliasPrefix));
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, String aliasPrefix) {
+        addMethods(methodNames, obj, type, aliasPrefix, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) {
-        addMethods(methodNames, obj, type, methodNames, mode, simple, oneway);
+    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseMethodCreator creator) {
+        Method[] methods = type.getMethods();
+        for (int i = 0; i < methodNames.length; ++i) {
+            String methodName = methodNames[i];
+            for (Method method : methods) {
+                if (methodName.equals(method.getName()) &&
+                    ((obj == null) == Modifier.isStatic(method.getModifiers()))) {
+                    addMethod(creator.create(method));
+                }
+            }
+        }
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode, boolean simple) {
-        addMethods(methodNames, obj, type, methodNames, mode, simple);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple, final boolean oneway) {
+        addMethods(methodNames, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple, oneway);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, HproseResultMode mode) {
-        addMethods(methodNames, obj, type, methodNames, mode);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, final HproseResultMode mode, final boolean simple) {
+        addMethods(methodNames, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode, simple);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type, boolean simple) {
-        addMethods(methodNames, obj, type, methodNames, simple);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, final HproseResultMode mode) {
+        addMethods(methodNames, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, mode);
+            }
+        });
     }
 
-    private void addMethods(String[] methodNames, Object obj, Class<?> type) {
-        addMethods(methodNames, obj, type, methodNames);
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type, final boolean simple) {
+        addMethods(methodNames, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj, simple);
+            }
+        });
+    }
+
+    private void addMethods(String[] methodNames, final Object obj, Class<?> type) {
+        addMethods(methodNames, obj, type, new HproseMethodCreator() {
+            public HproseMethod create(Method method) {
+                return new HproseMethod(method, obj);
+            }
+        });
     }
 
     public void addMethods(String[] methodNames, Object obj, String[] aliasNames) {
@@ -542,7 +675,8 @@ public class HproseMethods {
             for (Method method : methods) {
                 int mod = method.getModifiers();
                 if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-                    addMethod(aliasPrefix + "_" + method.getName(), creator.create(method));
+                    HproseMethod m = creator.create(method);
+                    addMethod(aliasPrefix + "_" + m.aliasName, m);
                 }
             }
         }
@@ -595,7 +729,7 @@ public class HproseMethods {
             for (Method method : methods) {
                 int mod = method.getModifiers();
                 if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-                    addMethod(method.getName(), creator.create(method));
+                    addMethod(creator.create(method));
                 }
             }
         }
@@ -686,7 +820,8 @@ public class HproseMethods {
         for (Method method : methods) {
             int mod = method.getModifiers();
             if (Modifier.isPublic(mod) && Modifier.isStatic(mod)) {
-                addMethod(aliasPrefix + "_" + method.getName(), creator.create(method));
+                HproseMethod m = creator.create(method);
+                addMethod(aliasPrefix + "_" + m.aliasName, m);
             }
         }
     }
@@ -736,7 +871,7 @@ public class HproseMethods {
         for (Method method : methods) {
             int mod = method.getModifiers();
             if (Modifier.isPublic(mod) && Modifier.isStatic(mod)) {
-                addMethod(method.getName(), creator.create(method));
+                addMethod(creator.create(method));
             }
         }
     }

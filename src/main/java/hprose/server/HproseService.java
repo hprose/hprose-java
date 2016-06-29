@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jun 21, 2016                             *
+ * LastModified: Jun 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -265,6 +265,26 @@ public abstract class HproseService implements HproseClients {
 
     public final void add(Method method, Object obj, String aliasName, HproseResultMode mode, boolean simple, boolean oneway) {
         getGlobalMethods().addMethod(method, obj, aliasName, mode, simple, oneway);
+    }
+
+    public final void add(Method method, Object obj) {
+        getGlobalMethods().addMethod(method, obj);
+    }
+
+    public final void add(Method method, Object obj, HproseResultMode mode) {
+        getGlobalMethods().addMethod(method, obj, mode);
+    }
+
+    public final void add(Method method, Object obj, boolean simple) {
+        getGlobalMethods().addMethod(method, obj, simple);
+    }
+
+    public final void add(Method method, Object obj, HproseResultMode mode, boolean simple) {
+        getGlobalMethods().addMethod(method, obj, mode, simple);
+    }
+
+    public final void add(Method method, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
+        getGlobalMethods().addMethod(method, obj, mode, simple, oneway);
     }
 
     public final void add(String methodName, Object obj, Class<?>[] paramTypes, String aliasName) throws NoSuchMethodException {

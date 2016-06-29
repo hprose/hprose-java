@@ -12,7 +12,7 @@
  *                                                        *
  * hprose remote method class for Java.                   *
  *                                                        *
- * LastModified: Jun 6, 2016                              *
+ * LastModified: Jun 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,6 +29,7 @@ public final class HproseMethod {
     public HproseResultMode mode;
     public boolean simple;
     public boolean oneway;
+    public String aliasName;
 
     private void init(Method method, Object obj, HproseResultMode mode, boolean simple, boolean oneway) {
         this.obj = obj;
@@ -37,6 +38,8 @@ public final class HproseMethod {
         this.mode = mode;
         this.simple = simple;
         this.oneway = oneway;
+        MethodName _name = method.getAnnotation(MethodName.class);
+        this.aliasName = _name != null ? _name.value() : method.getName();
     }
 
     private void init(Method method, Object obj, HproseResultMode mode, boolean simple) {

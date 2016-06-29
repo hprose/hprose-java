@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Jun 28, 2016                             *
+ * LastModified: Jun 29, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -227,6 +227,30 @@ public class HproseServlet extends HttpServlet {
                 }
             }
             catch (ClassNotFoundException ex) {
+                throw new ServletException(ex);
+            }
+        }
+        param = config.getInitParameter("topic");
+        if (param != null) {
+            try {
+                String[] topics = StrUtil.split(param, ',', 0);
+                for (int i = 0, n = topics.length; i < n; ++i) {
+                    String[] item = StrUtil.split(topics[i], '|', 3);
+                    if (item.length == 1) {
+                        service.publish(item[0]);
+                    }
+                    else if (item.length == 2) {
+                        service.publish(item[0],
+                                Integer.parseInt(item[1], 10));
+                    }
+                    else if (item.length == 3) {
+                        service.publish(item[0],
+                                Integer.parseInt(item[1], 10),
+                                Integer.parseInt(item[1], 10));
+                    }
+                }
+            }
+            catch (Exception ex) {
                 throw new ServletException(ex);
             }
         }

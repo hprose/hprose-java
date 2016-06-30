@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: May 3, 2016                              *
+ * LastModified: Jun 30, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -40,6 +40,7 @@ public class HproseHttpService extends HproseService {
     private boolean crossDomainEnabled = false;
     private boolean p3pEnabled = false;
     private boolean getEnabled = true;
+    private int asyncTimeout = 300000;
     private final HashMap<String, Boolean> origins = new HashMap<String, Boolean>();
     private final static ThreadLocal<HttpContext> currentContext = new ThreadLocal<HttpContext>();
 
@@ -87,6 +88,14 @@ public class HproseHttpService extends HproseService {
 
     public void setGetEnabled(boolean enabled) {
         getEnabled = enabled;
+    }
+
+    public int getAsyncTimeout() {
+        return asyncTimeout;
+    }
+
+    public void setAsyncTimeout(int asyncTimeout) {
+        this.asyncTimeout = asyncTimeout;
     }
 
     public void addAccessControlAllowOrigin(String origin) {
@@ -200,7 +209,7 @@ public class HproseHttpService extends HproseService {
     @SuppressWarnings("unchecked")
     private void asyncHandle(final HttpContext httpContext, final HproseHttpMethods methods) {
         final AsyncContext async = httpContext.getRequest().startAsync();
-        async.setTimeout(getTimeout());
+        async.setTimeout(asyncTimeout);
         async.addListener(new AsyncListener() {
             public void onComplete(AsyncEvent ae) throws IOException {
             }

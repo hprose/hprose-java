@@ -12,23 +12,37 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Jun 27, 2016                             *
+ * LastModified: Jun 30, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
-package hprose.common;
+package hprose.client;
 
+import hprose.common.ByRef;
+import hprose.common.Failswitch;
+import hprose.common.HproseCallback;
+import hprose.common.HproseCallback1;
+import hprose.common.HproseErrorEvent;
+import hprose.common.Idempotent;
+import hprose.common.InvokeSettings;
+import hprose.common.MethodName;
+import hprose.common.Oneway;
+import hprose.common.ResultMode;
+import hprose.common.Retry;
+import hprose.common.SimpleMode;
+import hprose.common.Timeout;
 import hprose.util.ClassUtil;
+import hprose.util.concurrent.Action;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class HproseInvocationHandler implements InvocationHandler {
-    private final HproseInvoker client;
+    private final HproseClient client;
     private final String ns;
 
-    public HproseInvocationHandler(HproseInvoker client, String ns) {
+    public HproseInvocationHandler(HproseClient client, String ns) {
         this.client = client;
         this.ns = (ns == null) ? "" : ns + "_";
     }
@@ -65,7 +79,32 @@ public class HproseInvocationHandler implements InvocationHandler {
         }
         int n = paramTypes.length;
         Object result = null;
-        if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback1.class)) {
+        if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(Action.class)) {
+            if (paramTypes[n - 1] instanceof ParameterizedType) {
+                returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
+            }
+            Action<?> callback = (Action<?>)args[n - 1];
+            if (n == 1) {
+                if (timeout != null) {
+                    client.subscribe(name, callback, returnType, timeout.value());
+                }
+                else {
+                    client.subscribe(name, callback, returnType);
+                }
+            }
+            else if (n == 2) {
+                if (timeout != null) {
+                    client.subscribe(name, (Integer)args[0], callback, returnType, timeout.value());
+                }
+                else {
+                    client.subscribe(name, (Integer)args[0], callback, returnType);
+                }
+            }
+            else {
+                throw new NoSuchMethodException(name);
+            }
+        }
+        else if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback1.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }

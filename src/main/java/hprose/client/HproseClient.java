@@ -26,8 +26,6 @@ import hprose.common.HproseContext;
 import hprose.common.HproseErrorEvent;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
-import hprose.common.HproseInvocationHandler;
-import hprose.common.HproseInvoker;
 import hprose.common.HproseResultMode;
 import hprose.common.InvokeHandler;
 import hprose.common.InvokeSettings;
@@ -69,7 +67,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class HproseClient implements HproseInvoker {
+public abstract class HproseClient {
     protected final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<InvokeHandler> invokeHandlers = new ArrayList<InvokeHandler>();

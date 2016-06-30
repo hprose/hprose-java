@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jun 29, 2016                             *
+ * LastModified: Jun 30, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1093,6 +1093,7 @@ public abstract class HproseService implements HproseClients {
     }
     private int timeout = 120000;
     private int heartbeat = 3000;
+    private PushEvent pushEvent = null;
 
     public int getTimeout() {
         return timeout;
@@ -1110,8 +1111,15 @@ public abstract class HproseService implements HproseClients {
         this.heartbeat = heartbeat;
     }
 
+    public PushEvent getPushEvent() {
+        return pushEvent;
+    }
+
+    public void setPushEvent(PushEvent pushEvent) {
+        this.pushEvent = pushEvent;
+    }
+
     private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>>();
-    private PushEvent pushEvent = null;
 
     private ConcurrentHashMap<Integer, Topic> getTopics(String topic) throws HproseException {
         ConcurrentHashMap<Integer, Topic> topics = allTopics.get(topic);

@@ -73,11 +73,11 @@ public abstract class HproseService implements HproseClients {
             private final AtomicInteger next = new AtomicInteger(0);
             public Integer call() throws Exception {
                 int nextId = next.getAndIncrement();
-                if (nextId > 0) {
+                if (nextId >= 0) {
                     return nextId;
                 }
                 else {
-                    next.set(0);
+                    next.set(1);
                     return 0;
                 }
             }
@@ -1233,8 +1233,8 @@ public abstract class HproseService implements HproseClients {
                     t.request.resolve((Object)null);
                 }
                 Promise<Object> request = new Promise<Object>();
-                request.whenComplete(new Runnable() {
-                    public void run() {
+                request.complete(new Action<Object>() {
+                    public void call(Object result) throws Throwable {
                         Topic t = topics.get(id);
                         t.count.decrementAndGet();
                     }

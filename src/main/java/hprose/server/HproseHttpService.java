@@ -140,7 +140,7 @@ public class HproseHttpService extends HproseService {
         return arguments;
     }
 
-    protected void sendHeader(HttpContext httpContext) throws IOException {
+    protected void sendHeader(HttpContext httpContext) {
         if (event != null && HproseHttpServiceEvent.class.isInstance(event)) {
             ((HproseHttpServiceEvent)event).onSendHeader(httpContext);
         }
@@ -167,11 +167,11 @@ public class HproseHttpService extends HproseService {
         }
     }
 
-    public void handle(HttpContext httpContext) throws IOException {
+    public void handle(HttpContext httpContext) {
         handle(httpContext, null);
     }
 
-    public void handle(HttpContext httpContext, HproseHttpMethods methods) throws IOException {
+    public void handle(HttpContext httpContext, HproseHttpMethods methods) {
         sendHeader(httpContext);
         String method = httpContext.getRequest().getMethod();
         if (method.equals("GET")) {
@@ -193,7 +193,12 @@ public class HproseHttpService extends HproseService {
                 }
             }
             else {
-                httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
+                try {
+                    httpContext.getResponse().sendError(HttpServletResponse.SC_FORBIDDEN);
+                }
+                catch (IOException ex) {
+                    fireErrorEvent(ex, httpContext);
+                }
             }
         }
         else if (method.equals("POST")) {

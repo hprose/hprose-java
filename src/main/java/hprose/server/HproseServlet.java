@@ -25,7 +25,6 @@ import hprose.common.InvokeHandler;
 import hprose.io.HproseClassManager;
 import hprose.io.HproseMode;
 import hprose.util.StrUtil;
-import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -261,7 +260,7 @@ public class HproseServlet extends HttpServlet {
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException {
         service.handle(new HttpContext(service,
                                        request,
                                       response,
@@ -271,19 +270,19 @@ public class HproseServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException {
         processRequest(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException {
         processRequest(request, response);
     }
 
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException {
         processRequest(request, response);
     }
 

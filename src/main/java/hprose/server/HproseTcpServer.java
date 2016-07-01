@@ -268,7 +268,7 @@ public class HproseTcpServer extends HproseService {
      * Is thread pool enabled.
      * This thread pool is not for the service threads, it is for the user service method.
      * The default value is false.
-     * @return is enabled thread pool
+     * @return is thread pool enabled
      */
     public boolean isThreadPoolEnabled() {
         return threadPoolEnabled;
@@ -278,7 +278,7 @@ public class HproseTcpServer extends HproseService {
      * Set thread pool enabled.
      * This thread pool is not for the service threads, it is for the user service method.
      * If your service method takes a long time, or will be blocked, please set this property to be true.
-     * @param value is enabled thread pool
+     * @param value is thread pool enabled
      */
     public void setThreadPoolEnabled(boolean value) {
         if (value && (threadPool == null)) {

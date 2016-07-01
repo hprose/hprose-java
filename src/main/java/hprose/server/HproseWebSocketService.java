@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: May 3, 2016                              *
+ * LastModified: Jul 1, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,6 +23,7 @@ import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import hprose.util.concurrent.Action;
 import hprose.util.concurrent.Promise;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import javax.websocket.EndpointConfig;
@@ -85,7 +86,7 @@ public class HproseWebSocketService extends HproseService {
     }
 
     @SuppressWarnings("unchecked")
-    public void handle(ByteBuffer buf, Session session) throws Throwable {
+    public void handle(ByteBuffer buf, Session session) throws IOException {
         WebSocketContext context = new WebSocketContext(this, session, config);
         int id;
         Object response = null;

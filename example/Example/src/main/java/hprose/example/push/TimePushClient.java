@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 public class TimePushClient {
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         final HproseClient client = HproseClient.create("tcp://127.0.0.1:8080");
         final CountDownLatch counter = new CountDownLatch(10);
         client.subscribe("time", (Date time) -> {

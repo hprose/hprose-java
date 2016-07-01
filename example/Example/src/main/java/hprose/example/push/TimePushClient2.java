@@ -10,7 +10,7 @@ interface IPushTime {
 }
 
 public class TimePushClient2 {
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         final HproseClient client = HproseClient.create("tcp://127.0.0.1:8080");
         IPushTime pushTime = client.useService(IPushTime.class);
         final CountDownLatch counter = new CountDownLatch(10);

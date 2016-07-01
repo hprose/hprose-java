@@ -9,7 +9,7 @@ interface IBroadcast {
 }
 
 public class BroadcastClient {
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         final HproseClient client = HproseClient.create("tcp://127.0.0.1:8081");
         IBroadcast bc = client.useService(IBroadcast.class);
         bc.news((String news) -> System.out.println(news));

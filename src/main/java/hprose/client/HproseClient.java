@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jun 28, 2016                             *
+ * LastModified: Jul 1, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -908,9 +908,12 @@ public abstract class HproseClient {
     }
 
     @SuppressWarnings("unchecked")
-    private synchronized Promise<Integer> autoId() throws Throwable {
+    private synchronized Promise<Integer> autoId() {
         if (autoId == null) {
-            autoId = (Promise<Integer>)this.invoke("#", autoIdSettings);
+            try {
+                autoId = (Promise<Integer>)this.invoke("#", autoIdSettings);
+            }
+            catch (Throwable e) {}
             autoId.then(new Action<Integer>() {
                 public void call(Integer value) throws Throwable {
                     _autoId = value;
@@ -926,11 +929,11 @@ public abstract class HproseClient {
         return autoId;
     }
 
-    public final void subscribe(String name, Action<Object> callback) throws Throwable {
+    public final void subscribe(String name, Action<Object> callback) {
         subscribe(name, callback, Object.class, timeout);
     }
 
-    public final void subscribe(String name, Action<Object> callback, int timeout) throws Throwable {
+    public final void subscribe(String name, Action<Object> callback, int timeout) {
         subscribe(name, callback, Object.class, timeout);
     }
 
@@ -942,11 +945,11 @@ public abstract class HproseClient {
         subscribe(name, id, callback, Object.class, timeout);
     }
 
-    public final <T> void subscribe(String name, Action<T> callback, Type type) throws Throwable {
+    public final <T> void subscribe(String name, Action<T> callback, Type type) {
         subscribe(name, callback, type, timeout);
     }
 
-    public final <T> void subscribe(final String name, final Action<T> callback, final Type type, final int timeout) throws Throwable {
+    public final <T> void subscribe(final String name, final Action<T> callback, final Type type, final int timeout) {
         autoId().then(new Action<Integer>() {
             public void call(Integer value) throws Throwable {
                 subscribe(name, value, callback, type, timeout);

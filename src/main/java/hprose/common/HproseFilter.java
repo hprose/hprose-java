@@ -21,6 +21,6 @@ package hprose.common;
 import java.nio.ByteBuffer;
 
 public interface HproseFilter {
-    ByteBuffer inputFilter(ByteBuffer inputBuffer, HproseContext context);
-    ByteBuffer outputFilter(ByteBuffer outputBuffer, HproseContext context);
+    ByteBuffer inputFilter(ByteBuffer data, HproseContext context);
+    ByteBuffer outputFilter(ByteBuffer data, HproseContext context);
 }

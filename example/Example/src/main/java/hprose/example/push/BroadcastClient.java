@@ -2,8 +2,6 @@ package hprose.example.push;
 
 import hprose.client.HproseClient;
 import hprose.util.concurrent.Action;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 interface IBroadcast {
     public void news(Action<String> callback);
@@ -11,7 +9,7 @@ interface IBroadcast {
 }
 
 public class BroadcastClient {
-    public static void main(String[] args) throws IOException, URISyntaxException, Throwable {
+    public static void main(String[] args) throws Throwable {
         final HproseClient client = HproseClient.create("tcp://127.0.0.1:8081");
         IBroadcast bc = client.useService(IBroadcast.class);
         bc.news((String news) -> System.out.println(news));

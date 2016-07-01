@@ -12,7 +12,8 @@ public class BroadcastServer {
         TcpContext context = HproseTcpServer.getCurrentContext();
         System.out.println(Arrays.toString(context.clients.idlist("news")));
         context.clients.broadcast("news", "this is a pushed message:" + name);
-        return "Hello " + name + "! -- " + context.getSocket().getRemoteSocketAddress().toString();
+        return "Hello " + name + "! -- " +
+                context.getSocket().getRemoteSocketAddress().toString();
     }
     public static void main(String[] args) throws URISyntaxException, IOException {
         HproseTcpServer server = new HproseTcpServer("tcp://0.0.0.0:8081");

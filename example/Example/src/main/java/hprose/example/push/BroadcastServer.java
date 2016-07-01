@@ -1,6 +1,5 @@
 package hprose.example.push;
 
-import hprose.common.HproseException;
 import hprose.server.HproseTcpServer;
 import hprose.server.TcpContext;
 import java.io.IOException;
@@ -8,7 +7,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 public class BroadcastServer {
-    public static String hello(String name) throws HproseException {
+    public static String hello(String name) {
         TcpContext context = HproseTcpServer.getCurrentContext();
         System.out.println(Arrays.toString(context.clients.idlist("news")));
         context.clients.broadcast("news", "this is a pushed message:" + name);

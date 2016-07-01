@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jun 30, 2016                             *
+ * LastModified: Jul 1, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1121,10 +1121,10 @@ public abstract class HproseService implements HproseClients {
 
     private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>>();
 
-    private ConcurrentHashMap<Integer, Topic> getTopics(String topic) throws HproseException {
+    private ConcurrentHashMap<Integer, Topic> getTopics(String topic) {
         ConcurrentHashMap<Integer, Topic> topics = allTopics.get(topic);
         if (topics == null) {
-            throw new HproseException("topic \"" + topic + "\" is not published.");
+            throw new RuntimeException("topic \"" + topic + "\" is not published.");
         }
         return topics;
     }
@@ -1164,7 +1164,7 @@ public abstract class HproseService implements HproseClients {
         setTimer(topics, topic, id);
     }
 
-    private Promise<?> setRequestTimer(final String topic, final Integer id, Promise<?> request, int timeout) throws HproseException {
+    private Promise<?> setRequestTimer(final String topic, final Integer id, Promise<?> request, int timeout) {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
         if (timeout > 0) {
             return request.timeout(timeout).catchError(new Action<Throwable>() {
@@ -1259,29 +1259,29 @@ public abstract class HproseService implements HproseClients {
         }
     }
 
-    public final Integer[] idlist(String topic) throws HproseException {
+    public final Integer[] idlist(String topic) {
         return getTopics(topic).keySet().toArray(new Integer[0]);
     }
 
-    public final boolean exist(String topic, Integer id) throws HproseException {
+    public final boolean exist(String topic, Integer id) {
         return getTopics(topic).containsKey(id);
     }
 
-    public final void broadcast(String topic, Object result) throws HproseException {
+    public final void broadcast(String topic, Object result) {
         multicast(topic, idlist(topic), result);
     }
 
-    public final void broadcast(String topic, Object result, Action<Integer[]> callback) throws HproseException {
+    public final void broadcast(String topic, Object result, Action<Integer[]> callback) {
         multicast(topic, idlist(topic), result, callback);
     }
 
-    public final void multicast(String topic, Integer[] ids, Object result) throws HproseException {
+    public final void multicast(String topic, Integer[] ids, Object result) {
         for (int i = 0, n = ids.length; i < n; ++i) {
             push(topic, ids[i], result);
         }
     }
 
-    public final void multicast(String topic, Integer[] ids, Object result, Action<Integer[]> callback) throws HproseException {
+    public final void multicast(String topic, Integer[] ids, Object result, Action<Integer[]> callback) {
         if (callback == null) {
             multicast(topic, ids, result);
             return;
@@ -1313,22 +1313,22 @@ public abstract class HproseService implements HproseClients {
         };
     }
 
-    public final void unicast(String topic, Integer id, Object result) throws HproseException {
+    public final void unicast(String topic, Integer id, Object result) {
         push(topic, id, result);
     }
 
-    public final void unicast(String topic, Integer id, Object result, Action<Boolean> callback) throws HproseException {
+    public final void unicast(String topic, Integer id, Object result, Action<Boolean> callback) {
         Promise<Boolean> detector = push(topic, id, result);
         if (callback != null) {
             detector.then(callback);
         }
     }
 
-    public final Promise<Integer[]> push(String topic, Object result) throws HproseException {
+    public final Promise<Integer[]> push(String topic, Object result) {
         return push(topic, idlist(topic), result);
     }
 
-    public final Promise<Integer[]> push(String topic, Integer[] ids, Object result) throws HproseException {
+    public final Promise<Integer[]> push(String topic, Integer[] ids, Object result) {
         final Promise<Integer[]> detector = new Promise<Integer[]>();
         multicast(topic, ids, result, new Action<Integer[]>() {
             public void call(Integer[] value) throws Throwable {
@@ -1338,9 +1338,8 @@ public abstract class HproseService implements HproseClients {
         return detector;
     }
 
-    public final Promise<Boolean> push(String topic, Integer id, Object result) throws HproseException {
+    public final Promise<Boolean> push(String topic, Integer id, Object result) {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
-        if (topics == null) throw new HproseException("Topic " + topic + " is not published.");
         Topic t = topics.get(id);
         if (t == null) {
             return Promise.value(false);

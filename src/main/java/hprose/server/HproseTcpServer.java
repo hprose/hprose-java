@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: May 3, 2016                              *
+ * LastModified: Jul 1, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -44,7 +44,7 @@ public class HproseTcpServer extends HproseService {
     private volatile ExecutorService threadPool = null;
     private volatile int readTimeout = 30000;
     private volatile int writeTimeout = 30000;
-    private boolean enabledThreadPool = false;
+    private boolean threadPoolEnabled = false;
     private int reactorThreads = 2;
     private Acceptor acceptor = null;
     private String host = null;
@@ -265,26 +265,26 @@ public class HproseTcpServer extends HproseService {
     }
 
     /**
-     * Is enabled thread pool.
+     * Is thread pool enabled.
      * This thread pool is not for the service threads, it is for the user service method.
      * The default value is false.
      * @return is enabled thread pool
      */
-    public boolean isEnabledThreadPool() {
-        return enabledThreadPool;
+    public boolean isThreadPoolEnabled() {
+        return threadPoolEnabled;
     }
 
     /**
-     * Set enabled thread pool.
+     * Set thread pool enabled.
      * This thread pool is not for the service threads, it is for the user service method.
      * If your service method takes a long time, or will be blocked, please set this property to be true.
      * @param value is enabled thread pool
      */
-    public void setEnabledThreadPool(boolean value) {
+    public void setThreadPoolEnabled(boolean value) {
         if (value && (threadPool == null)) {
             threadPool = Executors.newCachedThreadPool();
         }
-        enabledThreadPool = value;
+        threadPoolEnabled = value;
     }
 
     /**
@@ -305,7 +305,7 @@ public class HproseTcpServer extends HproseService {
      */
     public void setThreadPool(ExecutorService value) {
         threadPool = value;
-        enabledThreadPool = (value != null);
+        threadPoolEnabled = (value != null);
     }
 
     protected void fireAcceptEvent(SocketChannel channel) {

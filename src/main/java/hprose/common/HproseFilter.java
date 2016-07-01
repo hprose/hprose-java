@@ -12,7 +12,7 @@
  *                                                        *
  * hprose filter interface for Java.                      *
  *                                                        *
- * LastModified: Mar 19, 2015                             *
+ * LastModified: Jul 1, 2015                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,6 @@ package hprose.common;
 import java.nio.ByteBuffer;
 
 public interface HproseFilter {
-    ByteBuffer inputFilter(ByteBuffer istream, HproseContext context);
-    ByteBuffer outputFilter(ByteBuffer ostream, HproseContext context);
+    ByteBuffer inputFilter(ByteBuffer inputBuffer, HproseContext context);
+    ByteBuffer outputFilter(ByteBuffer outputBuffer, HproseContext context);
 }

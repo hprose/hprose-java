@@ -1,4 +1,4 @@
-package hprose.example.middleware.log;
+package hprose.example.invokehandler.log;
 
 import hprose.server.HproseTcpServer;
 import java.io.IOException;

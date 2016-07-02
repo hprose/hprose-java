@@ -1,4 +1,4 @@
-package hprose.example.middleware.log;
+package hprose.example.invokehandler.log;
 
 import hprose.common.HproseContext;
 import hprose.common.InvokeHandler;

@@ -1,4 +1,4 @@
-package hprose.example.middleware.cache;
+package hprose.example.invokehandler.cache;
 
 import hprose.common.HproseContext;
 import hprose.common.InvokeHandler;

@@ -1,9 +1,9 @@
-package hprose.example.middleware.cache;
+package hprose.example.invokehandler.cache;
 
 import hprose.client.HproseClient;
 import hprose.common.InvokeSettings;
 import hprose.common.MethodName;
-import hprose.example.middleware.log.LogHandler;
+import hprose.example.invokehandler.log.LogHandler;
 import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.net.URISyntaxException;

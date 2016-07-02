@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jul 1, 2016                              *
+ * LastModified: Jul 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -124,7 +124,27 @@ public abstract class HproseService implements HproseClients {
     private NextFilterHandler getNextFilterHandler(final NextFilterHandler next, final FilterHandler handler) {
         return new NextFilterHandler() {
             public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
-                return handler.handle(request, context, next);
+                if (request.position() != 0) {
+                    request.flip();
+                }
+                Object response = handler.handle(request, context, next);
+                if (Promise.isPromise(response)) {
+                    return ((Promise<ByteBuffer>)response).then(new Func<ByteBuffer, ByteBuffer>() {
+                        public ByteBuffer call(ByteBuffer value) throws Throwable {
+                            if (value.position() != 0) {
+                                value.flip();
+                            }
+                            return value;
+                        }
+                    });
+                }
+                else {
+                    ByteBuffer value = (ByteBuffer)response;
+                    if (value.position() != 0) {
+                        value.flip();
+                    }
+                    return value;
+                }
             }
         };
     }

@@ -12,7 +12,7 @@ interface IEcho {
 }
 public class Client {
     public static void main(String[] args) throws URISyntaxException, IOException {
-        HproseClient client = HproseClient.create("tcp://127.0.0.1:8083");
+        HproseClient client = HproseClient.create("tcp://127.0.0.1:8084");
         client.addFilter(new StatFilter());
         client.addFilter(new SizeFilter("Non compressed"));
         client.addFilter(new CompressFilter());

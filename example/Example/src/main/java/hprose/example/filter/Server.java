@@ -12,7 +12,7 @@ public class Server {
         return obj;
     }
     public static void main(String[] args) throws URISyntaxException, IOException {
-        HproseTcpServer server = new HproseTcpServer("tcp://0.0.0.0:8083");
+        HproseTcpServer server = new HproseTcpServer("tcp://0.0.0.0:8084");
         server.add("echo", Server.class);
         server.addFilter(new StatFilter());
         server.addFilter(new SizeFilter("Non compressed"));

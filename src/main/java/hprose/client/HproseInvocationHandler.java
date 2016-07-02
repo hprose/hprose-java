@@ -60,7 +60,25 @@ public class HproseInvocationHandler implements InvocationHandler {
 
         final String name = ns + ((methodName == null) ? method.getName() : methodName.value());
 
-        final InvokeSettings settings = new InvokeSettings();
+        Type[] paramTypes = method.getGenericParameterTypes();
+        Type returnType = method.getGenericReturnType();
+        if (void.class.equals(returnType) ||
+            Void.class.equals(returnType)) {
+            returnType = null;
+        }
+        int n = paramTypes.length;
+
+        InvokeSettings settings;
+        if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(InvokeSettings.class)) {
+            --n;
+            settings = (InvokeSettings)args[n];
+            Object[] tmpargs = new Object[n];
+            System.arraycopy(args, 0, tmpargs, 0, n);
+            args = tmpargs;
+        }
+        else {
+            settings = new InvokeSettings();
+        }
 
         if (mode != null) settings.setMode(mode.value());
         if (simple != null) settings.setSimple(simple.value());
@@ -71,13 +89,6 @@ public class HproseInvocationHandler implements InvocationHandler {
         if (failswitch != null) settings.setFailswitch(failswitch.value());
         if (oneway != null) settings.setOneway(oneway.value());
 
-        Type[] paramTypes = method.getGenericParameterTypes();
-        Type returnType = method.getGenericReturnType();
-        if (void.class.equals(returnType) ||
-            Void.class.equals(returnType)) {
-            returnType = null;
-        }
-        int n = paramTypes.length;
         Object result = null;
         if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(Action.class)) {
             if (paramTypes[n - 1] instanceof ParameterizedType) {

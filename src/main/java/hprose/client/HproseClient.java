@@ -352,7 +352,7 @@ public abstract class HproseClient {
                 }
             });
         }
-        else if (response instanceof Buffer) {
+        else if (response instanceof ByteBuffer) {
             if (context.getSettings().isOneway()) return null;
             response = inputFilter((ByteBuffer) response, context);
             return response;
@@ -396,7 +396,7 @@ public abstract class HproseClient {
                     }
                 );
             }
-            else if (response instanceof Buffer) {
+            else if (response instanceof ByteBuffer) {
                 return response;
             }
             else {

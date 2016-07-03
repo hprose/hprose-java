@@ -12,11 +12,12 @@ public class TCPHelloClient {
         System.out.println("START");
         HproseTcpClient.setReactorThreads(2);
         long start = System.currentTimeMillis();
-        int threadNumber = 8;
-        final int roundNumber = 125000;
+        int threadNumber = 40;
+        final int roundNumber = 25000;
         Thread[] threads = new Thread[threadNumber];
         final HproseTcpClient client = new HproseTcpClient(new String[] {"tcp://localhost:4321", "tcp://localhost:4321"} );
         client.setFullDuplex(true);
+        client.setNoDelay(true);
         client.setMaxPoolSize(4);
         client.subscribe("news", new Action<String>() {
             @Override

@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jun 28, 2016                             *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,7 +21,6 @@ package hprose.util.concurrent;
 import hprose.util.JdkVersion;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -48,7 +47,20 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     public Promise() {}
 
-    public Promise(final Callable<V> computation) {
+    public Promise(final Call<V> computation) {
+        timer.execute(new Runnable() {
+            public void run() {
+                try {
+                    Promise.this.resolve(computation.call());
+                }
+                catch (Throwable e) {
+                    Promise.this.reject(e);
+                }
+            }
+        });
+    }
+
+    public Promise(final AsyncCall<V> computation) {
         timer.execute(new Runnable() {
             public void run() {
                 try {
@@ -83,7 +95,22 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final Callable<T> computation) {
+    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final Call<T> computation) {
+        final Promise<T> promise = new Promise<T>();
+        timer.schedule(new Runnable() {
+            public void run() {
+                try {
+                    promise.resolve(computation.call());
+                }
+                catch (Throwable e) {
+                    promise.reject(e);
+                }
+            }
+        }, duration, timeunit);
+        return promise;
+    }
+
+    public final static <T> Promise<T> delayed(long duration, TimeUnit timeunit, final AsyncCall<T> computation) {
         final Promise<T> promise = new Promise<T>();
         timer.schedule(new Runnable() {
             public void run() {
@@ -118,7 +145,11 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return promise;
     }
 
-    public final static <T> Promise<T> delayed(long duration, Callable<T> computation) {
+    public final static <T> Promise<T> delayed(long duration, Call<T> computation) {
+        return delayed(duration, TimeUnit.MILLISECONDS, computation);
+    }
+
+    public final static <T> Promise<T> delayed(long duration, AsyncCall<T> computation) {
         return delayed(duration, TimeUnit.MILLISECONDS, computation);
     }
 
@@ -130,7 +161,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         return delayed(duration, TimeUnit.MILLISECONDS, value);
     }
 
-    public final static <T> Promise<T> sync(Callable<T> computation) {
+    public final static <T> Promise<T> sync(Call<T> computation) {
+        try {
+            return value(computation.call());
+        }
+        catch (Throwable e) {
+            return error(e);
+        }
+    }
+
+    public final static <T> Promise<T> sync(AsyncCall<T> computation) {
         try {
             return value(computation.call());
         }
@@ -963,35 +1003,6 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         done(null, onreject);
     }
 
-    @SuppressWarnings("unchecked")
-    public final Promise<V> whenComplete(final Callable<?> action) {
-        return then(
-            new AsyncFunc<V, V>() {
-                public Promise<V> call(final V value) throws Throwable {
-                    Object f = action.call();
-                    if (f == null || !isThenable(f)) return Promise.value(value);
-                    return ((Promise<Object>)toPromise(f)).then(new Func<V, Object>() {
-                        public V call(Object __) throws Throwable {
-                            return value;
-                        }
-                    });
-                }
-            },
-            new AsyncFunc<V, Throwable>() {
-                public Promise<V> call(final Throwable e) throws Throwable {
-                    Object f = action.call();
-                    if (f == null || !isThenable(f)) throw e;
-                    return ((Promise<Object>)toPromise(f)).then(new Func<V, Object>() {
-                        public V call(Object __) throws Throwable {
-                            throw e;
-                        }
-                    });
-                }
-            }
-        );
-    }
-
-    @SuppressWarnings("unchecked")
     public final Promise<V> whenComplete(final Runnable action) {
         return then(
             new Func<V, V>() {
@@ -1003,6 +1014,23 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
             new Func<V, Throwable>() {
                 public V call(final Throwable e) throws Throwable {
                     action.run();
+                    throw e;
+                }
+            }
+        );
+    }
+
+    public final Promise<V> whenComplete(final Action<?> action) {
+        return then(
+            new Func<V, V>() {
+                public V call(final V value) throws Throwable {
+                   ((Action<V>)action).call(value);
+                    return value;
+                }
+            },
+            new Func<V, Throwable>() {
+                public V call(final Throwable e) throws Throwable {
+                    ((Action<Throwable>)action).call(e);
                     throw e;
                 }
             }

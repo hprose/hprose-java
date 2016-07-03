@@ -44,6 +44,7 @@ import hprose.io.serialize.Writer;
 import hprose.io.unserialize.Reader;
 import hprose.util.StrUtil;
 import hprose.util.concurrent.Action;
+import hprose.util.concurrent.Call;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
 import hprose.util.concurrent.Reducer;
@@ -875,8 +876,8 @@ public abstract class HproseService implements HproseClients {
     private Object invokeHandler(final String name, final Object[] args, final ServiceContext context) throws Throwable {
         boolean oneway = context.getRemoteMethod().oneway;
         if (oneway) {
-            Promise<Object> promise = new Promise<Object>(new Callable<Object>() {
-                public Object call() throws Exception {
+            Promise<Object> promise = new Promise<Object>(new Call<Object>() {
+                public Object call() throws Throwable {
                     try {
                         return callService(name, args, context);
                     }

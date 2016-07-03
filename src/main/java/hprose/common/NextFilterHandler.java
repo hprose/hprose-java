@@ -12,15 +12,16 @@
  *                                                        *
  * hprose NextFilterHandler interface for Java.           *
  *                                                        *
- * LastModified: Apr 24, 2016                             *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.common;
 
+import hprose.util.concurrent.Promise;
 import java.nio.ByteBuffer;
 
 public interface NextFilterHandler {
-    Object handle(ByteBuffer request, HproseContext context) throws Throwable;
+    Promise<ByteBuffer> handle(ByteBuffer request, HproseContext context);
 }

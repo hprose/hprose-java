@@ -3,14 +3,15 @@ package hprose.example.invokehandler.cache;
 import hprose.common.HproseContext;
 import hprose.common.InvokeHandler;
 import hprose.common.NextInvokeHandler;
+import hprose.util.concurrent.Promise;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CacheHandler implements InvokeHandler {
-    private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Promise<Object>>> cache = new ConcurrentHashMap<>();
     @Override
-    public Object handle(String name, Object[] args, HproseContext context, NextInvokeHandler next) throws Throwable {
+    public Promise<Object> handle(String name, Object[] args, HproseContext context, NextInvokeHandler next) {
         if (context.getBoolean("cache")) {
             String key = Arrays.deepToString(args);
             if (cache.containsKey(name)) {
@@ -21,7 +22,7 @@ public class CacheHandler implements InvokeHandler {
             else {
                 cache.put(name, new ConcurrentHashMap<>());
             }
-            Object result = next.handle(name, args, context);
+            Promise<Object> result = next.handle(name, args, context);
             cache.get(name).put(key, result);
             return result;
         }

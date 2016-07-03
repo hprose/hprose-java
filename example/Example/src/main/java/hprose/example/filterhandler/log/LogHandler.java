@@ -12,17 +12,10 @@ import java.util.logging.Logger;
 public class LogHandler implements FilterHandler {
     private static final Logger logger = Logger.getLogger(LogHandler.class.getName());
     @Override
-    public Object handle(ByteBuffer request, HproseContext context, NextFilterHandler next) throws Throwable {
+    public Promise<ByteBuffer> handle(ByteBuffer request, HproseContext context, NextFilterHandler next) {
         logger.log(Level.INFO, StrUtil.toString(request));
-        Object response = next.handle(request, context);
-        if (Promise.isPromise(response)) {
-            ((Promise<ByteBuffer>)response).then(
-                (ByteBuffer data) -> logger.log(Level.INFO, StrUtil.toString(data))
-            );
-        }
-        else {
-            logger.log(Level.INFO, StrUtil.toString((ByteBuffer)response));
-        }
+        Promise<ByteBuffer> response = next.handle(request, context);
+        response.then((ByteBuffer data) -> logger.log(Level.INFO, StrUtil.toString(data)));
         return response;
     }
 }

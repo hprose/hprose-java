@@ -12,14 +12,13 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jul 2, 2016                              *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
-import hprose.common.FilterHandler;
-import hprose.common.FilterHandlerManager;
+import hprose.common.HandlerManager;
 import hprose.common.HproseCallback;
 import hprose.common.HproseCallback1;
 import hprose.common.HproseContext;
@@ -27,10 +26,7 @@ import hprose.common.HproseErrorEvent;
 import hprose.common.HproseException;
 import hprose.common.HproseFilter;
 import hprose.common.HproseResultMode;
-import hprose.common.InvokeHandler;
 import hprose.common.InvokeSettings;
-import hprose.common.NextFilterHandler;
-import hprose.common.NextInvokeHandler;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
 import static hprose.io.HproseTags.TagArgument;
@@ -44,6 +40,7 @@ import hprose.net.ReceiveCallback;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import hprose.util.concurrent.Action;
+import hprose.util.concurrent.AsyncCall;
 import hprose.util.concurrent.AsyncFunc;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
@@ -58,7 +55,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -67,12 +63,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class HproseClient {
+public abstract class HproseClient extends HandlerManager {
     protected final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
-    private final ArrayList<InvokeHandler> invokeHandlers = new ArrayList<InvokeHandler>();
-    private final ArrayList<FilterHandler> beforeFilterHandlers = new ArrayList<FilterHandler>();
-    private final ArrayList<FilterHandler> afterFilterHandlers = new ArrayList<FilterHandler>();
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private final ArrayList<String> uris = new ArrayList<String>();
     private final AtomicInteger index = new AtomicInteger(-1);
@@ -83,24 +76,6 @@ public abstract class HproseClient {
     private boolean failswitch = false;
     private boolean byref = false;
     private boolean simple = false;
-    private final NextInvokeHandler defaultInvokeHandler = new NextInvokeHandler() {
-        public Object handle(String name, Object[] args, HproseContext context) throws Throwable {
-            return invokeHandler(name, args, (ClientContext)context);
-        }
-    };
-    private final NextFilterHandler defaultBeforeFilterHandler = new NextFilterHandler() {
-        public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
-            return beforeFilterHandler(request, (ClientContext)context);
-        }
-    };
-    private final NextFilterHandler defaultAfterFilterHandler = new NextFilterHandler() {
-        public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
-            return afterFilterHandler(request, (ClientContext)context);
-        }
-    };
-    private NextInvokeHandler invokeHandler = defaultInvokeHandler;
-    private NextFilterHandler beforeFilterHandler = defaultBeforeFilterHandler;
-    private NextFilterHandler afterFilterHandler = defaultAfterFilterHandler;
     protected String uri;
     public HproseErrorEvent onError = null;
 
@@ -339,78 +314,47 @@ public abstract class HproseClient {
         return response;
     }
 
-    @SuppressWarnings("unchecked")
-    private Object beforeFilterHandler(ByteBuffer request, final ClientContext context) throws Throwable {
+    private Promise<ByteBuffer> beforeFilterHandler(ByteBuffer request, final ClientContext context) {
         request = outputFilter(request, context);
-        Object response = afterFilterHandler.handle(request, context);
-        if (response instanceof Promise) {
-            return ((Promise<ByteBuffer>)response).then(new Func<ByteBuffer, ByteBuffer>() {
-                public ByteBuffer call(ByteBuffer response) throws Throwable {
-                    if (context.getSettings().isOneway()) return null;
-                    response = inputFilter(response, context);
-                    return response;
-                }
-            });
-        }
-        else if (response instanceof ByteBuffer) {
-            if (context.getSettings().isOneway()) return null;
-            response = inputFilter((ByteBuffer) response, context);
-            return response;
-        }
-        else {
-            throw new HproseException("Wrong return type of afterFilterHander");
-        }
-    }
-
-    private Object afterFilterHandler(ByteBuffer request, ClientContext context) throws Throwable {
-        if (context.getSettings().isAsync()) {
-            final Promise<ByteBuffer> response = new Promise<ByteBuffer>();
-            sendAndReceive(request, new ReceiveCallback() {
-                public void handler(ByteBuffer stream, Throwable e) {
-                    if (e != null) {
-                        response.reject(e);
-                    }
-                    else {
-                        response.resolve(stream);
-                    }
-                }
-            }, context.getSettings().getTimeout());
-            return response;
-        }
-        return sendAndReceive(request, context.getSettings().getTimeout());
-    }
-
-    private Object sendAndReceive(final ByteBuffer request, final ClientContext context) throws Throwable {
-        try {
-            Object response = beforeFilterHandler.handle(request, context);
-            if (response instanceof Promise) {
-                return ((Promise<?>)response).catchError(
-                    new Func<Object, Throwable>() {
-                        public Object call(Throwable e) throws Throwable {
-                            Object response = retry(request, context);
-                            if (response != null) {
-                                return response;
-                            }
-                            throw e;
-                        }
-                    }
-                );
-            }
-            else if (response instanceof ByteBuffer) {
+        return afterFilterHandler.handle(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
+            public ByteBuffer call(ByteBuffer response) throws Throwable {
+                if (context.getSettings().isOneway()) return null;
+                response = inputFilter(response, context);
                 return response;
             }
-            else {
-                throw new HproseException("Wrong return type of beforeFilterHander");
-            }
-        }
-        catch (IOException e) {
-            Object response = retry(request, context);
-            if (response != null) return response;
-            throw e;
-        }
+        });
     }
 
-    private Object retry(final ByteBuffer request, final ClientContext context) throws Throwable {
+    private Promise<ByteBuffer> afterFilterHandler(ByteBuffer request, ClientContext context) {
+        final Promise<ByteBuffer> response = new Promise<ByteBuffer>();
+        sendAndReceive(request, new ReceiveCallback() {
+            public void handler(ByteBuffer stream, Throwable e) {
+                if (e != null) {
+                    response.reject(e);
+                }
+                else {
+                    response.resolve(stream);
+                }
+            }
+        }, context.getSettings().getTimeout());
+        return response;
+    }
+
+    private Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, final ClientContext context) {
+        return beforeFilterHandler.handle(request, context).catchError(
+            new AsyncFunc<ByteBuffer, Throwable>() {
+                public Promise<ByteBuffer> call(Throwable e) throws Throwable {
+                    Promise<ByteBuffer> response = retry(request, context);
+                    if (response != null) {
+                        return response;
+                    }
+                    throw e;
+                }
+            }
+        );
+    }
+
+    private Promise<ByteBuffer> retry(final ByteBuffer request, final ClientContext context) {
         InvokeSettings settings = context.getSettings();
         if (settings.isFailswitch()) {
             failswitch();
@@ -420,27 +364,11 @@ public abstract class HproseClient {
             if (n > 0) {
                 settings.setRetry(n - 1);
                 int interval = (n >= 10) ? 500 : (10 - n) * 500;
-                if (settings.isAsync()) {
-                    return Promise.delayed(interval, new Callable<Object>() {
-                        public Object call() throws Exception {
-                            try {
-                                return sendAndReceive(request, context);
-                            }
-                            catch (Throwable e) {
-                                throw new HproseException(e);
-                            }
-                        }
-                    });
-                }
-                else {
-                    try {
-                        Thread.sleep(interval);
+                return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
+                    public Promise<ByteBuffer> call() throws Throwable {
+                        return sendAndReceive(request, context);
                     }
-                    catch (InterruptedException ex) {
-                        return null;
-                    }
-                    return sendAndReceive(request, context);
-                }
+                });
             }
         }
         return null;
@@ -556,122 +484,47 @@ public abstract class HproseClient {
         return result;
     }
 
+    @Override
+    protected Promise<Object> invokeHandler(String name, Object[] args, HproseContext context) {
+        return invokeHandler(name, args, (ClientContext)context);
+    }
+
+    @Override
+    protected Promise<ByteBuffer> beforeFilterHandler(ByteBuffer request, HproseContext context) {
+        return beforeFilterHandler(request, (ClientContext)context);
+    }
+
+    @Override
+    protected Promise<ByteBuffer> afterFilterHandler(ByteBuffer request, HproseContext context) {
+        return afterFilterHandler(request, (ClientContext)context);
+    }
+
     @SuppressWarnings("unchecked")
-    private Object invokeHandler(String name, final Object[] args, final ClientContext context) throws Throwable {
-        final ByteBufferStream stream = encode(name, args, context);
-        Object buffer = sendAndReceive(stream.buffer, context);
+    private Promise<Object> invokeHandler(String name, final Object[] args, final ClientContext context) {
+        final ByteBufferStream stream;
+        try {
+            stream = encode(name, args, context);
+        }
+        catch (Throwable e) {
+            return Promise.error(e);
+        }
         final InvokeSettings settings = context.getSettings();
-        if (buffer instanceof Promise) {
-            return ((Promise<ByteBuffer>)buffer).then(new Func<Object, ByteBuffer>() {
-                public Object call(ByteBuffer value) throws Throwable {
-                    stream.buffer = value;
-                    try {
-                        return decode(stream, args, context);
-                    }
-                    finally {
-                        if (settings.getMode() == HproseResultMode.Normal ||
-                            settings.getMode() == HproseResultMode.Serialized ||
-                            settings.getReturnType() == byte[].class) {
-                            stream.close();
-                        }
+        return sendAndReceive(stream.buffer, context).then(new Func<Object, ByteBuffer>() {
+            public Object call(ByteBuffer value) throws Throwable {
+                stream.buffer = value;
+                try {
+                    return decode(stream, args, context);
+                }
+                finally {
+                    if (settings.getMode() == HproseResultMode.Normal ||
+                        settings.getMode() == HproseResultMode.Serialized ||
+                        settings.getReturnType() == byte[].class) {
+                        stream.close();
                     }
                 }
-            });
-        }
-        else {
-            stream.buffer = (ByteBuffer)buffer;
-            try {
-                return decode(stream, args, context);
             }
-            finally {
-                if (settings.getMode() == HproseResultMode.Normal ||
-                    settings.getMode() == HproseResultMode.Serialized ||
-                    settings.getReturnType() == byte[].class) {
-                    stream.close();
-                }
-            }
-        }
+        });
     }
-
-    private NextInvokeHandler getNextInvokeHandler(final NextInvokeHandler next, final InvokeHandler handler) {
-        return new NextInvokeHandler() {
-            public Object handle(String name, Object[] args, HproseContext context) throws Throwable {
-                return handler.handle(name, args, context, next);
-            }
-        };
-    }
-
-    private NextFilterHandler getNextFilterHandler(final NextFilterHandler next, final FilterHandler handler) {
-        return new NextFilterHandler() {
-            public Object handle(ByteBuffer request, HproseContext context) throws Throwable {
-                if (request.position() != 0) {
-                    request.flip();
-                }
-                Object response = handler.handle(request, context, next);
-                if (Promise.isPromise(response)) {
-                    return ((Promise<ByteBuffer>)response).then(new Func<ByteBuffer, ByteBuffer>() {
-                        public ByteBuffer call(ByteBuffer value) throws Throwable {
-                            if (value.position() != 0) {
-                                value.flip();
-                            }
-                            return value;
-                        }
-                    });
-                }
-                else {
-                    ByteBuffer value = (ByteBuffer)response;
-                    if (value.position() != 0) {
-                        value.flip();
-                    }
-                    return value;
-                }
-            }
-        };
-    }
-
-    public final void addInvokeHandler(InvokeHandler handler) {
-        if (handler == null) return;
-        invokeHandlers.add(handler);
-        NextInvokeHandler next = defaultInvokeHandler;
-        for (int i = invokeHandlers.size() - 1; i >= 0; --i) {
-            next = getNextInvokeHandler(next, invokeHandlers.get(i));
-        }
-        invokeHandler = next;
-    }
-    public final void addBeforeFilterHandler(FilterHandler handler) {
-        if (handler == null) return;
-        beforeFilterHandlers.add(handler);
-        NextFilterHandler next = defaultBeforeFilterHandler;
-        for (int i = beforeFilterHandlers.size() - 1; i >= 0; --i) {
-            next = getNextFilterHandler(next, beforeFilterHandlers.get(i));
-        }
-        beforeFilterHandler = next;
-    }
-    public final void addAfterFilterHandler(FilterHandler handler) {
-        if (handler == null) return;
-        afterFilterHandlers.add(handler);
-        NextFilterHandler next = defaultAfterFilterHandler;
-        for (int i = afterFilterHandlers.size() - 1; i >= 0; --i) {
-            next = getNextFilterHandler(next, afterFilterHandlers.get(i));
-        }
-        afterFilterHandler = next;
-    }
-    public final HproseClient use(InvokeHandler handler) {
-        addInvokeHandler(handler);
-        return this;
-    }
-    public final FilterHandlerManager beforeFilter = new FilterHandlerManager() {
-        public final FilterHandlerManager use(FilterHandler handler) {
-            addBeforeFilterHandler(handler);
-            return this;
-        }
-    };
-    public final FilterHandlerManager afterFilter = new FilterHandlerManager() {
-        public final FilterHandlerManager use(FilterHandler handler) {
-            addAfterFilterHandler(handler);
-            return this;
-        }
-    };
 
     protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer, int timeout) throws Throwable;
 
@@ -729,7 +582,6 @@ public abstract class HproseClient {
     public final <T> void invoke(String name, Object[] args, HproseCallback1<T> callback, Class<T> returnType, InvokeSettings settings) {
         invoke(name, args, callback, null, returnType, settings);
     }
-    @SuppressWarnings("unchecked")
     public final <T> void invoke(final String name, Object[] args, final HproseCallback1<T> callback, final HproseErrorEvent errorEvent, Class<T> returnType, InvokeSettings settings) {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
@@ -738,30 +590,23 @@ public abstract class HproseClient {
         final HproseContext context = getContext(settings);
         Promise.all(args).then(new Action<Object[]>() {
             public void call(Object[] args) throws Throwable {
-                try {
-                    ((Promise<T>) invokeHandler.handle(name, args, context)).then(
-                            new Action<T>() {
-                                public void call(T value) throws Throwable {
-                                    callback.handler(value);
-                                }
-                            },
-                            new Action<Throwable>() {
-                                public void call(Throwable e) throws Throwable {
-                                    if (errEvent != null) {
-                                        errEvent.handler(name, e);
-                                    }
-                                }
+                invokeHandler.handle(name, args, context).then(
+                    new Action<Object>() {
+                        @SuppressWarnings("unchecked")
+                        public void call(Object value) throws Throwable {
+                            callback.handler((T)value);
+                        }
+                    },
+                    new Action<Throwable>() {
+                        public void call(Throwable e) throws Throwable {
+                            if (errEvent != null) {
+                                errEvent.handler(name, e);
                             }
-                    );
-                }
-                catch (Throwable e) {
-                    if (errEvent != null) {
-                        errEvent.handler(name, e);
+                        }
                     }
-                }
+                );
             }
         });
-
     }
 
     public final void invoke(String name, Object[] args, HproseCallback<?> callback) {
@@ -786,7 +631,6 @@ public abstract class HproseClient {
     public final <T> void invoke(String name, Object[] args, HproseCallback<T> callback, Class<T> returnType, InvokeSettings settings) {
         invoke(name, args, callback, null, returnType, settings);
     }
-    @SuppressWarnings("unchecked")
     public final <T> void invoke(final String name, final Object[] args, final HproseCallback<T> callback, final HproseErrorEvent errorEvent, Class<T> returnType, InvokeSettings settings) {
         if (settings == null) settings = new InvokeSettings();
         if (returnType != null) settings.setReturnType(returnType);
@@ -795,27 +639,21 @@ public abstract class HproseClient {
         final HproseContext context = getContext(settings);
         Promise.all(args).then(new Action<Object[]>() {
             public void call(final Object[] args) throws Throwable {
-                try {
-                    ((Promise<T>) invokeHandler.handle(name, args, context)).then(
-                        new Action<T>() {
-                            public void call(T value) throws Throwable {
-                                callback.handler(value, args);
-                            }
-                        },
-                        new Action<Throwable>() {
-                            public void call(Throwable e) throws Throwable {
-                                if (errEvent != null) {
-                                    errEvent.handler(name, e);
-                                }
+                invokeHandler.handle(name, args, context).then(
+                    new Action<Object>() {
+                        @SuppressWarnings("unchecked")
+                        public void call(Object value) throws Throwable {
+                            callback.handler((T)value, args);
+                        }
+                    },
+                    new Action<Throwable>() {
+                        public void call(Throwable e) throws Throwable {
+                            if (errEvent != null) {
+                                errEvent.handler(name, e);
                             }
                         }
-                    );
-                }
-                catch (Throwable e) {
-                    if (errEvent != null) {
-                        errEvent.handler(name, e);
                     }
-                }
+                );
             }
         });
     }
@@ -865,7 +703,7 @@ public abstract class HproseClient {
                 }
             }
         }
-        return (T)invokeHandler.handle(name, args, getContext(settings));
+        return ((Promise<T>)invokeHandler.handle(name, args, getContext(settings))).toFuture().get();
     }
 
     @SuppressWarnings("unchecked")
@@ -887,12 +725,7 @@ public abstract class HproseClient {
         final HproseContext context = getContext(settings);
         return Promise.all(args).then(new AsyncFunc<Object, Object[]>() {
             public Promise<Object> call(Object[] args) throws Throwable {
-                try {
-                    return (Promise<Object>)invokeHandler.handle(name, args, context);
-                }
-                catch (Throwable e) {
-                    return Promise.error(e);
-                }
+                return invokeHandler.handle(name, args, context);
             }
         });
     }
@@ -995,13 +828,8 @@ public abstract class HproseClient {
                         settings.setReturnType(type);
                         settings.setTimeout(timeout);
                         settings.setAsync(true);
-                        try {
-                            Promise<T> result = (Promise<T>)invokeHandler.handle(name, new Object[] {id}, getContext(settings));
-                            result.then(topic.handler, this);
-                        }
-                        catch (Throwable ex) {
-                            call(ex);
-                        }
+                        Promise<T> result = (Promise<T>)invokeHandler.handle(name, new Object[] {id}, getContext(settings));
+                        result.then(topic.handler, this);
                     }
                 }
             };

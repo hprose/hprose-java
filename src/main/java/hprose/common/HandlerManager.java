@@ -12,7 +12,7 @@
  *                                                        *
  * hprose HandlerManager class for Java.                  *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Jul 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -74,7 +74,12 @@ public abstract class HandlerManager {
     private NextInvokeHandler getNextInvokeHandler(final NextInvokeHandler next, final InvokeHandler handler) {
         return new NextInvokeHandler() {
             public Promise<Object> handle(String name, Object[] args, HproseContext context) {
-                return handler.handle(name, args, context, next);
+                try {
+                    return handler.handle(name, args, context, next);
+                }
+                catch (Throwable e) {
+                    return Promise.error(e);
+                }
             }
         };
     }
@@ -82,17 +87,22 @@ public abstract class HandlerManager {
     private NextFilterHandler getNextFilterHandler(final NextFilterHandler next, final FilterHandler handler) {
         return new NextFilterHandler() {
             public Promise<ByteBuffer> handle(ByteBuffer request, HproseContext context) {
-                if (request.position() != 0) {
-                    request.flip();
-                }
-                return handler.handle(request, context, next).then(new Func<ByteBuffer, ByteBuffer>() {
-                    public ByteBuffer call(ByteBuffer response) throws Throwable {
-                        if (response.position() != 0) {
-                            response.flip();
-                        }
-                        return response;
+                try {
+                    if (request.position() != 0) {
+                        request.flip();
                     }
-                });
+                    return handler.handle(request, context, next).then(new Func<ByteBuffer, ByteBuffer>() {
+                        public ByteBuffer call(ByteBuffer response) throws Throwable {
+                            if (response.position() != 0) {
+                                response.flip();
+                            }
+                            return response;
+                        }
+                    });
+                }
+                catch (Throwable e) {
+                    return Promise.error(e);
+                }
             }
         };
     }

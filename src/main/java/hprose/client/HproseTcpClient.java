@@ -12,19 +12,20 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Jun 2, 2016                              *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
 import hprose.common.HproseException;
+import hprose.common.InvokeSettings;
 import hprose.io.HproseMode;
 import hprose.net.Connection;
 import hprose.net.ConnectionHandler;
 import hprose.net.Connector;
-import hprose.net.ReceiveCallback;
 import hprose.net.TimeoutType;
+import hprose.util.concurrent.Promise;
 import hprose.util.concurrent.Threads;
 import hprose.util.concurrent.Timer;
 import java.io.IOException;
@@ -37,7 +38,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,21 +45,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class Request {
     public final ByteBuffer buffer;
-    public final ReceiveCallback callback;
+    public final Promise<ByteBuffer> result = new Promise<ByteBuffer>();
     public final int timeout;
-    public Request(ByteBuffer buffer, ReceiveCallback callback, int timeout) {
+    public Request(ByteBuffer buffer, int timeout) {
         this.buffer = buffer;
-        this.callback = callback;
         this.timeout = timeout;
     }
 }
 
 final class Response {
-    public final ReceiveCallback callback;
+    public final Promise<ByteBuffer> result;
     public final long createTime;
     public final int timeout;
-    public Response(ReceiveCallback callback, int timeout) {
-        this.callback = callback;
+    public Response(Promise<ByteBuffer> result, int timeout) {
+        this.result = result;
         this.createTime = System.currentTimeMillis();
         this.timeout = timeout;
     }
@@ -123,7 +122,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
                         }
                         catch (IOException ex) {
                             while ((request = requests.poll()) != null) {
-                                request.callback.handler(null, ex);
+                                request.result.reject(ex);
                             }
                         }
                     }
@@ -145,8 +144,10 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 
     protected abstract void send(Connection conn, Request request);
 
-    public final synchronized void send(ByteBuffer buffer, ReceiveCallback callback, int timeout) {
-        requests.offer(new Request(buffer, callback, timeout));
+    public final synchronized Promise<ByteBuffer> send(ByteBuffer buffer, int timeout) {
+        Request request = new Request(buffer, timeout);
+        requests.offer(request);
+        return request.result;
     }
 
     protected void close(Map<Connection, Object> responses) {
@@ -159,7 +160,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
             }
         }
         while (!requests.isEmpty()) {
-            requests.poll().callback.handler(null, new ClosedChannelException());
+            requests.poll().result.reject(new ClosedChannelException());
         }
     }
 
@@ -189,7 +190,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                     Response response = e.getValue();
                     if ((currentTime - response.createTime) >=  response.timeout) {
                         it.remove();
-                        response.callback.handler(null, new TimeoutException("timeout"));
+                        response.result.reject(new TimeoutException("timeout"));
                     }
                 }
                 if (res.isEmpty() && conn.isConnected()) {
@@ -222,7 +223,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         if (res != null) {
             if (res.size() < 10) {
                 int id = nextId.incrementAndGet() & 0x7fffffff;
-                res.put(id, new Response(request.callback, request.timeout));
+                res.put(id, new Response(request.result, request.timeout));
                 conn.send(request.buffer, id);
             }
             else {
@@ -257,7 +258,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
             responses.remove(conn);
             Request request;
             while ((request = requests.poll()) != null) {
-                request.callback.handler(null, new TimeoutException("connect timeout"));
+                request.result.reject(new TimeoutException("connect timeout"));
             }
         }
         else if (TimeoutType.IDLE_TIMEOUT != type) {
@@ -268,7 +269,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                     Map.Entry<Integer, Response> entry = it.next();
                     it.remove();
                     Response response = entry.getValue();
-                    response.callback.handler(null, new TimeoutException(type.toString()));
+                    response.result.reject(new TimeoutException(type.toString()));
                 }
             }
         }
@@ -282,7 +283,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                 if (data.position() != 0) {
                     data.flip();
                 }
-                response.callback.handler(data, null);
+                response.result.resolve(data);
             }
             if (res.isEmpty()) {
                 recycle(conn);
@@ -302,7 +303,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                 Map.Entry<Integer, Response> entry = it.next();
                 it.remove();
                 Response response = entry.getValue();
-                response.callback.handler(null, e);
+                response.result.reject(e);
             }
         }
     }
@@ -321,7 +322,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
                 Response response = entry.getValue();
                 if ((currentTime - response.createTime) >= response.timeout) {
                     it.remove();
-                    response.callback.handler(null, new TimeoutException("timeout"));
+                    response.result.reject(new TimeoutException("timeout"));
                     conn.close();
                 }
             }
@@ -348,7 +349,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     }
 
     protected final void send(Connection conn, Request request) {
-        responses.put(conn, new Response(request.callback, request.timeout));
+        responses.put(conn, new Response(request.result, request.timeout));
         conn.send(request.buffer, null);
     }
 
@@ -376,13 +377,13 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
             responses.remove(conn);
             Request request;
             while ((request = requests.poll()) != null) {
-                request.callback.handler(null, new TimeoutException("connect timeout"));
+                request.result.reject(new TimeoutException("connect timeout"));
             }
         }
         else if (TimeoutType.IDLE_TIMEOUT != type) {
             Response response = responses.put(conn, nullResponse);
             if (response != null && response != nullResponse) {
-                response.callback.handler(null, new TimeoutException(type.toString()));
+                response.result.reject(new TimeoutException(type.toString()));
             }
         }
         conn.close();
@@ -395,7 +396,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
             if (data.position() != 0) {
                 data.flip();
             }
-            response.callback.handler(data, null);
+            response.result.resolve(data);
         }
     }
 
@@ -404,7 +405,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     public final void onError(Connection conn, Exception e) {
         Response response = responses.remove(conn);
         if (response != null && response != nullResponse) {
-            response.callback.handler(null, e);
+            response.result.reject(e);
         }
     }
 }
@@ -558,36 +559,13 @@ public class HproseTcpClient extends HproseClient {
         this.keepAlive = keepAlive;
     }
 
-    @Override
-    protected final ByteBuffer sendAndReceive(ByteBuffer request, int timeout) throws Throwable {
-        final Result result = new Result();
-        final Semaphore sem = new Semaphore(0);
-        sendAndReceive(request, new ReceiveCallback() {
-            public void handler(ByteBuffer buffer, Throwable e) {
-                result.buffer = buffer;
-                result.e = e;
-                sem.release();
-            }
-        }, timeout);
-        try {
-            sem.acquire();
-        }
-        catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        if (result.e == null) {
-            return result.buffer;
-        }
-        throw result.e;
-    }
-
-    @Override
-    protected final void sendAndReceive(ByteBuffer request, ReceiveCallback callback, int timeout) {
+    protected Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, ClientContext context) {
+        final InvokeSettings settings = context.getSettings();
         if (fullDuplex) {
-            fdTrans.send(request, callback, timeout);
+            return fdTrans.send(request, settings.getTimeout());
         }
         else {
-            hdTrans.send(request, callback, timeout);
+            return hdTrans.send(request, settings.getTimeout());
         }
     }
 

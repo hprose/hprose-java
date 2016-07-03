@@ -36,7 +36,6 @@ import static hprose.io.HproseTags.TagError;
 import static hprose.io.HproseTags.TagResult;
 import hprose.io.serialize.Writer;
 import hprose.io.unserialize.Reader;
-import hprose.net.ReceiveCallback;
 import hprose.util.ClassUtil;
 import hprose.util.StrUtil;
 import hprose.util.concurrent.Action;
@@ -44,7 +43,6 @@ import hprose.util.concurrent.AsyncCall;
 import hprose.util.concurrent.AsyncFunc;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
-import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -57,14 +55,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class HproseClient extends HandlerManager {
-    protected final static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
     private final ArrayList<String> uris = new ArrayList<String>();
@@ -78,16 +73,6 @@ public abstract class HproseClient extends HandlerManager {
     private boolean simple = false;
     protected String uri;
     public HproseErrorEvent onError = null;
-
-    static {
-        Threads.registerShutdownHandler(new Runnable() {
-            public void run() {
-                if (!executor.isShutdown()) {
-                    executor.shutdown();
-                }
-            }
-        });
-    }
 
     protected HproseClient() {
         this((String[])null, HproseMode.MemberMode);
@@ -326,21 +311,10 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     private Promise<ByteBuffer> afterFilterHandler(ByteBuffer request, ClientContext context) {
-        final Promise<ByteBuffer> response = new Promise<ByteBuffer>();
-        sendAndReceive(request, new ReceiveCallback() {
-            public void handler(ByteBuffer stream, Throwable e) {
-                if (e != null) {
-                    response.reject(e);
-                }
-                else {
-                    response.resolve(stream);
-                }
-            }
-        }, context.getSettings().getTimeout());
-        return response;
+        return sendAndReceive(request, context);
     }
 
-    private Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, final ClientContext context) {
+    private Promise<ByteBuffer> sendRequest(final ByteBuffer request, final ClientContext context) {
         return beforeFilterHandler.handle(request, context).catchError(
             new AsyncFunc<ByteBuffer, Throwable>() {
                 public Promise<ByteBuffer> call(Throwable e) throws Throwable {
@@ -366,7 +340,7 @@ public abstract class HproseClient extends HandlerManager {
                 int interval = (n >= 10) ? 500 : (10 - n) * 500;
                 return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
                     public Promise<ByteBuffer> call() throws Throwable {
-                        return sendAndReceive(request, context);
+                        return sendRequest(request, context);
                     }
                 });
             }
@@ -509,7 +483,7 @@ public abstract class HproseClient extends HandlerManager {
             return Promise.error(e);
         }
         final InvokeSettings settings = context.getSettings();
-        return sendAndReceive(stream.buffer, context).then(new Func<Object, ByteBuffer>() {
+        return sendRequest(stream.buffer, context).then(new Func<Object, ByteBuffer>() {
             public Object call(ByteBuffer value) throws Throwable {
                 stream.buffer = value;
                 try {
@@ -526,9 +500,7 @@ public abstract class HproseClient extends HandlerManager {
         });
     }
 
-    protected abstract ByteBuffer sendAndReceive(ByteBuffer buffer, int timeout) throws Throwable;
-
-    protected abstract void sendAndReceive(ByteBuffer buffer, ReceiveCallback callback, int timeout);
+    protected abstract Promise<ByteBuffer> sendAndReceive(ByteBuffer request, ClientContext context);
 
     public final void invoke(String name, HproseCallback1<?> callback) {
         invoke(name, nullArgs, callback, null, null, null);

@@ -12,17 +12,19 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Jun 2, 2016                              *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.client;
 
 import hprose.common.HproseException;
+import hprose.common.InvokeSettings;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
-import hprose.net.ReceiveCallback;
 import hprose.util.Base64;
+import hprose.util.concurrent.Call;
+import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -188,8 +190,7 @@ public class HproseHttpClient extends HproseClient {
         this.sslsf = sslsf;
     }
 
-    @Override
-    protected ByteBuffer sendAndReceive(ByteBuffer request, int timeout) throws Throwable {
+    private ByteBuffer syncSendAndReceive(ByteBuffer request, int timeout) throws Throwable {
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -282,21 +283,18 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected void sendAndReceive(final ByteBuffer request, final ReceiveCallback callback, final int timeout) {
-        executor.execute(new Runnable() {
-            public void run() {
-                ByteBuffer response = null;
-                Throwable e = null;
-                try {
-                    response = sendAndReceive(request, timeout);
-                }
-                catch (Throwable ex) {
-                    e = ex;
-                }
-                finally {
-                    callback.handler(response, e);
-                }
+    protected Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, ClientContext context) {
+        final InvokeSettings settings = context.getSettings();
+        Call<ByteBuffer> call = new Call<ByteBuffer>() {
+            public ByteBuffer call() throws Throwable {
+                return syncSendAndReceive(request, settings.getTimeout());
             }
-        });
+        };
+        if (settings.isAsync()) {
+            return new Promise<ByteBuffer>(call);
+        }
+        else {
+            return Promise.sync(call);
+        }
     }
 }

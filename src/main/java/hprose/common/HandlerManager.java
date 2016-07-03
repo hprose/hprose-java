@@ -35,12 +35,32 @@ public abstract class HandlerManager {
     };
     private final NextFilterHandler defaultBeforeFilterHandler = new NextFilterHandler() {
         public Promise<ByteBuffer>  handle(ByteBuffer request, HproseContext context) {
-            return beforeFilterHandler(request, context);
+            if (request.position() != 0) {
+                request.flip();
+            }
+            return beforeFilterHandler(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
+                public ByteBuffer call(ByteBuffer response) throws Throwable {
+                    if (response.position() != 0) {
+                        response.flip();
+                    }
+                    return response;
+                }
+            });
         }
     };
     private final NextFilterHandler defaultAfterFilterHandler = new NextFilterHandler() {
         public Promise<ByteBuffer>  handle(ByteBuffer request, HproseContext context) {
-            return afterFilterHandler(request, context);
+            if (request.position() != 0) {
+                request.flip();
+            }
+            return afterFilterHandler(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
+                public ByteBuffer call(ByteBuffer response) throws Throwable {
+                    if (response.position() != 0) {
+                        response.flip();
+                    }
+                    return response;
+                }
+            });
         }
     };
     protected NextInvokeHandler invokeHandler = defaultInvokeHandler;

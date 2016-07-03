@@ -16,8 +16,6 @@ public class SizeHandler implements FilterHandler {
         System.out.println(message + " request size: " + request.remaining());
         Promise<ByteBuffer> response = next.handle(request, context);
         response.then((ByteBuffer data) -> {
-            System.out.println(message + " response position: " + data.position());
-            System.out.println(message + " response limit: " + data.limit());
             System.out.println(message + " response size: " + data.remaining());
         });
         return response;

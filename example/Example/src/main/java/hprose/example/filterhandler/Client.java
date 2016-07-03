@@ -26,7 +26,7 @@ public class Client {
                           .use(new SizeHandler("Compresssed"));
 
         IEcho h = client.useService(IEcho.class);
-        int n = 100;
+        int n = 100000;
         int[] value = new int[n];
         for (int i = 0; i < n; ++i) {
             value[i] = i;

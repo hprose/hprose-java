@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp server class for Java.                      *
  *                                                        *
- * LastModified: Jul 1, 2016                              *
+ * LastModified: Jul 7, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,6 @@ import hprose.net.Connection;
 import hprose.net.ConnectionHandler;
 import hprose.net.TimeoutType;
 import hprose.util.concurrent.Action;
-import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.Socket;
@@ -65,44 +64,20 @@ public class HproseTcpServer extends HproseService {
         public final void run() {
             TcpContext context = new TcpContext(HproseTcpServer.this, conn.socketChannel());
             currentContext.set(context);
-            Object response;
-            try {
-                response = HproseTcpServer.this.handle(data, context);
-            }
-            catch (Throwable e) {
-                conn.close();
-                currentContext.remove();
-                return;
-            }
-            finally {
-                ByteBufferStream.free(data);
-            }
-            if (response instanceof Promise) {
-                ((Promise<ByteBuffer>)response).then(new Action<ByteBuffer>() {
-                    public void call(ByteBuffer value) throws Throwable {
-                        conn.send(value, id);
-                    }
-                }, new Action<Throwable>() {
-                    public void call(Throwable e) throws Throwable {
-                        conn.close();
-                    }
-                }).complete(new Action<Object>() {
-                    public void call(Object o) throws Throwable {
-                        currentContext.remove();
-                    }
-                });
-            }
-            else {
-                try {
-                    conn.send((ByteBuffer)response, id);
+            HproseTcpServer.this.handle(data, context).then(new Action<ByteBuffer>() {
+                public void call(ByteBuffer value) throws Throwable {
+                    conn.send(value, id);
                 }
-                catch (Throwable e) {
+            }).catchError(new Action<Throwable>() {
+                public void call(Throwable e) throws Throwable {
                     conn.close();
                 }
-                finally {
+            }).whenComplete(new Runnable() {
+                public void run() {
                     currentContext.remove();
+                    ByteBufferStream.free(data);
                 }
-            }
+            });
         }
     }
 

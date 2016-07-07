@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Jul 7, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1011,17 +1011,16 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    protected Object handle(ByteBuffer buffer, ServiceContext context) throws Throwable {
-        try {
-            currentContext.set(context);
-            return beforeFilterHandler.handle(buffer, context);
-        }
-        finally {
-            currentContext.remove();
-        }
+    protected Promise<ByteBuffer> handle(ByteBuffer buffer, ServiceContext context) {
+        currentContext.set(context);
+        return beforeFilterHandler.handle(buffer, context).whenComplete(new Runnable() {
+            public void run() {
+                currentContext.remove();
+            }
+        });
     }
 
-    protected Object handle(ByteBuffer buffer, HproseMethods methods, ServiceContext context) throws Throwable {
+    protected Promise<ByteBuffer> handle(ByteBuffer buffer, HproseMethods methods, ServiceContext context) {
         context.setMethods(methods);
         return handle(buffer, context);
     }

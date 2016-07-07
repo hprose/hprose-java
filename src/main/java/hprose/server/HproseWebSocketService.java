@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: Jul 1, 2016                              *
+ * LastModified: Jul 7, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,7 +22,6 @@ import hprose.common.HproseContext;
 import hprose.common.HproseMethods;
 import hprose.io.ByteBufferStream;
 import hprose.util.concurrent.Action;
-import hprose.util.concurrent.Promise;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -86,52 +85,30 @@ public class HproseWebSocketService extends HproseService {
     }
 
     @SuppressWarnings("unchecked")
-    public void handle(ByteBuffer buf, Session session) throws IOException {
+    public void handle(final ByteBuffer buf, final Session session) throws IOException {
         WebSocketContext context = new WebSocketContext(this, session, config);
-        int id;
-        Object response = null;
-        try {
-            currentContext.set(context);
-            id = buf.getInt();
-            response = handle(buf.slice(), context);
-        }
-        catch (Throwable e) {
-            currentContext.remove();
-            return;
-        }
-        finally {
-            ByteBufferStream.free(buf);
-        }
-        buf = ByteBuffer.allocate(4);
-        buf.putInt(id);
-        buf.flip();
-        final RemoteEndpoint.Basic remote = session.getBasicRemote();
-        remote.sendBinary(buf, false);
-        if (response instanceof Promise) {
-            ((Promise<ByteBuffer>)response).then(new Action<ByteBuffer>() {
-                public void call(ByteBuffer value) throws Throwable {
-                    try {
-                        remote.sendBinary(value, true);
-                    }
-                    finally {
-                        ByteBufferStream.free(value);
-                    }
+        final int id = buf.getInt();
+        currentContext.set(context);
+        handle(buf.slice(), context).then(new Action<ByteBuffer>() {
+            public void call(ByteBuffer value) throws Throwable {
+                try {
+                    ByteBuffer buffer = ByteBuffer.allocate(4 + value.remaining());
+                    buffer.putInt(id);
+                    buffer.put(value);
+                    buffer.flip();
+                    final RemoteEndpoint.Async remote = session.getAsyncRemote();
+                    remote.sendBinary(buffer);
                 }
-            }).complete(new Action<Object>() {
-                public void call(Object o) throws Throwable {
-                    currentContext.remove();
+                finally {
+                    ByteBufferStream.free(value);
                 }
-            });
-        }
-        else {
-            try {
-                remote.sendBinary((ByteBuffer)response, true);
             }
-            finally {
-                ByteBufferStream.free((ByteBuffer)response);
+        }).whenComplete(new Runnable() {
+            public void run() {
                 currentContext.remove();
+                ByteBufferStream.free(buf);
             }
-        }
+        });
     }
 
     public void handleError(Session session, Throwable error) {

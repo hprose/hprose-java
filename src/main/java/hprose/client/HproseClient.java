@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Jul 26, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -349,12 +349,15 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     private void failswitch() {
-        int i = index.get() + 1;
-        if (i >= uris.size()) {
-            index.set(i = 0);
+        int n = uris.size();
+        if (n > 1) {
+            int i = index.get() + (int)Math.floor(Math.random() * (n - 1)) + 1;
+            if (i >= n) {
+                i %= n;
+            }
+            index.set(i);
+            uri = uris.get(i);
         }
-        index.set(i);
-        uri = uris.get(i);
     }
 
     private ClientContext getContext(InvokeSettings settings) {

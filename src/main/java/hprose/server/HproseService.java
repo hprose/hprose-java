@@ -1163,9 +1163,6 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                         pushEvent.subscribe(topic, id, HproseService.this);
                     }
                 }
-                if (t.request != null) {
-                    t.request.resolve((Object)null);
-                }
                 Promise<Object> request = new Promise<Object>();
                 request.complete(new Action<Object>() {
                     public void call(Object result) throws Throwable {

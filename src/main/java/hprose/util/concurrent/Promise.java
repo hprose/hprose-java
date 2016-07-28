@@ -1028,12 +1028,14 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     public final Promise<V> whenComplete(final Action<?> action) {
         return then(
             new Func<V, V>() {
+                @SuppressWarnings("unchecked")
                 public V call(final V value) throws Throwable {
                    ((Action<V>)action).call(value);
                     return value;
                 }
             },
             new Func<V, Throwable>() {
+                @SuppressWarnings("unchecked")
                 public V call(final Throwable e) throws Throwable {
                     ((Action<Throwable>)action).call(e);
                     throw e;

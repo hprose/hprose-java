@@ -76,6 +76,10 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         });
     }
 
+    private static class InvalidRequestException extends Exception {}
+
+    private final static InvalidRequestException invalidRequestException = new InvalidRequestException();
+
     public HproseService() {
         add("call", new Callable<Integer>() {
             private final AtomicInteger next = new AtomicInteger(0);
@@ -1101,8 +1105,8 @@ public abstract class HproseService extends HandlerManager implements HproseClie
     private Promise<?> setRequestTimer(final String topic, final Integer id, Promise<?> request, int timeout) {
         final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
         if (timeout > 0) {
-            return request.timeout(timeout).catchError(new Action<Throwable>() {
-                public void call(Throwable e) throws Throwable {
+            return request.timeout(timeout).catchError(new AsyncFunc<Object, Throwable>() {
+                public Promise<Object> call(Throwable e) throws Throwable {
                     final Topic t = topics.get(id);
                     if (e instanceof TimeoutException) {
                         new Runnable() {
@@ -1118,8 +1122,12 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                         }.run();
                     }
                     else {
+                        if (e instanceof InvalidRequestException) {
+                            return new Promise();
+                        }
                         t.count.decrementAndGet();
                     }
+                    return null;
                 }
             });
         }
@@ -1162,6 +1170,9 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                     if (pushEvent != null) {
                         pushEvent.subscribe(topic, id, HproseService.this);
                     }
+                }
+                if (t.request != null) {
+                    t.request.reject(invalidRequestException);
                 }
                 Promise<Object> request = new Promise<Object>();
                 request.complete(new Action<Object>() {
@@ -1279,6 +1290,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
             try {
                 t.request.resolve(result);
                 t.request = null;
+                setTimer(topics, topic, id);
                 return Promise.value(true);
             }
             catch (NullPointerException e) {}

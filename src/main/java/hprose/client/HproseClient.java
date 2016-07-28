@@ -67,7 +67,7 @@ public abstract class HproseClient extends HandlerManager {
     private HproseMode mode;
     private int timeout = 30000;
     private int retry = 10;
-    private boolean idempontent = false;
+    private boolean idempotent = false;
     private boolean failswitch = false;
     private boolean byref = false;
     private boolean simple = false;
@@ -166,12 +166,12 @@ public abstract class HproseClient extends HandlerManager {
         this.retry = retry;
     }
 
-    public final boolean isIdempontent() {
-        return idempontent;
+    public final boolean isIdempotent() {
+        return idempotent;
     }
 
-    public final void setIdempontent(boolean idempontent) {
-        this.idempontent = idempontent;
+    public final void setIdempotent(boolean idempotent) {
+        this.idempotent = idempotent;
     }
 
     public final boolean isFailswitch() {

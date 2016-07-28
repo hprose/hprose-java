@@ -31,7 +31,7 @@ public class ClientContext extends HproseContext {
         settings.setByref(client.isByref());
         settings.setSimple(client.isSimple());
         settings.setFailswitch(client.isFailswitch());
-        settings.setIdempotent(client.isIdempontent());
+        settings.setIdempotent(client.isIdempotent());
         settings.setRetry(client.getRetry());
         settings.setTimeout(client.getTimeout());
         settings.setOneway(false);

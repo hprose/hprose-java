@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Jul 28, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -822,7 +822,12 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final void resolve(Promise<V> value) {
-        value.fill(this);
+        if (value == null) {
+            _resolve(null);
+        }
+        else {
+            value.fill(this);
+        }
     }
 
     public final void reject(Throwable e) {

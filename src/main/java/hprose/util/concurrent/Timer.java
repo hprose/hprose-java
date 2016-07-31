@@ -12,7 +12,7 @@
  *                                                        *
  * Timer class for Java.                                  *
  *                                                        *
- * LastModified: Apr 21, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -45,7 +45,7 @@ public class Timer {
     private volatile Future<?> timeoutID = null;
     public synchronized void clear() {
         if (timeoutID != null) {
-            timeoutID.cancel(false);
+            timeoutID.cancel(true);
             timeoutID = null;
         }
     }

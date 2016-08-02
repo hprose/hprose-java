@@ -12,7 +12,7 @@
  *                                                        *
  * Class Util class for Java.                             *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Aug 2, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -125,6 +125,17 @@ public final class ClassUtil {
         return type;
     }
 
+
+    private static Class<?> toClass(Type[] bounds) {
+        if (bounds.length == 1) {
+            Type boundType = bounds[0];
+            if (boundType instanceof Class<?>) {
+                return (Class<?>) boundType;
+            }
+        }
+        return Object.class;
+    }
+
     public final static Class<?> toClass(Type type) {
         if (type == null) {
             return null;
@@ -133,25 +144,10 @@ public final class ClassUtil {
             return (Class<?>) type;
         }
         else if (type instanceof WildcardType) {
-            WildcardType wildcardType = (WildcardType) type;
-            if (wildcardType.getUpperBounds().length == 1) {
-                Type upperBoundType = wildcardType.getUpperBounds()[0];
-                if (upperBoundType instanceof Class<?>) {
-                    return (Class<?>) upperBoundType;
-                }
-            }
-            return Object.class;
+            return toClass(((WildcardType) type).getUpperBounds());
         }
         else if (type instanceof TypeVariable) {
-            TypeVariable typeVariable = (TypeVariable) type;
-            Type[] bounds = typeVariable.getBounds();
-            if (bounds.length == 1) {
-                Type boundType = bounds[0];
-                if (boundType instanceof Class<?>) {
-                    return (Class<?>) boundType;
-                }
-            }
-            return Object.class;
+            return toClass(((TypeVariable) type).getBounds());
         }
         else if (type instanceof ParameterizedType) {
             return toClass(((ParameterizedType) type).getRawType());
@@ -164,4 +160,24 @@ public final class ClassUtil {
         }
     }
 
+    public final static Type getComponentType(Type type) {
+        return (type instanceof GenericArrayType) ?
+                ((GenericArrayType) type).getGenericComponentType() :
+                (type instanceof ParameterizedType) ?
+                ((ParameterizedType)type).getActualTypeArguments()[0] :
+                ((Class<?>) type).isArray() ?
+                ((Class<?>) type).getComponentType() : Object.class;
+    }
+
+    public final static Type getKeyType(Type type) {
+        return (type instanceof ParameterizedType) ?
+                ((ParameterizedType)type).getActualTypeArguments()[0] :
+                Object.class;
+    }
+
+    public final static Type getValueType(Type type) {
+        return (type instanceof ParameterizedType) ?
+                ((ParameterizedType)type).getActualTypeArguments()[1] :
+                Object.class;
+    }
 }

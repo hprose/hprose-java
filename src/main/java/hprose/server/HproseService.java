@@ -752,6 +752,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         switch (remoteMethod.mode) {
             case RawWithEndTag:
                 data.write((byte[])result);
+                data.flip();
                 return data.buffer;
             case Raw:
                 data.write((byte[])result);

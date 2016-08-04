@@ -193,6 +193,6 @@ public final class ClassUtil {
                 }
             }
         }
-        return Object.class;
+        return paramType;
     }
 }

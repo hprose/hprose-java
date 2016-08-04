@@ -12,13 +12,14 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import hprose.util.CaseInsensitiveMap;
 import hprose.util.DateTime;
 import hprose.util.JdkVersion;
 import hprose.util.LinkedCaseInsensitiveMap;
@@ -129,6 +130,7 @@ public final class UnserializerFactory {
         unserializers.put(SortedSet.class, TreeSetUnserializer.instance);
         unserializers.put(LinkedCaseInsensitiveMap.class, LinkedCaseInsensitiveMapUnserializer.instance);
         unserializers.put(LinkedHashMap.class, LinkedHashMapUnserializer.instance);
+        unserializers.put(CaseInsensitiveMap.class, CaseInsensitiveMapUnserializer.instance);
         unserializers.put(HashMap.class, HashMapUnserializer.instance);
         unserializers.put(AbstractMap.class, HashMapUnserializer.instance);
         unserializers.put(Map.class, LinkedHashMapUnserializer.instance);

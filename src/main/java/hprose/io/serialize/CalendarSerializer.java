@@ -12,7 +12,7 @@
  *                                                        *
  * Calendar serializer class for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,12 +27,13 @@ import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-final class CalendarSerializer implements Serializer<Calendar> {
+final class CalendarSerializer extends ReferenceSerializer<Calendar> {
 
     public final static CalendarSerializer instance = new CalendarSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Calendar calendar) throws IOException {
-        if (refer != null) refer.set(calendar);
+    @Override
+    public final void serialize(Writer writer, Calendar calendar) throws IOException {
+        super.serialize(writer, calendar);
         TimeZone tz = calendar.getTimeZone();
         if (!(tz.hasSameRules(TimeZoneUtil.DefaultTZ) || tz.hasSameRules(TimeZoneUtil.UTC))) {
             tz = TimeZoneUtil.UTC;
@@ -40,16 +41,9 @@ final class CalendarSerializer implements Serializer<Calendar> {
             c.setTimeZone(tz);
             calendar = c;
         }
+        OutputStream stream = writer.stream;
         ValueWriter.writeDateOfCalendar(stream, calendar);
         ValueWriter.writeTimeOfCalendar(stream, calendar, true, false);
         stream.write(tz.hasSameRules(TimeZoneUtil.UTC) ? TagUTC : TagSemicolon);
-    }
-
-    public final void write(Writer writer, Calendar obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

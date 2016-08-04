@@ -20,69 +20,23 @@
 package hprose.io.unserialize;
 
 import static hprose.io.HproseTags.TagEmpty;
-import static hprose.io.HproseTags.TagNull;
-import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.util.TimeZone;
 
-final class TimeZoneUnserializer implements Unserializer {
+public final class TimeZoneUnserializer extends BaseUnserializer<TimeZone> {
 
     public final static TimeZoneUnserializer instance = new TimeZoneUnserializer();
 
-    final static TimeZone readTimeZone(Reader reader, ByteBuffer buffer) throws IOException {
-        TimeZone tz = TimeZone.getTimeZone(ValueReader.readString(buffer));
-        reader.refer.set(tz);
-        return tz;
+    @Override
+    public TimeZone unserialize(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagString) return TimeZone.getTimeZone(ReferenceReader.readString(reader));
+        if (tag == TagEmpty) return null;
+        return super.unserialize(reader, tag, type);
     }
 
-    final static TimeZone readTimeZone(Reader reader, InputStream stream) throws IOException {
-        TimeZone tz = TimeZone.getTimeZone(ValueReader.readString(stream));
-        reader.refer.set(tz);
-        return tz;
+    public TimeZone read(Reader reader) throws IOException {
+        return read(reader, TimeZone.class);
     }
-
-    private static TimeZone toTimeZone(Object obj) throws IOException {
-        if (obj instanceof TimeZone) {
-            return (TimeZone)obj;
-        }
-        if (obj instanceof char[]) {
-            return TimeZone.getTimeZone(new String((char[])obj));
-        }
-        return TimeZone.getTimeZone(obj.toString());
-    }
-
-    final static TimeZone read(Reader reader, ByteBuffer buffer) throws IOException {
-        int tag = buffer.get();
-        switch (tag) {
-            case TagNull:
-            case TagEmpty: return null;
-            case TagString: return readTimeZone(reader, buffer);
-            case TagRef: return toTimeZone(reader.readRef(buffer));
-            default: throw ValueReader.castError(reader.tagToString(tag), TimeZone.class);
-        }
-    }
-
-    final static TimeZone read(Reader reader, InputStream stream) throws IOException {
-        int tag = stream.read();
-        switch (tag) {
-            case TagNull:
-            case TagEmpty: return null;
-            case TagString: return readTimeZone(reader, stream);
-            case TagRef: return toTimeZone(reader.readRef(stream));
-            default: throw ValueReader.castError(reader.tagToString(tag), TimeZone.class);
-        }
-    }
-
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(reader, buffer);
-    }
-
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(reader, stream);
-    }
-
 }

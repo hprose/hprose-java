@@ -12,7 +12,7 @@
  *                                                        *
  * short array serializer class for Java.                 *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,14 +25,16 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class ShortArraySerializer implements Serializer<short[]> {
+final class ShortArraySerializer extends ReferenceSerializer<short[]> {
 
     public final static ShortArraySerializer instance = new ShortArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, short[] array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length;
+    @Override
+    public final void serialize(Writer writer, short[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length;
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -41,13 +43,5 @@ final class ShortArraySerializer implements Serializer<short[]> {
             ValueWriter.write(stream, array[i]);
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, short[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

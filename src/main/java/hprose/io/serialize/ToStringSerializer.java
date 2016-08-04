@@ -12,7 +12,7 @@
  *                                                        *
  * to string serializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,17 +23,16 @@ import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class ToStringSerializer implements Serializer {
+final class ToStringSerializer extends ReferenceSerializer {
 
     public final static ToStringSerializer instance = new ToStringSerializer();
 
-    public final void write(Writer writer, Object obj) throws IOException {
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public final void serialize(Writer writer, Object obj) throws IOException {
+        super.serialize(writer, obj);
         OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            if (refer != null) refer.set(obj);
-            stream.write(TagString);
-            ValueWriter.write(stream, obj.toString());
-        }
+        stream.write(TagString);
+        ValueWriter.write(stream, obj.toString());
     }
 }

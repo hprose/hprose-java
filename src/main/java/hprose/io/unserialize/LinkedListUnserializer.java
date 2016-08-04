@@ -12,29 +12,29 @@
  *                                                        *
  * LinkedList unserializer class for Java.                *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagList;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
-final class LinkedListUnserializer implements Unserializer {
+public final class LinkedListUnserializer extends BaseUnserializer<LinkedList> {
 
     public final static LinkedListUnserializer instance = new LinkedListUnserializer();
 
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return CollectionUnserializer.readCollection(reader, buffer, LinkedList.class, type);
+    @Override
+    public LinkedList unserialize(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagList) return ReferenceReader.readLinkedList(reader, type);
+        return super.unserialize(reader, tag, type);
     }
 
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return CollectionUnserializer.readCollection(reader, stream, LinkedList.class, type);
+    public LinkedList read(Reader reader) throws IOException {
+        return read(reader, LinkedList.class);
     }
-
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * UUID serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,23 +26,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.UUID;
 
-final class UUIDSerializer implements Serializer<UUID> {
+final class UUIDSerializer extends ReferenceSerializer<UUID> {
 
     public final static UUIDSerializer instance = new UUIDSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, UUID uuid) throws IOException {
-        if (refer != null) refer.set(uuid);
+    @Override
+    public final void serialize(Writer writer, UUID uuid) throws IOException {
+        super.serialize(writer, uuid);
+        OutputStream stream = writer.stream;
         stream.write(TagGuid);
         stream.write(TagOpenbrace);
         stream.write(ValueWriter.getAscii(uuid.toString()));
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, UUID obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

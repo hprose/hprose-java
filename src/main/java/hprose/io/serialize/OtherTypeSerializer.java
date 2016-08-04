@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: May 19, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,8 +25,8 @@ import static hprose.io.HproseTags.TagClosebrace;
 import static hprose.io.HproseTags.TagObject;
 import static hprose.io.HproseTags.TagOpenbrace;
 import static hprose.io.HproseTags.TagString;
-import hprose.io.accessor.Accessors;
-import hprose.io.accessor.MemberAccessor;
+import hprose.io.access.Accessors;
+import hprose.io.access.MemberAccessor;
 import hprose.util.ClassUtil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-final class OtherTypeSerializer implements Serializer {
+final class OtherTypeSerializer extends ReferenceSerializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 
@@ -91,26 +91,20 @@ final class OtherTypeSerializer implements Serializer {
         return cr;
     }
 
+    @Override
     @SuppressWarnings({"unchecked"})
-    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Object object) throws IOException {
+    public final void serialize(Writer writer, Object object) throws IOException {
+        OutputStream stream = writer.stream;
         Class<?> type = object.getClass();
         Integer cr = writer.classref.get(type);
         if (cr == null) {
             cr = writeClass(writer, type);
         }
-        if (refer != null) refer.set(object);
+        super.serialize(writer, object);
         stream.write(TagObject);
         ValueWriter.writeInt(stream, cr);
         stream.write(TagOpenbrace);
         writeObject(writer, object, type);
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Object obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(writer, stream, refer, obj);
-        }
     }
 }

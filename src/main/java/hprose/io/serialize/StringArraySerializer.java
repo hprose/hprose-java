@@ -12,7 +12,7 @@
  *                                                        *
  * String array serializer class for Java.                *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,14 +26,16 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class StringArraySerializer implements Serializer<String[]> {
+final class StringArraySerializer extends ReferenceSerializer<String[]> {
 
     public final static StringArraySerializer instance = new StringArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, String[] array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length;
+    @Override
+    public final void serialize(Writer writer, String[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length;
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -43,18 +45,10 @@ final class StringArraySerializer implements Serializer<String[]> {
             if (e == null) {
                 stream.write(TagNull);
             }
-            else if (refer == null || !refer.write(stream, e)) {
-                StringSerializer.write(stream, refer, e);
+            else {
+                StringSerializer.instance.write(writer, e);
             }
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, String[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * other type array serializer class for Java.            *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,12 +26,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 
-final class OtherTypeArraySerializer implements Serializer {
+final class OtherTypeArraySerializer extends ReferenceSerializer {
 
     public final static OtherTypeArraySerializer instance = new OtherTypeArraySerializer();
 
-    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, Object array) throws IOException {
-        if (refer != null) refer.set(array);
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public final void serialize(Writer writer, Object array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         int length = Array.getLength(array);
         stream.write(TagList);
         if (length > 0) {
@@ -42,13 +45,5 @@ final class OtherTypeArraySerializer implements Serializer {
             writer.serialize(Array.get(array, i));
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Object obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(writer, stream, refer, obj);
-        }
     }
 }

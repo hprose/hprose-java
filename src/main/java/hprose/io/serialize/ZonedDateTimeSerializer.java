@@ -12,7 +12,7 @@
  *                                                        *
  * ZonedDateTime serializer class for Java.               *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,12 +26,14 @@ import java.io.OutputStream;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-final class ZonedDateTimeSerializer implements Serializer<ZonedDateTime> {
+final class ZonedDateTimeSerializer extends ReferenceSerializer<ZonedDateTime> {
 
     public final static ZonedDateTimeSerializer instance = new ZonedDateTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, ZonedDateTime datetime) throws IOException {
-        if (refer != null) refer.set(datetime);
+    @Override
+    public final void serialize(Writer writer, ZonedDateTime datetime) throws IOException {
+        super.serialize(writer, datetime);
+        OutputStream stream = writer.stream;
         if (!(datetime.getOffset().equals(ZoneOffset.UTC))) {
             stream.write(TagString);
             ValueWriter.write(stream, datetime.toString());
@@ -48,14 +50,6 @@ final class ZonedDateTimeSerializer implements Serializer<ZonedDateTime> {
                 ValueWriter.writeNano(stream, datetime.getNano());
                 stream.write(TagUTC);
             }
-        }
-    }
-
-    public final void write(Writer writer, ZonedDateTime obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
         }
     }
 }

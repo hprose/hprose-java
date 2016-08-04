@@ -12,7 +12,7 @@
  *                                                        *
  * List serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,14 +28,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
 
-final class ListSerializer implements Serializer<List> {
+final class ListSerializer<T> extends ReferenceSerializer<List<T>> {
 
     public final static ListSerializer instance = new ListSerializer();
 
-    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, List list) throws IOException {
-        if (refer != null) refer.set(list);
-        int count = list.size();
+    @Override
+    public final void serialize(Writer writer, List<T> list) throws IOException {
+        super.serialize(writer, list);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int count = list.size();
         if (count > 0) {
             ValueWriter.writeInt(stream, count);
         }
@@ -46,18 +48,10 @@ final class ListSerializer implements Serializer<List> {
             }
         }
         else {
-            for (Iterator i = list.iterator(); i.hasNext();) {
+            for (Iterator<T> i = list.iterator(); i.hasNext();) {
                 writer.serialize(i.next());
             }
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, List obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(writer, stream, refer, obj);
-        }
     }
 }

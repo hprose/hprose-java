@@ -12,7 +12,7 @@
  *                                                        *
  * Calendar array serializer class for Java.              *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Calendar;
 
-final class CalendarArraySerializer implements Serializer<Calendar[]> {
+final class CalendarArraySerializer extends ReferenceSerializer<Calendar[]> {
 
     public final static CalendarArraySerializer instance = new CalendarArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Calendar[] array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length;
+    @Override
+    public final void serialize(Writer writer, Calendar[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length;
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -44,18 +46,10 @@ final class CalendarArraySerializer implements Serializer<Calendar[]> {
             if (e == null) {
                 stream.write(TagNull);
             }
-            else if (refer == null || !refer.write(stream, e)) {
-                CalendarSerializer.write(stream, refer, e);
+            else {
+                CalendarSerializer.instance.write(writer, e);
             }
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Calendar[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

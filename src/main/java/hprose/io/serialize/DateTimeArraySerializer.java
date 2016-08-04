@@ -12,7 +12,7 @@
  *                                                        *
  * DateTime array serializer class for Java.              *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 
-final class DateTimeArraySerializer implements Serializer<Date[]> {
+final class DateTimeArraySerializer extends ReferenceSerializer<Date[]> {
 
     public final static DateTimeArraySerializer instance = new DateTimeArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Date[] array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length;
+    @Override
+    public final void serialize(Writer writer, Date[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length;
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -44,18 +46,10 @@ final class DateTimeArraySerializer implements Serializer<Date[]> {
             if (e == null) {
                 stream.write(TagNull);
             }
-            else if (refer == null || !refer.write(stream, e)) {
-                DateTimeSerializer.write(stream, refer, e);
+            else {
+                DateTimeSerializer.instance.write(writer, e);
             }
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Date[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

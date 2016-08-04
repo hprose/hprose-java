@@ -12,29 +12,32 @@
  *                                                        *
  * AtomicIntegerArray unserializer class for Java.        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagNull;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-final class AtomicIntegerArrayUnserializer implements Unserializer {
+public final class AtomicIntegerArrayUnserializer implements Unserializer<AtomicIntegerArray> {
 
     public final static AtomicIntegerArrayUnserializer instance = new AtomicIntegerArrayUnserializer();
 
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return new AtomicIntegerArray(IntArrayUnserializer.read(reader, buffer));
+    public AtomicIntegerArray read(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagNull) return null;
+        return new AtomicIntegerArray(IntArrayUnserializer.instance.read(reader, tag, int[].class));
     }
 
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return new AtomicIntegerArray(IntArrayUnserializer.read(reader, stream));
+    public AtomicIntegerArray read(Reader reader, Type type) throws IOException {
+       return read(reader, reader.stream.read(), type);
     }
 
+    public AtomicIntegerArray read(Reader reader) throws IOException {
+       return read(reader, AtomicIntegerArray.class);
+    }
 }

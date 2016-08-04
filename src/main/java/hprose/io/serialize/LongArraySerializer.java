@@ -12,7 +12,7 @@
  *                                                        *
  * long array serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,12 +25,14 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class LongArraySerializer implements Serializer<long[]> {
+final class LongArraySerializer extends ReferenceSerializer<long[]> {
 
     public final static LongArraySerializer instance = new LongArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, long[] array) throws IOException {
-        if (refer != null) refer.set(array);
+    @Override
+    public final void serialize(Writer writer, long[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         int length = array.length;
         stream.write(TagList);
         if (length > 0) {
@@ -41,13 +43,5 @@ final class LongArraySerializer implements Serializer<long[]> {
             ValueWriter.write(stream, array[i]);
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, long[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

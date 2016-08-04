@@ -12,7 +12,7 @@
  *                                                        *
  * String unserializer class for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,100 +28,44 @@ import static hprose.io.HproseTags.TagInfinity;
 import static hprose.io.HproseTags.TagInteger;
 import static hprose.io.HproseTags.TagLong;
 import static hprose.io.HproseTags.TagNaN;
-import static hprose.io.HproseTags.TagNull;
 import static hprose.io.HproseTags.TagPos;
-import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagSemicolon;
 import static hprose.io.HproseTags.TagString;
 import static hprose.io.HproseTags.TagTime;
 import static hprose.io.HproseTags.TagTrue;
 import static hprose.io.HproseTags.TagUTF8Char;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 
-final class StringUnserializer implements Unserializer {
+public final class StringUnserializer extends BaseUnserializer<String> {
 
     public final static StringUnserializer instance = new StringUnserializer();
 
-    final static String readString(Reader reader, ByteBuffer buffer) throws IOException {
-        String str = ValueReader.readString(buffer);
-        reader.refer.set(str);
-        return str;
-    }
-
-    final static String readString(Reader reader, InputStream stream) throws IOException {
-        String str = ValueReader.readString(stream);
-        reader.refer.set(str);
-        return str;
-    }
-
-    private static String toString(Object obj) {
-        if (obj instanceof char[]) {
-            return new String((char[])obj);
-        }
-        return obj.toString();
-    }
-
-    final static String read(Reader reader, ByteBuffer buffer) throws IOException {
-        int tag = buffer.get();
+    @Override
+    public String unserialize(Reader reader, int tag, Type type) throws IOException {
         switch (tag) {
             case TagEmpty: return "";
-            case TagNull: return null;
-            case TagString: return readString(reader, buffer);
-            case TagUTF8Char: return ValueReader.readUTF8Char(buffer);
-            case TagInteger: return ValueReader.readUntil(buffer, TagSemicolon).toString();
-            case TagLong: return ValueReader.readUntil(buffer, TagSemicolon).toString();
-            case TagDouble: return ValueReader.readUntil(buffer, TagSemicolon).toString();
-            case TagRef: return toString(reader.readRef(buffer));
+            case TagString: return ReferenceReader.readString(reader);
+            case TagUTF8Char: return ValueReader.readUTF8Char(reader);
+            case TagInteger: return ValueReader.readUntil(reader, TagSemicolon).toString();
+            case TagLong: return ValueReader.readUntil(reader, TagSemicolon).toString();
+            case TagDouble: return ValueReader.readUntil(reader, TagSemicolon).toString();
         }
-        if (tag >= '0' && tag <= '9') return String.valueOf((char)tag);
+        if (tag >= '0' && tag <= '9') return String.valueOf((char) tag);
         switch (tag) {
             case TagTrue: return "true";
             case TagFalse: return "false";
             case TagNaN: return "NaN";
-            case TagInfinity: return (buffer.get() == TagPos) ?
+            case TagInfinity: return (reader.stream.read() == TagPos) ?
                                                  "Infinity" : "-Infinity";
-            case TagDate: return DefaultUnserializer.readDateTime(reader, buffer).toString();
-            case TagTime: return DefaultUnserializer.readTime(reader, buffer).toString();
-            case TagGuid: return UUIDUnserializer.readUUID(reader, buffer).toString();
-            default: throw ValueReader.castError(reader.tagToString(tag), String.class);
+            case TagDate: return ReferenceReader.readDateTime(reader).toString();
+            case TagTime: return ReferenceReader.readTime(reader).toString();
+            case TagGuid: return ReferenceReader.readUUID(reader).toString();
         }
+        return super.unserialize(reader, tag, type);
     }
 
-    final static String read(Reader reader, InputStream stream) throws IOException {
-        int tag = stream.read();
-        switch (tag) {
-            case TagEmpty: return "";
-            case TagNull: return null;
-            case TagString: return readString(reader, stream);
-            case TagUTF8Char: return ValueReader.readUTF8Char(stream);
-            case TagInteger: return ValueReader.readUntil(stream, TagSemicolon).toString();
-            case TagLong: return ValueReader.readUntil(stream, TagSemicolon).toString();
-            case TagDouble: return ValueReader.readUntil(stream, TagSemicolon).toString();
-            case TagRef: return toString(reader.readRef(stream));
-        }
-        if (tag >= '0' && tag <= '9') return String.valueOf((char)tag);
-        switch (tag) {
-            case TagTrue: return "true";
-            case TagFalse: return "false";
-            case TagNaN: return "NaN";
-            case TagInfinity: return (stream.read() == TagPos) ?
-                                                 "Infinity" : "-Infinity";
-            case TagDate: return DefaultUnserializer.readDateTime(reader, stream).toString();
-            case TagTime: return DefaultUnserializer.readTime(reader, stream).toString();
-            case TagGuid: return UUIDUnserializer.readUUID(reader, stream).toString();
-            default: throw ValueReader.castError(reader.tagToString(tag), String.class);
-        }
+    public String read(Reader reader) throws IOException {
+        return read(reader, String.class);
     }
-
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(reader, buffer);
-    }
-
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(reader, stream);
-    }
-
 }

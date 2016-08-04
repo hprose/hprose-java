@@ -12,7 +12,7 @@
  *                                                        *
  * ZoneId unserializer class for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,69 +20,23 @@
 package hprose.io.unserialize;
 
 import static hprose.io.HproseTags.TagEmpty;
-import static hprose.io.HproseTags.TagNull;
-import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.time.ZoneId;
 
-final class ZoneIdUnserializer implements Unserializer {
+public final class ZoneIdUnserializer extends BaseUnserializer<ZoneId> {
 
     public final static ZoneIdUnserializer instance = new ZoneIdUnserializer();
 
-    final static ZoneId readZoneId(Reader reader, ByteBuffer buffer) throws IOException {
-        ZoneId tz = ZoneId.of(ValueReader.readString(buffer));
-        reader.refer.set(tz);
-        return tz;
+    @Override
+    public ZoneId unserialize(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagString) return ZoneId.of(ReferenceReader.readString(reader));
+        if (tag == TagEmpty) return null;
+        return super.unserialize(reader, tag, type);
     }
 
-    final static ZoneId readZoneId(Reader reader, InputStream stream) throws IOException {
-        ZoneId tz = ZoneId.of(ValueReader.readString(stream));
-        reader.refer.set(tz);
-        return tz;
+    public ZoneId read(Reader reader) throws IOException {
+        return read(reader, ZoneId.class);
     }
-
-    private static ZoneId toZoneId(Object obj) throws IOException {
-        if (obj instanceof ZoneId) {
-            return (ZoneId)obj;
-        }
-        if (obj instanceof char[]) {
-            return ZoneId.of(new String((char[])obj));
-        }
-        return ZoneId.of(obj.toString());
-    }
-
-    final static ZoneId read(Reader reader, ByteBuffer buffer) throws IOException {
-        int tag = buffer.get();
-        switch (tag) {
-            case TagNull:
-            case TagEmpty: return null;
-            case TagString: return readZoneId(reader, buffer);
-            case TagRef: return toZoneId(reader.readRef(buffer));
-            default: throw ValueReader.castError(reader.tagToString(tag), ZoneId.class);
-        }
-    }
-
-    final static ZoneId read(Reader reader, InputStream stream) throws IOException {
-        int tag = stream.read();
-        switch (tag) {
-            case TagNull:
-            case TagEmpty: return null;
-            case TagString: return readZoneId(reader, stream);
-            case TagRef: return toZoneId(reader.readRef(stream));
-            default: throw ValueReader.castError(reader.tagToString(tag), ZoneId.class);
-        }
-    }
-
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(reader, buffer);
-    }
-
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(reader, stream);
-    }
-
 }

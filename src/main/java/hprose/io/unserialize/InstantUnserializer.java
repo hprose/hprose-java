@@ -12,7 +12,7 @@
  *                                                        *
  * Instant unserializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,85 +24,34 @@ import static hprose.io.HproseTags.TagDouble;
 import static hprose.io.HproseTags.TagEmpty;
 import static hprose.io.HproseTags.TagInteger;
 import static hprose.io.HproseTags.TagLong;
-import static hprose.io.HproseTags.TagNull;
-import static hprose.io.HproseTags.TagRef;
 import static hprose.io.HproseTags.TagString;
 import static hprose.io.HproseTags.TagTime;
-import hprose.util.DateTime;
-import hprose.util.TimeZoneUtil;
+import hprose.io.convert.InstantConverter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
-final class InstantUnserializer implements Unserializer {
+public final class InstantUnserializer extends BaseUnserializer<Instant> {
 
     public final static InstantUnserializer instance = new InstantUnserializer();
 
-    private static Instant toInstant(DateTime dt) {
-        return OffsetDateTime.of(dt.year, dt.month, dt.day,
-                dt.hour, dt.minute, dt.second, dt.nanosecond,
-                dt.utc ? ZoneOffset.UTC :
-                         ZoneOffset.of(TimeZoneUtil.DefaultTZ.getID())).toInstant();
-    }
-
-    private static Instant toInstant(Object obj) {
-        if (obj instanceof DateTime) {
-            return toInstant((DateTime)obj);
-        }
-        if (obj instanceof char[]) {
-            return Instant.parse(new String((char[])obj));
-        }
-        return Instant.parse(obj.toString());
-    }
-
-    final static Instant read(Reader reader, ByteBuffer buffer) throws IOException {
-        int tag = buffer.get();
+    @Override
+    public Instant unserialize(Reader reader, int tag, Type type) throws IOException {
+        InstantConverter converter = InstantConverter.instance;
         switch (tag) {
-            case TagDate: return toInstant(DefaultUnserializer.readDateTime(reader, buffer));
-            case TagTime: return toInstant(DefaultUnserializer.readTime(reader, buffer));
-            case TagNull:
+            case TagDate: return converter.convertTo(ReferenceReader.readDateTime(reader));
+            case TagTime:  return converter.convertTo(ReferenceReader.readTime(reader));
             case TagEmpty: return null;
-            case TagString: return Instant.parse(StringUnserializer.readString(reader, buffer));
-            case TagRef: return toInstant(reader.readRef(buffer));
-        }
-        if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
-        switch (tag) {
+            case TagString: return converter.convertTo(ReferenceReader.readString(reader));
             case TagInteger:
-            case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(buffer));
-            case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(buffer)).longValue());
-            default: throw ValueReader.castError(reader.tagToString(tag), Instant.class);
+            case TagLong: return converter.convertTo(ValueReader.readLong(reader));
+            case TagDouble: return converter.convertTo(ValueReader.readDouble(reader));
         }
+        if (tag >= '0' && tag <= '9') return converter.convertTo(tag - '0');
+        return super.unserialize(reader, tag, type);
     }
 
-    final static Instant read(Reader reader, InputStream stream) throws IOException {
-        int tag = stream.read();
-        switch (tag) {
-            case TagDate: return toInstant(DefaultUnserializer.readDateTime(reader, stream));
-            case TagTime: return toInstant(DefaultUnserializer.readTime(reader, stream));
-            case TagNull:
-            case TagEmpty: return null;
-            case TagString: return Instant.parse(StringUnserializer.readString(reader, stream));
-            case TagRef: return toInstant(reader.readRef(stream));
-        }
-        if (tag >= '0' && tag <= '9') return Instant.ofEpochMilli(tag - '0');
-        switch (tag) {
-            case TagInteger:
-            case TagLong: return Instant.ofEpochMilli(ValueReader.readLong(stream));
-            case TagDouble: return Instant.ofEpochMilli(Double.valueOf(ValueReader.readDouble(stream)).longValue());
-            default: throw ValueReader.castError(reader.tagToString(tag), Instant.class);
-        }
+    public Instant read(Reader reader) throws IOException {
+        return read(reader, Instant.class);
     }
-
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return read(reader, buffer);
-    }
-
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return read(reader, stream);
-    }
-
 }

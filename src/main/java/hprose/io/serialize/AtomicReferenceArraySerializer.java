@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReferenceArray serializer class for Java.        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,14 +26,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-final class AtomicReferenceArraySerializer implements Serializer<AtomicReferenceArray> {
+final class AtomicReferenceArraySerializer extends ReferenceSerializer<AtomicReferenceArray> {
 
     public final static AtomicReferenceArraySerializer instance = new AtomicReferenceArraySerializer();
 
-    public final static void write(Writer writer, OutputStream stream, WriterRefer refer, AtomicReferenceArray array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length();
+    @Override
+    public final void serialize(Writer writer, AtomicReferenceArray array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length();
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -42,13 +44,5 @@ final class AtomicReferenceArraySerializer implements Serializer<AtomicReference
             writer.serialize(array.get(i));
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, AtomicReferenceArray obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(writer, stream, refer, obj);
-        }
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * Map serializer class for Java.                         *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,12 +27,14 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-final class MapSerializer implements Serializer<Map<?, ?>> {
+final class MapSerializer<K, V> extends ReferenceSerializer<Map<K, V>> {
 
     public final static MapSerializer instance = new MapSerializer();
 
-    public final static <K, V> void write(Writer writer, OutputStream stream, WriterRefer refer, Map<K, V> map) throws IOException {
-        if (refer != null) refer.set(map);
+    @Override
+    public final void serialize(Writer writer, Map<K, V> map) throws IOException {
+        super.serialize(writer, map);
+        OutputStream stream = writer.stream;
         int count = map.size();
         stream.write(TagMap);
         if (count > 0) {
@@ -46,13 +48,5 @@ final class MapSerializer implements Serializer<Map<?, ?>> {
             writer.serialize(entry.getValue());
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Map<?, ?> obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(writer, stream, refer, obj);
-        }
     }
 }

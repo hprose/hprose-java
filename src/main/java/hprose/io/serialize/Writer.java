@@ -12,7 +12,7 @@
  *                                                        *
  * hprose writer class for Java.                          *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -126,7 +126,7 @@ public class Writer {
     }
 
     public final void writeDate(Date date) throws IOException {
-        DateSerializer.write(stream, refer, date);
+        DateSerializer.instance.serialize(this, date);
     }
 
     public final void writeDateWithRef(Date date) throws IOException {
@@ -134,7 +134,7 @@ public class Writer {
     }
 
     public final void writeDate(Time time) throws IOException {
-        TimeSerializer.write(stream, refer, time);
+        TimeSerializer.instance.serialize(this, time);
     }
 
     public final void writeDateWithRef(Time time) throws IOException {
@@ -142,7 +142,7 @@ public class Writer {
     }
 
     public final void writeDate(Timestamp time) throws IOException {
-        TimestampSerializer.write(stream, refer, time);
+        TimestampSerializer.instance.serialize(this, time);
     }
 
     public final void writeDateWithRef(Timestamp time) throws IOException {
@@ -150,7 +150,7 @@ public class Writer {
     }
 
     public final void writeDate(java.util.Date date) throws IOException {
-        DateTimeSerializer.write(stream, refer, date);
+        DateTimeSerializer.instance.serialize(this, date);
     }
 
     public final void writeDateWithRef(java.util.Date date) throws IOException {
@@ -158,7 +158,7 @@ public class Writer {
     }
 
     public final void writeDate(Calendar calendar) throws IOException {
-        CalendarSerializer.write(stream, refer, calendar);
+        CalendarSerializer.instance.serialize(this, calendar);
     }
 
     public final void writeDateWithRef(Calendar calendar) throws IOException {
@@ -174,7 +174,7 @@ public class Writer {
     }
 
     public final void writeBytes(byte[] bytes) throws IOException {
-        ByteArraySerializer.write(stream, refer, bytes);
+        ByteArraySerializer.instance.serialize(this, bytes);
     }
 
     public final void writeBytesWithRef(byte[] bytes) throws IOException {
@@ -186,7 +186,7 @@ public class Writer {
     }
 
     public final void writeString(String s) throws IOException {
-        StringSerializer.write(stream, refer, s);
+        StringSerializer.instance.serialize(this, s);
     }
 
     public final void writeStringWithRef(String s) throws IOException {
@@ -194,7 +194,7 @@ public class Writer {
     }
 
     public final void writeString(StringBuilder s) throws IOException {
-        StringBuilderSerializer.write(stream, refer, s);
+        StringBuilderSerializer.instance.serialize(this, s);
     }
 
     public final void writeStringWithRef(StringBuilder s) throws IOException {
@@ -202,7 +202,7 @@ public class Writer {
     }
 
     public final void writeString(StringBuffer s) throws IOException {
-        StringBufferSerializer.write(stream, refer, s);
+        StringBufferSerializer.instance.serialize(this, s);
     }
 
     public final void writeStringWithRef(StringBuffer s) throws IOException {
@@ -210,7 +210,7 @@ public class Writer {
     }
 
     public final void writeString(char[] s) throws IOException {
-        CharArraySerializer.write(stream, refer, s);
+        CharArraySerializer.instance.serialize(this, s);
     }
 
     public final void writeStringWithRef(char[] s) throws IOException {
@@ -218,7 +218,7 @@ public class Writer {
     }
 
     public final void writeUUID(UUID uuid) throws IOException {
-        UUIDSerializer.write(stream, refer, uuid);
+        UUIDSerializer.instance.serialize(this, uuid);
     }
 
     public final void writeUUIDWithRef(UUID uuid) throws IOException {
@@ -226,7 +226,7 @@ public class Writer {
     }
 
     public final void writeArray(short[] array) throws IOException {
-        ShortArraySerializer.write(stream, refer, array);
+        ShortArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(short[] array) throws IOException {
@@ -234,7 +234,7 @@ public class Writer {
     }
 
     public final void writeArray(int[] array) throws IOException {
-        IntArraySerializer.write(stream, refer, array);
+        IntArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(int[] array) throws IOException {
@@ -242,7 +242,7 @@ public class Writer {
     }
 
     public final void writeArray(long[] array) throws IOException {
-        LongArraySerializer.write(stream, refer, array);
+        LongArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(long[] array) throws IOException {
@@ -250,7 +250,7 @@ public class Writer {
     }
 
     public final void writeArray(float[] array) throws IOException {
-        FloatArraySerializer.write(stream, refer, array);
+        FloatArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(float[] array) throws IOException {
@@ -258,7 +258,7 @@ public class Writer {
     }
 
     public final void writeArray(double[] array) throws IOException {
-        DoubleArraySerializer.write(stream, refer, array);
+        DoubleArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(double[] array) throws IOException {
@@ -266,7 +266,7 @@ public class Writer {
     }
 
     public final void writeArray(boolean[] array) throws IOException {
-        BooleanArraySerializer.write(stream, refer, array);
+        BooleanArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(boolean[] array) throws IOException {
@@ -274,7 +274,7 @@ public class Writer {
     }
 
     public final void writeArray(Date[] array) throws IOException {
-        DateArraySerializer.write(stream, refer, array);
+        DateArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(Date[] array) throws IOException {
@@ -282,7 +282,7 @@ public class Writer {
     }
 
     public final void writeArray(Time[] array) throws IOException {
-        TimeArraySerializer.write(stream, refer, array);
+        TimeArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(Time[] array) throws IOException {
@@ -290,7 +290,7 @@ public class Writer {
     }
 
     public final void writeArray(Timestamp[] array) throws IOException {
-        TimestampArraySerializer.write(stream, refer, array);
+        TimestampArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(Timestamp[] array) throws IOException {
@@ -298,7 +298,7 @@ public class Writer {
     }
 
     public final void writeArray(java.util.Date[] array) throws IOException {
-        DateTimeArraySerializer.write(stream, refer, array);
+        DateTimeArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(java.util.Date[] array) throws IOException {
@@ -306,7 +306,7 @@ public class Writer {
     }
 
     public final void writeArray(Calendar[] array) throws IOException {
-        CalendarArraySerializer.write(stream, refer, array);
+        CalendarArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(Calendar[] array) throws IOException {
@@ -314,7 +314,7 @@ public class Writer {
     }
 
     public final void writeArray(String[] array) throws IOException {
-        StringArraySerializer.write(stream, refer, array);
+        StringArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(String[] array) throws IOException {
@@ -322,7 +322,7 @@ public class Writer {
     }
 
     public final void writeArray(StringBuilder[] array) throws IOException {
-        StringBuilderArraySerializer.write(stream, refer, array);
+        StringBuilderArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(StringBuilder[] array) throws IOException {
@@ -330,7 +330,7 @@ public class Writer {
     }
 
     public final void writeArray(StringBuffer[] array) throws IOException {
-        StringBufferArraySerializer.write(stream, refer, array);
+        StringBufferArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(StringBuffer[] array) throws IOException {
@@ -338,7 +338,7 @@ public class Writer {
     }
 
     public final void writeArray(UUID[] array) throws IOException {
-        UUIDArraySerializer.write(stream, refer, array);
+        UUIDArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(UUID[] array) throws IOException {
@@ -346,7 +346,7 @@ public class Writer {
     }
 
     public final void writeArray(char[][] array) throws IOException {
-        CharsArraySerializer.write(stream, refer, array);
+        CharsArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(char[][] array) throws IOException {
@@ -354,7 +354,7 @@ public class Writer {
     }
 
     public final void writeArray(byte[][] array) throws IOException {
-        BytesArraySerializer.write(stream, refer, array);
+        BytesArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(byte[][] array) throws IOException {
@@ -362,7 +362,7 @@ public class Writer {
     }
 
     public final void writeArray(BigInteger[] array) throws IOException {
-        BigIntegerArraySerializer.write(stream, refer, array);
+        BigIntegerArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(BigInteger[] array) throws IOException {
@@ -370,7 +370,7 @@ public class Writer {
     }
 
     public final void writeArray(BigDecimal[] array) throws IOException {
-        BigDecimalArraySerializer.write(stream, refer, array);
+        BigDecimalArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(BigDecimal[] array) throws IOException {
@@ -378,7 +378,7 @@ public class Writer {
     }
 
     public final void writeArray(Object[] array) throws IOException {
-        ObjectArraySerializer.write(this, stream, refer, array);
+        ObjectArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(Object[] array) throws IOException {
@@ -386,7 +386,7 @@ public class Writer {
     }
 
     public final void writeArray(AtomicIntegerArray array) throws IOException {
-        AtomicIntegerArraySerializer.write(stream, refer, array);
+        AtomicIntegerArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(AtomicIntegerArray array) throws IOException {
@@ -394,7 +394,7 @@ public class Writer {
     }
 
     public final void writeArray(AtomicLongArray array) throws IOException {
-        AtomicLongArraySerializer.write(stream, refer, array);
+        AtomicLongArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(AtomicLongArray array) throws IOException {
@@ -402,7 +402,7 @@ public class Writer {
     }
 
     public final void writeArray(AtomicReferenceArray array) throws IOException {
-        AtomicReferenceArraySerializer.write(this, stream, refer, array);
+        AtomicReferenceArraySerializer.instance.serialize(this, array);
     }
 
     public final void writeArrayWithRef(AtomicReferenceArray array) throws IOException {
@@ -410,15 +410,17 @@ public class Writer {
     }
 
     public final void writeArray(Object array) throws IOException {
-        OtherTypeArraySerializer.write(this, stream, refer, array);
+        OtherTypeArraySerializer.instance.serialize(this, array);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeArrayWithRef(Object array) throws IOException {
         OtherTypeArraySerializer.instance.write(this, array);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeCollection(Collection<?> collection) throws IOException {
-        CollectionSerializer.write(this, stream, refer, collection);
+        CollectionSerializer.instance.serialize(this, collection);
     }
 
     @SuppressWarnings({"unchecked"})
@@ -426,28 +428,41 @@ public class Writer {
         CollectionSerializer.instance.write(this, collection);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeList(List<?> list) throws IOException {
-        ListSerializer.write(this, stream, refer, list);
+        ListSerializer.instance.serialize(this, list);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeListWithRef(List<?> list) throws IOException {
         ListSerializer.instance.write(this, list);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeMap(Map<?, ?> map) throws IOException {
-        MapSerializer.write(this, stream, refer, map);
+        MapSerializer.instance.write(this, map);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeMapWithRef(Map<?, ?> map) throws IOException {
         MapSerializer.instance.write(this, map);
     }
 
     public final void writeObject(Object object) throws IOException {
-        OtherTypeSerializer.write(this, stream, refer, object);
+        OtherTypeSerializer.instance.serialize(this, object);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final void writeObjectWithRef(Object object) throws IOException {
         OtherTypeSerializer.instance.write(this, object);
+    }
+
+    final boolean writeRef(Object object) throws IOException {
+        return refer != null && refer.write(stream, object);
+    }
+
+    final void setRef(Object object) {
+        if (refer != null) refer.set(object);
     }
 
     public final void reset() {

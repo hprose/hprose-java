@@ -12,14 +12,13 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.unserialize;
 
 import hprose.common.HproseException;
-import hprose.io.ByteBufferInputStream;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
 import static hprose.io.HproseTags.TagBytes;
@@ -38,14 +37,15 @@ import static hprose.io.HproseTags.TagMap;
 import static hprose.io.HproseTags.TagNaN;
 import static hprose.io.HproseTags.TagNull;
 import static hprose.io.HproseTags.TagObject;
+import static hprose.io.HproseTags.TagOpenbrace;
 import static hprose.io.HproseTags.TagRef;
-import static hprose.io.HproseTags.TagSemicolon;
 import static hprose.io.HproseTags.TagString;
 import static hprose.io.HproseTags.TagTime;
 import static hprose.io.HproseTags.TagTrue;
 import static hprose.io.HproseTags.TagUTF8Char;
+import hprose.io.convert.DefaultConverter;
 import hprose.util.ClassUtil;
-import hprose.util.StrUtil;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,13 +58,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 interface ReaderRefer {
     void set(Object obj);
@@ -90,7 +86,6 @@ final class RealReaderRefer implements ReaderRefer {
 public class Reader {
 
     public final InputStream stream;
-    private final ByteBuffer buffer;
     final HproseMode mode;
     final ArrayList<Object> classref = new ArrayList<Object>();
     final IdentityHashMap<Object, String[]> membersref = new IdentityHashMap<Object, String[]>();
@@ -110,12 +105,6 @@ public class Reader {
 
     public Reader(InputStream stream, HproseMode mode, boolean simple) {
         this.stream = stream;
-        if (stream != null && stream instanceof ByteBufferInputStream) {
-            buffer = ((ByteBufferInputStream)stream).stream.buffer;
-        }
-        else {
-            buffer = null;
-        }
         this.mode = mode;
         this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
     }
@@ -133,10 +122,7 @@ public class Reader {
     }
 
     public Reader(ByteBuffer buffer, HproseMode mode, boolean simple) {
-        this.stream = null;
-        this.buffer = buffer;
-        this.mode = mode;
-        this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
+        this(new ByteBufferStream(buffer).getInputStream(), mode, simple);
     }
 
     public Reader(byte[] bytes) {
@@ -152,10 +138,7 @@ public class Reader {
     }
 
     public Reader(byte[] bytes, HproseMode mode, boolean simple) {
-        this.stream = null;
-        this.buffer = ByteBuffer.wrap(bytes);
-        this.mode = mode;
-        this.refer = simple ? new FakeReaderRefer() : new RealReaderRefer();
+        this(new ByteArrayInputStream(bytes), mode, simple);
     }
 
     public final HproseException unexpectedTag(int tag) {
@@ -167,23 +150,10 @@ public class Reader {
             return new HproseException("No byte found in stream");
         }
         else if (expectTags == null) {
-            if (buffer != null) {
-                String moreinfo = StrUtil.toString(new ByteBufferStream(buffer));
-                return new HproseException("Unexpected serialize tag '" +
-                                           (char)tag + "' in stream. \r\n" +
-                                            "The whole data: " + moreinfo);
-            }
             return new HproseException("Unexpected serialize tag '" +
                                        (char)tag + "' in stream");
         }
         else {
-            if (buffer != null) {
-                String moreinfo = StrUtil.toString(new ByteBufferStream(buffer));
-                return new HproseException("Tag '" + expectTags +
-                                       "' expected, but '" + (char)tag +
-                                       "' found in stream. \r\n" +
-                                            "The whole data: " + moreinfo);
-            }
             return new HproseException("Tag '" + expectTags +
                                        "' expected, but '" + (char)tag +
                                        "' found in stream");
@@ -197,12 +167,7 @@ public class Reader {
     }
 
     public final void checkTag(int expectTag) throws IOException {
-        if (buffer != null) {
-            checkTag(buffer.get(), expectTag);
-        }
-        else {
-            checkTag(stream.read(), expectTag);
-        }
+        checkTag(stream.read(), expectTag);
     }
 
     public final int checkTags(int tag, String expectTags) throws IOException {
@@ -213,451 +178,359 @@ public class Reader {
     }
 
     public final int checkTags(String expectTags) throws IOException {
-        return (buffer != null ? checkTags(buffer.get(), expectTags) :
-                                 checkTags(stream.read(), expectTags));
+        return checkTags(stream.read(), expectTags);
     }
 
-    private StringBuilder readUntil(int tag) throws IOException {
-        return (buffer != null ? ValueReader.readUntil(buffer, tag) :
-                                 ValueReader.readUntil(stream, tag));
+    public final void skip(int tag) throws IOException {
+        int c = stream.read();
+        assert c == tag : "Tag '" + (char)tag +
+                          "' expected, but '" + (char)c +
+                          "' found in stream";
     }
 
     public final byte readByte(int tag) throws IOException {
-        return (byte)(buffer != null ? ValueReader.readInt(buffer, tag) :
-                                       ValueReader.readInt(stream, tag));
+        return (byte) ValueReader.readInt(this, tag);
     }
 
     public final short readShort(int tag) throws IOException {
-        return (short)(buffer != null ? ValueReader.readInt(buffer, tag) :
-                                        ValueReader.readInt(stream, tag));
+        return (short) ValueReader.readInt(this, tag);
     }
 
     public final int readInt(int tag) throws IOException {
-        return (buffer != null ? ValueReader.readInt(buffer, tag) :
-                                 ValueReader.readInt(stream, tag));
+        return ValueReader.readInt(this, tag);
     }
 
     public final long readLong(int tag) throws IOException {
-        return (buffer != null ? ValueReader.readLong(buffer, tag) :
-                                 ValueReader.readLong(stream, tag));
+        return ValueReader.readLong(this, tag);
     }
 
     public final int readIntWithoutTag() throws IOException {
-        return readInt(TagSemicolon);
+        return ValueReader.readInt(this);
     }
 
     public final BigInteger readBigIntegerWithoutTag() throws IOException {
-        return new BigInteger(readUntil(TagSemicolon).toString(), 10);
+        return ValueReader.readBigInteger(this);
     }
 
     public final long readLongWithoutTag() throws IOException {
-        return readLong(TagSemicolon);
+        return ValueReader.readInt(this);
     }
 
     public final double readDoubleWithoutTag() throws IOException {
-        return ValueReader.parseDouble(readUntil(TagSemicolon));
+        return ValueReader.readDouble(this);
     }
 
     public final double readInfinityWithoutTag() throws IOException {
-        return (buffer != null ? ValueReader.readInfinity(buffer) :
-                                 ValueReader.readInfinity(stream));
+        return ValueReader.readInfinity(this);
     }
 
     public final Calendar readDateWithoutTag()throws IOException {
-        return (buffer != null ? DefaultUnserializer.readDateTime(this, buffer).toCalendar() :
-                                 DefaultUnserializer.readDateTime(this, stream).toCalendar());
+        return ReferenceReader.readDateTime(this).toCalendar();
     }
 
     public final Calendar readTimeWithoutTag()throws IOException {
-        return (buffer != null ? DefaultUnserializer.readTime(this, buffer).toCalendar() :
-                                 DefaultUnserializer.readTime(this, stream).toCalendar());
+        return ReferenceReader.readTime(this).toCalendar();
     }
 
     public final byte[] readBytesWithoutTag() throws IOException {
-        return (buffer != null ? ByteArrayUnserializer.readBytes(this, buffer) :
-                                 ByteArrayUnserializer.readBytes(this, stream));
+        return ReferenceReader.readBytes(this);
     }
 
     public final String readUTF8CharWithoutTag() throws IOException {
-        return (buffer != null ? ValueReader.readUTF8Char(buffer) :
-                                 ValueReader.readUTF8Char(stream));
+        return ValueReader.readUTF8Char(this);
     }
 
     public final String readStringWithoutTag() throws IOException {
-        return (buffer != null ? StringUnserializer.readString(this, buffer) :
-                                 StringUnserializer.readString(this, stream));
+        return ReferenceReader.readString(this);
     }
 
     public final char[] readCharsWithoutTag() throws IOException {
-        return (buffer != null ? CharArrayUnserializer.readChars(this, buffer) :
-                                 CharArrayUnserializer.readChars(this, stream));
+        return ReferenceReader.readChars(this);
     }
 
     public final UUID readUUIDWithoutTag() throws IOException {
-        return (buffer != null ? UUIDUnserializer.readUUID(this, buffer) :
-                                 UUIDUnserializer.readUUID(this, stream));
+        return ReferenceReader.readUUID(this);
     }
 
     public final ArrayList readListWithoutTag() throws IOException {
-        return (buffer != null ? DefaultUnserializer.readList(this, buffer) :
-                                 DefaultUnserializer.readList(this, stream));
+        return ReferenceReader.readArrayList(this);
     }
 
     public final HashMap readMapWithoutTag() throws IOException {
-        return (buffer != null ? DefaultUnserializer.readMap(this, buffer) :
-                                 DefaultUnserializer.readMap(this, stream));
+        return ReferenceReader.readHashMap(this);
     }
 
-    public final Object readObjectWithoutTag(Class<?> type) throws IOException {
-        return (buffer != null ? ObjectUnserializer.readObject(this, buffer, type) :
-                                 ObjectUnserializer.readObject(this, stream, type));
+    public final Object readObjectWithoutTag(Type type) throws IOException {
+        return ReferenceReader.readObject(this, type);
     }
 
     public final Object unserialize() throws IOException {
-        return (buffer != null ? DefaultUnserializer.read(this, buffer) :
-                                 DefaultUnserializer.read(this, stream));
+        return DefaultUnserializer.instance.read(this);
     }
 
     public final boolean readBoolean() throws IOException {
-        return (buffer != null ? BooleanUnserializer.read(this, buffer) :
-                                 BooleanUnserializer.read(this, stream));
+        return BooleanUnserializer.instance.read(this);
     }
 
     public final Boolean readBooleanObject() throws IOException {
-        return (buffer != null ? BooleanObjectUnserializer.read(this, buffer) :
-                                 BooleanObjectUnserializer.read(this, stream));
+        return BooleanObjectUnserializer.instance.read(this);
     }
 
     public final char readChar() throws IOException {
-        return (buffer != null ? CharUnserializer.read(this, buffer) :
-                                 CharUnserializer.read(this, stream));
+        return CharUnserializer.instance.read(this);
     }
 
     public final Character readCharObject() throws IOException {
-        return (buffer != null ? CharObjectUnserializer.read(this, buffer) :
-                                 CharObjectUnserializer.read(this, stream));
+        return CharObjectUnserializer.instance.read(this);
     }
 
     public final byte readByte() throws IOException {
-        return (buffer != null ? ByteUnserializer.read(this, buffer) :
-                                 ByteUnserializer.read(this, stream));
+        return ByteUnserializer.instance.read(this);
     }
 
     public final Byte readByteObject() throws IOException {
-        return (buffer != null ? ByteObjectUnserializer.read(this, buffer) :
-                                 ByteObjectUnserializer.read(this, stream));
+        return ByteObjectUnserializer.instance.read(this);
     }
 
     public final short readShort() throws IOException {
-        return (buffer != null ? ShortUnserializer.read(this, buffer) :
-                                 ShortUnserializer.read(this, stream));
+        return ShortUnserializer.instance.read(this);
     }
 
     public final Short readShortObject() throws IOException {
-        return (buffer != null ? ShortObjectUnserializer.read(this, buffer) :
-                                 ShortObjectUnserializer.read(this, stream));
+        return ShortObjectUnserializer.instance.read(this);
     }
 
     public final int readInt() throws IOException {
-        return (buffer != null ? IntUnserializer.read(this, buffer) :
-                                 IntUnserializer.read(this, stream));
+        return IntUnserializer.instance.read(this);
     }
 
     public final Integer readIntObject() throws IOException {
-        return (buffer != null ? IntObjectUnserializer.read(this, buffer) :
-                                 IntObjectUnserializer.read(this, stream));
+        return IntObjectUnserializer.instance.read(this);
     }
 
     public final long readLong() throws IOException {
-        return (buffer != null ? LongUnserializer.read(this, buffer) :
-                                 LongUnserializer.read(this, stream));
+        return LongUnserializer.instance.read(this);
     }
 
     public final Long readLongObject() throws IOException {
-        return (buffer != null ? LongObjectUnserializer.read(this, buffer) :
-                                 LongObjectUnserializer.read(this, stream));
+        return LongObjectUnserializer.instance.read(this);
     }
 
     public final float readFloat() throws IOException {
-        return (buffer != null ? FloatUnserializer.read(this, buffer) :
-                                 FloatUnserializer.read(this, stream));
+        return FloatUnserializer.instance.read(this);
     }
 
     public final Float readFloatObject() throws IOException {
-        return (buffer != null ? FloatObjectUnserializer.read(this, buffer) :
-                                 FloatObjectUnserializer.read(this, stream));
+        return FloatObjectUnserializer.instance.read(this);
     }
 
     public final double readDouble() throws IOException {
-        return (buffer != null ? DoubleUnserializer.read(this, buffer) :
-                                 DoubleUnserializer.read(this, stream));
+        return DoubleUnserializer.instance.read(this);
     }
 
     public final Double readDoubleObject() throws IOException {
-        return (buffer != null ? DoubleObjectUnserializer.read(this, buffer) :
-                                 DoubleObjectUnserializer.read(this, stream));
+        return DoubleObjectUnserializer.instance.read(this);
     }
 
-    public final <T> T readEnum(Class<T> type) throws IOException {
-        return (buffer != null ? EnumUnserializer.read(this, buffer, type) :
-                                 EnumUnserializer.read(this, stream, type));
+    @SuppressWarnings({"unchecked"})
+    public final <T extends Enum<T>> T readEnum(Class<T> type) throws IOException {
+        return (T) EnumUnserializer.instance.read(this, type);
     }
 
     public final String readString() throws IOException {
-        return (buffer != null ? StringUnserializer.read(this, buffer) :
-                                 StringUnserializer.read(this, stream));
+        return StringUnserializer.instance.read(this);
     }
 
     public final BigInteger readBigInteger() throws IOException {
-        return (buffer != null ? BigIntegerUnserializer.read(this, buffer) :
-                                 BigIntegerUnserializer.read(this, stream));
+        return BigIntegerUnserializer.instance.read(this);
     }
 
     public final Date readDate() throws IOException {
-        return (buffer != null ? DateUnserializer.read(this, buffer) :
-                                 DateUnserializer.read(this, stream));
+        return DateUnserializer.instance.read(this);
     }
 
     public final Time readTime() throws IOException {
-        return (buffer != null ? TimeUnserializer.read(this, buffer) :
-                                 TimeUnserializer.read(this, stream));
+        return TimeUnserializer.instance.read(this);
     }
 
     public final java.util.Date readDateTime() throws IOException {
-        return (buffer != null ? DateTimeUnserializer.read(this, buffer) :
-                                 DateTimeUnserializer.read(this, stream));
+        return DateTimeUnserializer.instance.read(this);
     }
 
     public final Timestamp readTimestamp() throws IOException {
-        return (buffer != null ? TimestampUnserializer.read(this, buffer) :
-                                 TimestampUnserializer.read(this, stream));
+        return TimestampUnserializer.instance.read(this);
     }
 
     public final Calendar readCalendar() throws IOException {
-        return (buffer != null ? CalendarUnserializer.read(this, buffer) :
-                                 CalendarUnserializer.read(this, stream));
+        return CalendarUnserializer.instance.read(this);
     }
 
     public final BigDecimal readBigDecimal() throws IOException {
-        return (buffer != null ? BigDecimalUnserializer.read(this, buffer) :
-                                 BigDecimalUnserializer.read(this, stream));
+        return BigDecimalUnserializer.instance.read(this);
     }
 
     public final StringBuilder readStringBuilder() throws IOException {
-        return (buffer != null ? StringBuilderUnserializer.read(this, buffer) :
-                                 StringBuilderUnserializer.read(this, stream));
+        return StringBuilderUnserializer.instance.read(this);
     }
 
     public final StringBuffer readStringBuffer() throws IOException {
-        return (buffer != null ? StringBufferUnserializer.read(this, buffer) :
-                                 StringBufferUnserializer.read(this, stream));
+        return StringBufferUnserializer.instance.read(this);
     }
 
     public final UUID readUUID() throws IOException  {
-        return (buffer != null ? UUIDUnserializer.read(this, buffer) :
-                                 UUIDUnserializer.read(this, stream));
+        return UUIDUnserializer.instance.read(this);
     }
 
     public final void readArray(Type[] types, Object[] a, int count) throws IOException {
-        if (buffer != null) {
-            readArray(buffer, types, a, count);
-        }
-        else {
-            readArray(stream, types, a, count);
-        }
+        ReferenceReader.readArray(this, types, a, count);
     }
 
     public final Object[] readArray(int count) throws IOException {
-        return (buffer != null ? ObjectArrayUnserializer.readArray(this, buffer, count) :
-                                 ObjectArrayUnserializer.readArray(this, stream, count));
+        return ReferenceReader.readArray(this, count);
     }
 
     public final Object[] readObjectArray() throws IOException {
-        return (buffer != null ? ObjectArrayUnserializer.read(this, buffer) :
-                                 ObjectArrayUnserializer.read(this, stream));
+        return ObjectArrayUnserializer.instance.read(this);
     }
 
     public final boolean[] readBooleanArray() throws IOException {
-        return (buffer != null ? BooleanArrayUnserializer.read(this, buffer) :
-                                 BooleanArrayUnserializer.read(this, stream));
+        return BooleanArrayUnserializer.instance.read(this);
     }
 
     public final char[] readCharArray() throws IOException {
-        return (buffer != null ? CharArrayUnserializer.read(this, buffer) :
-                                 CharArrayUnserializer.read(this, stream));
+        return CharArrayUnserializer.instance.read(this);
     }
 
     public final byte[] readByteArray() throws IOException {
-        return (buffer != null ? ByteArrayUnserializer.read(this, buffer) :
-                                 ByteArrayUnserializer.read(this, stream));
+        return ByteArrayUnserializer.instance.read(this);
     }
 
     public final short[] readShortArray() throws IOException {
-        return (buffer != null ? ShortArrayUnserializer.read(this, buffer) :
-                                 ShortArrayUnserializer.read(this, stream));
+        return ShortArrayUnserializer.instance.read(this);
     }
 
     public final int[] readIntArray() throws IOException {
-        return (buffer != null ? IntArrayUnserializer.read(this, buffer) :
-                                 IntArrayUnserializer.read(this, stream));
+        return IntArrayUnserializer.instance.read(this);
     }
 
     public final long[] readLongArray() throws IOException {
-        return (buffer != null ? LongArrayUnserializer.read(this, buffer) :
-                                 LongArrayUnserializer.read(this, stream));
+        return LongArrayUnserializer.instance.read(this);
     }
 
     public final float[] readFloatArray() throws IOException {
-        return (buffer != null ? FloatArrayUnserializer.read(this, buffer) :
-                                 FloatArrayUnserializer.read(this, stream));
+        return FloatArrayUnserializer.instance.read(this);
     }
 
     public final double[] readDoubleArray() throws IOException {
-        return (buffer != null ? DoubleArrayUnserializer.read(this, buffer) :
-                                 DoubleArrayUnserializer.read(this, stream));
+        return DoubleArrayUnserializer.instance.read(this);
     }
 
     public final String[] readStringArray() throws IOException {
-        return (buffer != null ? StringArrayUnserializer.read(this, buffer) :
-                                 StringArrayUnserializer.read(this, stream));
+        return StringArrayUnserializer.instance.read(this);
     }
 
     public final BigInteger[] readBigIntegerArray() throws IOException {
-        return (buffer != null ? BigIntegerArrayUnserializer.read(this, buffer) :
-                                 BigIntegerArrayUnserializer.read(this, stream));
+        return BigIntegerArrayUnserializer.instance.read(this);
     }
 
     public final Date[] readDateArray() throws IOException {
-        return (buffer != null ? DateArrayUnserializer.read(this, buffer) :
-                                 DateArrayUnserializer.read(this, stream));
+        return DateArrayUnserializer.instance.read(this);
     }
 
     public final Time[] readTimeArray() throws IOException {
-        return (buffer != null ? TimeArrayUnserializer.read(this, buffer) :
-                                 TimeArrayUnserializer.read(this, stream));
+        return TimeArrayUnserializer.instance.read(this);
     }
 
     public final Timestamp[] readTimestampArray() throws IOException {
-        return (buffer != null ? TimestampArrayUnserializer.read(this, buffer) :
-                                 TimestampArrayUnserializer.read(this, stream));
+        return TimestampArrayUnserializer.instance.read(this);
     }
 
     public final java.util.Date[] readDateTimeArray() throws IOException {
-        return (buffer != null ? DateTimeArrayUnserializer.read(this, buffer) :
-                                 DateTimeArrayUnserializer.read(this, stream));
+        return DateTimeArrayUnserializer.instance.read(this);
     }
 
     public final Calendar[] readCalendarArray() throws IOException {
-        return (buffer != null ? CalendarArrayUnserializer.read(this, buffer) :
-                                 CalendarArrayUnserializer.read(this, stream));
+        return CalendarArrayUnserializer.instance.read(this);
     }
 
     public final BigDecimal[] readBigDecimalArray() throws IOException {
-        return (buffer != null ? BigDecimalArrayUnserializer.read(this, buffer) :
-                                 BigDecimalArrayUnserializer.read(this, stream));
+        return BigDecimalArrayUnserializer.instance.read(this);
     }
 
     public final StringBuilder[] readStringBuilderArray() throws IOException {
-        return (buffer != null ? StringBuilderArrayUnserializer.read(this, buffer) :
-                                 StringBuilderArrayUnserializer.read(this, stream));
+        return StringBuilderArrayUnserializer.instance.read(this);
     }
 
     public final StringBuffer[] readStringBufferArray() throws IOException {
-        return (buffer != null ? StringBufferArrayUnserializer.read(this, buffer) :
-                                 StringBufferArrayUnserializer.read(this, stream));
+        return StringBufferArrayUnserializer.instance.read(this);
     }
 
     public final UUID[] readUUIDArray() throws IOException {
-        return (buffer != null ? UUIDArrayUnserializer.read(this, buffer) :
-                                 UUIDArrayUnserializer.read(this, stream));
+        return UUIDArrayUnserializer.instance.read(this);
     }
 
     public final char[][] readCharsArray() throws IOException {
-        return (buffer != null ? CharsArrayUnserializer.read(this, buffer) :
-                                 CharsArrayUnserializer.read(this, stream));
+        return CharsArrayUnserializer.instance.read(this);
     }
 
     public final byte[][] readBytesArray() throws IOException {
-        return (buffer != null ? BytesArrayUnserializer.read(this, buffer) :
-                                 BytesArrayUnserializer.read(this, stream));
-    }
-
-    public final <T> T[] readOtherTypeArray(Class<T> componentClass, Type componentType) throws IOException {
-        return (buffer != null ? ArrayUnserializer.readArray(this, buffer, componentClass, componentType) :
-                                 ArrayUnserializer.readArray(this, stream, componentClass, componentType));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public final AtomicReference<?> readAtomicReference(Type type) throws IOException {
-        return new AtomicReference(unserialize(type));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public final <T> AtomicReferenceArray<T> readAtomicReferenceArray(Class<T> componentClass, Type componentType) throws IOException {
-        return new AtomicReferenceArray<T>(readOtherTypeArray(componentClass, componentType));
-    }
-
-    public final Collection readCollection(Class<?> cls, Type type) throws IOException {
-        return (buffer != null ? CollectionUnserializer.readCollection(this, buffer, cls, type) :
-                                 CollectionUnserializer.readCollection(this, stream, cls, type));
-    }
-
-    public final Map readMap(Class<?> cls, Type type) throws IOException {
-        return (buffer != null ? MapUnserializer.readMap(this, buffer, cls, type) :
-                                 MapUnserializer.readMap(this, stream, cls, type));
-    }
-
-    public final <K, V> Map<K, V> readMap(Class<?> cls, Class<K> keyClass, Class<V> valueClass, Type keyType, Type valueType) throws IOException {
-        return (buffer != null ? MapUnserializer.read(this, buffer, cls, keyClass, valueClass, keyType, valueType) :
-                                 MapUnserializer.read(this, stream, cls, keyClass, valueClass, keyType, valueType));
-    }
-
-    public final Object readObject(Class<?> type) throws IOException {
-        return (buffer != null ? ObjectUnserializer.read(this, buffer, type) :
-                                 ObjectUnserializer.read(this, stream, type));
+        return BytesArrayUnserializer.instance.read(this);
     }
 
     public final Object unserialize(Type type) throws IOException {
-        return (buffer != null ? unserialize(buffer, type) :
-                                 unserialize(stream, type));
+        if (type == null) {
+            return DefaultUnserializer.instance.read(this);
+        }
+        Class<?> cls = ClassUtil.toClass(type);
+        return UnserializerFactory.get(cls).read(this, stream.read(), type);
     }
 
+    @SuppressWarnings({"unchecked"})
     public final <T> T unserialize(Class<T> type) throws IOException {
-        return (buffer != null ? unserialize(buffer, type) :
-                                 unserialize(stream, type));
+        return (T) unserialize((Type) type);
     }
 
-    final Object readRef(ByteBuffer buffer) throws IOException {
-        return refer.read(ValueReader.readInt(buffer));
-    }
-
-    final Object readRef(InputStream stream) throws IOException {
-        return refer.read(ValueReader.readInt(stream));
+    public final Object readRef() throws IOException {
+        return refer.read(ValueReader.readInt(this));
     }
 
     @SuppressWarnings({"unchecked"})
-    final <T> T readRef(ByteBuffer buffer, Class<T> type) throws IOException {
-        Object obj = readRef(buffer);
-        Class<?> objType = obj.getClass();
-        if (objType.equals(type) ||
-            type.isAssignableFrom(objType)) {
-            return (T)obj;
-        }
-        throw ValueReader.castError(objType.toString(), type);
+    public final <T> T readRef(Type type) throws IOException {
+        return (T) DefaultConverter.instance.convertTo(readRef(), type);
     }
 
-    @SuppressWarnings({"unchecked"})
-    final <T> T readRef(InputStream stream, Class<T> type) throws IOException {
-        Object obj = readRef(stream);
-        Class<?> objType = obj.getClass();
-        if (objType.equals(type) ||
-            type.isAssignableFrom(objType)) {
-            return (T)obj;
-        }
-        throw ValueReader.castError(objType.toString(), type);
+    public void setRef(Object obj) {
+        refer.set(obj);
     }
 
-    final String tagToString(int tag) throws IOException {
+    public void readClass() throws IOException {
+        String className = ValueReader.readString(this);
+        int count = ValueReader.readCount(this);
+        String[] memberNames = new String[count];
+        StringUnserializer unserialize = StringUnserializer.instance;
+        for (int i = 0; i < count; ++i) {
+            memberNames[i] = unserialize.read(this, stream.read(), String.class);
+        }
+        stream.read();
+        Class<?> cls = ClassUtil.getClass(className);
+        Object key = (cls.equals(void.class)) ? new Object() : cls;
+        classref.add(key);
+        membersref.put(key, memberNames);
+    }
+
+    public Object readClassRef() throws IOException {
+        return classref.get(ValueReader.readInt(this, TagOpenbrace));
+    }
+
+    public String[] getMemberNames(Object cr) {
+        return membersref.get(cr);
+    }
+
+    public String[] readMemberNames() throws IOException {
+        return getMemberNames(readClassRef());
+    }
+
+    public final String tagToString(int tag) throws IOException {
         switch (tag) {
             case '0':
             case '1':
@@ -694,56 +567,6 @@ public class Reader {
         }
     }
 
-    private void readArray(ByteBuffer buffer, Type[] types, Object[] a, int count) throws IOException {
-        refer.set(a);
-        for (int i = 0; i < count; ++i) {
-            a[i] = unserialize(buffer, types[i]);
-        }
-        buffer.get();
-    }
-
-    private void readArray(InputStream stream, Type[] types, Object[] a, int count) throws IOException {
-        refer.set(a);
-        for (int i = 0; i < count; ++i) {
-            a[i] = unserialize(stream, types[i]);
-        }
-        stream.read();
-    }
-
-    final Object unserialize(ByteBuffer buffer, Type type) throws IOException {
-        if (type == null) {
-            return DefaultUnserializer.read(this, buffer);
-        }
-        Class<?> cls = ClassUtil.toClass(type);
-        return unserialize(buffer, cls, type);
-    }
-
-    final Object unserialize(InputStream stream, Type type) throws IOException {
-        if (type == null) {
-            return DefaultUnserializer.read(this, stream);
-        }
-        Class<?> cls = ClassUtil.toClass(type);
-        return unserialize(stream, cls, type);
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private <T> T unserialize(ByteBuffer buffer, Class<T> type) throws IOException {
-        return (T) unserialize(buffer, type, type);
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private <T> T unserialize(InputStream stream, Class<T> type) throws IOException {
-        return (T) unserialize(stream, type, type);
-    }
-
-    private Object unserialize(ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return UnserializerFactory.get(cls).read(this, buffer, cls, type);
-    }
-
-    private Object unserialize(InputStream stream, Class<?> cls, Type type) throws IOException {
-        return UnserializerFactory.get(cls).read(this, stream, cls, type);
-    }
-
     public final ByteBufferStream readRaw() throws IOException {
     	ByteBufferStream rawstream = new ByteBufferStream();
     	readRaw(rawstream.getOutputStream());
@@ -752,12 +575,7 @@ public class Reader {
     }
 
     public final void readRaw(OutputStream ostream) throws IOException {
-        if (buffer != null) {
-            RawReader.readRaw(buffer, ostream, buffer.get());
-        }
-        else {
-            RawReader.readRaw(stream, ostream, stream.read());
-        }
+        RawReader.readRaw(stream, ostream, stream.read());
     }
 
     public final void reset() {

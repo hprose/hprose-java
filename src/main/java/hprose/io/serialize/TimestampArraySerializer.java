@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp array serializer class for Java.             *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,14 +27,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 
-final class TimestampArraySerializer implements Serializer<Timestamp[]> {
+final class TimestampArraySerializer extends ReferenceSerializer<Timestamp[]> {
 
     public final static TimestampArraySerializer instance = new TimestampArraySerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Timestamp[] array) throws IOException {
-        if (refer != null) refer.set(array);
-        int length = array.length;
+    @Override
+    public final void serialize(Writer writer, Timestamp[] array) throws IOException {
+        super.serialize(writer, array);
+        OutputStream stream = writer.stream;
         stream.write(TagList);
+        int length = array.length;
         if (length > 0) {
             ValueWriter.writeInt(stream, length);
         }
@@ -44,18 +46,10 @@ final class TimestampArraySerializer implements Serializer<Timestamp[]> {
             if (e == null) {
                 stream.write(TagNull);
             }
-            else if (refer == null || !refer.write(stream, e)) {
-                TimestampSerializer.write(stream, refer, e);
+            else {
+                TimestampSerializer.instance.write(writer, e);
             }
         }
         stream.write(TagClosebrace);
-    }
-
-    public final void write(Writer writer, Timestamp[] obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

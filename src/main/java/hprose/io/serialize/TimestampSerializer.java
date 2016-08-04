@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp serializer class for Java.                   *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,25 +26,18 @@ import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-final class TimestampSerializer implements Serializer<Timestamp> {
+final class TimestampSerializer extends ReferenceSerializer<Timestamp> {
 
     public final static TimestampSerializer instance = new TimestampSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Timestamp time) throws IOException {
-        if (refer != null) refer.set(time);
+    @Override
+    public final void serialize(Writer writer, Timestamp time) throws IOException {
+        super.serialize(writer, time);
+        OutputStream stream = writer.stream;
         Calendar calendar = DateTime.toCalendar(time);
         ValueWriter.writeDateOfCalendar(stream, calendar);
         ValueWriter.writeTimeOfCalendar(stream, calendar, false, true);
         ValueWriter.writeNano(stream, time.getNanos());
         stream.write(TagSemicolon);
     }
-
-    public final void write(Writer writer, Timestamp obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
-    }
-
 }

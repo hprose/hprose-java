@@ -12,7 +12,7 @@
  *                                                        *
  * OffsetDateTime serializer class for Java.              *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,12 +26,14 @@ import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-final class OffsetDateTimeSerializer implements Serializer<OffsetDateTime> {
+final class OffsetDateTimeSerializer extends ReferenceSerializer<OffsetDateTime> {
 
     public final static OffsetDateTimeSerializer instance = new OffsetDateTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, OffsetDateTime datetime) throws IOException {
-        if (refer != null) refer.set(datetime);
+    @Override
+    public final void serialize(Writer writer, OffsetDateTime datetime) throws IOException {
+        super.serialize(writer, datetime);
+        OutputStream stream = writer.stream;
         if (!(datetime.getOffset().equals(ZoneOffset.UTC))) {
             stream.write(TagString);
             ValueWriter.write(stream, datetime.toString());
@@ -48,14 +50,6 @@ final class OffsetDateTimeSerializer implements Serializer<OffsetDateTime> {
                 ValueWriter.writeNano(stream, datetime.getNano());
                 stream.write(TagUTC);
             }
-        }
-    }
-
-    public final void write(Writer writer, OffsetDateTime obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
         }
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * LocalDateTime serializer class for Java.               *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,12 +25,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 
-final class LocalDateTimeSerializer implements Serializer<LocalDateTime> {
+final class LocalDateTimeSerializer extends ReferenceSerializer<LocalDateTime> {
 
     public final static LocalDateTimeSerializer instance = new LocalDateTimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, LocalDateTime datetime) throws IOException {
-        if (refer != null) refer.set(datetime);
+    @Override
+    public final void serialize(Writer writer, LocalDateTime datetime) throws IOException {
+        super.serialize(writer, datetime);
+        OutputStream stream = writer.stream;
         int year = datetime.getYear();
         if (year > 9999 || year < 1) {
             stream.write(TagString);
@@ -41,14 +43,6 @@ final class LocalDateTimeSerializer implements Serializer<LocalDateTime> {
             ValueWriter.writeTime(stream, datetime.getHour(), datetime.getMinute(), datetime.getSecond(), 0, false, true);
             ValueWriter.writeNano(stream, datetime.getNano());
             stream.write(TagSemicolon);
-        }
-    }
-
-    public final void write(Writer writer, LocalDateTime obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
         }
     }
 }

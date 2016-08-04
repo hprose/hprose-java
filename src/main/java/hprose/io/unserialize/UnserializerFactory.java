@@ -21,6 +21,7 @@ package hprose.io.unserialize;
 
 import hprose.util.DateTime;
 import hprose.util.JdkVersion;
+import hprose.util.LinkedCaseInsensitiveMap;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -38,6 +39,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -125,9 +127,11 @@ public final class UnserializerFactory {
         unserializers.put(Set.class, HashSetUnserializer.instance);
         unserializers.put(TreeSet.class, TreeSetUnserializer.instance);
         unserializers.put(SortedSet.class, TreeSetUnserializer.instance);
+        unserializers.put(LinkedCaseInsensitiveMap.class, LinkedCaseInsensitiveMapUnserializer.instance);
+        unserializers.put(LinkedHashMap.class, LinkedHashMapUnserializer.instance);
         unserializers.put(HashMap.class, HashMapUnserializer.instance);
         unserializers.put(AbstractMap.class, HashMapUnserializer.instance);
-        unserializers.put(Map.class, HashMapUnserializer.instance);
+        unserializers.put(Map.class, LinkedHashMapUnserializer.instance);
         unserializers.put(TreeMap.class, TreeMapUnserializer.instance);
         unserializers.put(SortedMap.class, TreeMapUnserializer.instance);
         unserializers.put(AtomicBoolean.class, AtomicBooleanUnserializer.instance);

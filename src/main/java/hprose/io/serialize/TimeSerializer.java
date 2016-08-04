@@ -12,7 +12,7 @@
  *                                                        *
  * Time serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Jul 31, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,22 +26,16 @@ import java.io.OutputStream;
 import java.sql.Time;
 import java.util.Calendar;
 
-final class TimeSerializer implements Serializer<Time> {
+final class TimeSerializer extends ReferenceSerializer<Time> {
 
     public final static TimeSerializer instance = new TimeSerializer();
 
-    public final static void write(OutputStream stream, WriterRefer refer, Time time) throws IOException {
-        if (refer != null) refer.set(time);
+    @Override
+    public final void serialize(Writer writer, Time time) throws IOException {
+        super.serialize(writer, time);
+        OutputStream stream = writer.stream;
         Calendar calendar = DateTime.toCalendar(time);
         ValueWriter.writeTimeOfCalendar(stream, calendar, false, false);
         stream.write(TagSemicolon);
-    }
-
-    public final void write(Writer writer, Time obj) throws IOException {
-        OutputStream stream = writer.stream;
-        WriterRefer refer = writer.refer;
-        if (refer == null || !refer.write(stream, obj)) {
-            write(stream, refer, obj);
-        }
     }
 }

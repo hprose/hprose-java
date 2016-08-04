@@ -12,29 +12,32 @@
  *                                                        *
  * AtomicBoolean unserializer class for Java.             *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagNull;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class AtomicBooleanUnserializer implements Unserializer {
+public final class AtomicBooleanUnserializer implements Unserializer<AtomicBoolean> {
 
     public final static AtomicBooleanUnserializer instance = new AtomicBooleanUnserializer();
 
-    public final Object read(Reader reader, ByteBuffer buffer, Class<?> cls, Type type) throws IOException {
-        return new AtomicBoolean(BooleanUnserializer.read(reader, buffer));
+    public AtomicBoolean read(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagNull) return null;
+        return new AtomicBoolean(BooleanObjectUnserializer.instance.read(reader, tag, Boolean.class));
     }
 
-    public final Object read(Reader reader, InputStream stream, Class<?> cls, Type type) throws IOException {
-        return new AtomicBoolean(BooleanUnserializer.read(reader, stream));
+    public AtomicBoolean read(Reader reader, Type type) throws IOException {
+       return read(reader, reader.stream.read(), type);
     }
 
+    public AtomicBoolean read(Reader reader) throws IOException {
+       return read(reader, AtomicBoolean.class);
+    }
 }

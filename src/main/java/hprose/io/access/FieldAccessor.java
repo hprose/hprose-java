@@ -12,7 +12,7 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,21 +26,22 @@ import hprose.io.serialize.Writer;
 import hprose.io.unserialize.Reader;
 import hprose.io.unserialize.Unserializer;
 import hprose.io.unserialize.UnserializerFactory;
+import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public final class FieldAccessor implements MemberAccessor {
     private final long offset;
-    private final Type type;
+    private final Type fieldType;
     private final Serializer serializer;
     private final Unserializer unserializer;
 
-    public FieldAccessor(Field accessor) {
-        accessor.setAccessible(true);
-        offset = Accessors.unsafe.objectFieldOffset(accessor);
-        type = accessor.getGenericType();
-        Class<?> cls = accessor.getType();
+    public FieldAccessor(Type type, Field field) {
+        field.setAccessible(true);
+        offset = Accessors.unsafe.objectFieldOffset(field);
+        fieldType = ClassUtil.getActualType(type, field.getGenericType());
+        Class<?> cls = ClassUtil.toClass(fieldType);
         serializer = SerializerFactory.get(cls);
         unserializer = UnserializerFactory.get(cls);
     }
@@ -65,7 +66,7 @@ public final class FieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(Reader reader, Object obj) throws IOException {
-        Object value = unserializer.read(reader, reader.stream.read(), type);
+        Object value = unserializer.read(reader, reader.stream.read(), fieldType);
         try {
             Accessors.unsafe.putObject(obj, offset, value);
         }

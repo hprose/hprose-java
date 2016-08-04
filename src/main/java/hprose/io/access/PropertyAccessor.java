@@ -12,7 +12,7 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,19 +35,19 @@ public final class PropertyAccessor implements MemberAccessor {
     private final static Object[] nullArgs = new Object[0];
     private final Method getter;
     private final Method setter;
-    private final Type type;
+    private final Type propType;
     private final Serializer serializer;
     private final Unserializer unserializer;
 
-    public PropertyAccessor(Method getter, Method setter) {
+    public PropertyAccessor(Type type, Method getter, Method setter) {
         getter.setAccessible(true);
         setter.setAccessible(true);
         this.getter = getter;
         this.setter = setter;
-        this.type = getter.getGenericReturnType();
-        Class<?> cls =  ClassUtil.toClass(type);
-        this.serializer = SerializerFactory.get(cls);
-        this.unserializer = UnserializerFactory.get(cls);
+        propType = ClassUtil.getActualType(type, getter.getGenericReturnType());
+        Class<?> cls = ClassUtil.toClass(propType);
+        serializer = SerializerFactory.get(cls);
+        unserializer = UnserializerFactory.get(cls);
     }
 
     @Override
@@ -70,7 +70,7 @@ public final class PropertyAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(Reader reader, Object obj) throws IOException {
-        Object value = unserializer.read(reader, reader.stream.read(), type);
+        Object value = unserializer.read(reader, reader.stream.read(), propType);
         try {
             setter.invoke(obj, new Object[] { value });
         }

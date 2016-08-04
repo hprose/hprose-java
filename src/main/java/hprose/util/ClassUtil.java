@@ -180,4 +180,19 @@ public final class ClassUtil {
                 ((ParameterizedType)type).getActualTypeArguments()[1] :
                 Object.class;
     }
+
+    public final static Type getActualType(Type type, Type paramType) {
+        if ((type instanceof ParameterizedType) &&
+            (paramType instanceof TypeVariable)) {
+            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+            TypeVariable[] typeParameters = ((TypeVariable) paramType).getGenericDeclaration().getTypeParameters();
+            int n = typeParameters.length;
+            for (int i = 0; i < n; i++) {
+                if (typeParameters[i] == paramType) {
+                    return actualTypeArguments[i];
+                }
+            }
+        }
+        return Object.class;
+    }
 }

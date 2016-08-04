@@ -12,7 +12,7 @@
  *                                                        *
  * SafeFieldAccessor class for Java.                      *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,21 +26,22 @@ import hprose.io.serialize.Writer;
 import hprose.io.unserialize.Reader;
 import hprose.io.unserialize.Unserializer;
 import hprose.io.unserialize.UnserializerFactory;
+import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 public final class SafeFieldAccessor implements MemberAccessor {
-    private final Field accessor;
-    private final Type type;
+    private final Field field;
+    private final Type fieldType;
     private final Serializer serializer;
     private final Unserializer unserializer;
 
-    public SafeFieldAccessor(Field field) {
+    public SafeFieldAccessor(Type type, Field field) {
         field.setAccessible(true);
-        accessor = field;
-        type = accessor.getGenericType();
-        Class<?> cls = accessor.getType();
+        this.field = field;
+        fieldType = ClassUtil.getActualType(type, field.getGenericType());
+        Class<?> cls = ClassUtil.toClass(fieldType);
         serializer = SerializerFactory.get(cls);
         unserializer = UnserializerFactory.get(cls);
     }
@@ -50,7 +51,7 @@ public final class SafeFieldAccessor implements MemberAccessor {
     public void serialize(Writer writer, Object obj) throws IOException {
         Object value;
         try {
-            value = accessor.get(obj);
+            value = field.get(obj);
         }
         catch (Exception e) {
             throw new HproseException(e.getMessage());
@@ -65,9 +66,9 @@ public final class SafeFieldAccessor implements MemberAccessor {
 
     @Override
     public void unserialize(Reader reader, Object obj) throws IOException {
-        Object value = unserializer.read(reader, reader.stream.read(), type);
+        Object value = unserializer.read(reader, reader.stream.read(), fieldType);
         try {
-            accessor.set(obj, value);
+            field.set(obj, value);
         }
         catch (Exception e) {
             throw new HproseException(e.getMessage());

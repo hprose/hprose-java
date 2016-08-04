@@ -767,7 +767,7 @@ public final class ReferenceReader {
         Class<?> cls = ClassUtil.toClass(type);
         Object obj = ConstructorAccessor.newInstance(cls);
         reader.setRef(obj);
-        Map<String, MemberAccessor> members = Accessors.getMembers(cls, reader.mode);
+        Map<String, MemberAccessor> members = Accessors.getMembers(type, reader.mode);
         int count = ValueReader.readCount(reader);
         StringUnserializer unserializer = StringUnserializer.instance;
         for (int i = 0; i < count; ++i) {
@@ -784,8 +784,9 @@ public final class ReferenceReader {
         return obj;
     }
 
-    private static Object readObject(Reader reader, String[] memberNames, Class<?> type) throws HproseException, IOException {
-        Object obj = ConstructorAccessor.newInstance(type);
+    private static Object readObject(Reader reader, String[] memberNames, Type type) throws HproseException, IOException {
+        Class<?> cls = ClassUtil.toClass(type);
+        Object obj = ConstructorAccessor.newInstance(cls);
         reader.setRef(obj);
         Map<String, MemberAccessor> members = Accessors.getMembers(type, reader.mode);
         int count = memberNames.length;
@@ -814,19 +815,19 @@ public final class ReferenceReader {
     }
 
     public final static Object readObject(Reader reader, Type type) throws IOException {
-        Class<?> cls = ClassUtil.toClass(type);
         Object cr = reader.readClassRef();
         String[] memberNames = reader.getMemberNames(cr);
         if (Class.class.equals(cr.getClass())) {
             Class<?> c = (Class<?>) cr;
-            if ((cls == null) || cls.isAssignableFrom(c)) {
-                cls = c;
+            if ((type == null) ||
+                ((type instanceof Class<?>) && ((Class<?>) type).isAssignableFrom(c))) {
+                type = c;
             }
         }
-        if (cls == null || Object.class.equals(cls)) {
+        if (type == null || Object.class.equals(type)) {
             return readObjectAsMap(reader, memberNames);
         }
-        return readObject(reader, memberNames, cls);
+        return readObject(reader, memberNames, type);
     }
 
     public final static Object readObject(Reader reader) throws IOException {

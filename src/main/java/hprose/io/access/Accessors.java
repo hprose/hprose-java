@@ -12,25 +12,27 @@
  *                                                        *
  * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.io.access;
 
 import hprose.io.HproseMode;
+import hprose.util.ClassUtil;
 import hprose.util.LinkedCaseInsensitiveMap;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class Accessors {
-    private final static ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>> propertiesCache = new ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
-    private final static ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>> membersCache = new ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
-    private final static ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>> fieldsCache = new ConcurrentHashMap<Class<?>, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>> propertiesCache = new ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>> membersCache = new ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
+    private final static ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>> fieldsCache = new ConcurrentHashMap<Type, LinkedCaseInsensitiveMap<String, MemberAccessor>>();
 
     private static sun.misc.Unsafe getUnsafe() {
         try {
@@ -84,11 +86,11 @@ public final class Accessors {
         return null;
     }
 
-    private static Map<String, MemberAccessor> getProperties(Class<?> type) {
+    private static Map<String, MemberAccessor> getProperties(Type type) {
         LinkedCaseInsensitiveMap<String, MemberAccessor> properties = propertiesCache.get(type);
         if (properties == null) {
             properties = new LinkedCaseInsensitiveMap<String, MemberAccessor>();
-            Method[] methods = type.getMethods();
+            Method[] methods = ClassUtil.toClass(type).getMethods();
             for (Method setter : methods) {
                 if (Modifier.isStatic(setter.getModifiers())) {
                     continue;
@@ -107,7 +109,7 @@ public final class Accessors {
                 String propertyName = name.substring(3);
                 Method getter = findGetter(methods, propertyName, paramTypes[0]);
                 if (getter != null) {
-                    PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
+                    PropertyAccessor propertyAccessor = new PropertyAccessor(type, getter, setter);
                     char[] cname = propertyName.toCharArray();
                     cname[0] = Character.toLowerCase(cname[0]);
                     propertyName = new String(cname);
@@ -119,7 +121,7 @@ public final class Accessors {
         return properties;
     }
 
-    private static MemberAccessor getFieldAccessor(Field field) {
+    private static MemberAccessor getFieldAccessor(Type type, Field field) {
         if (unsafe != null && !isAndroid()) {
             Class<?> cls = field.getType();
             if (cls == int.class) {
@@ -146,22 +148,22 @@ public final class Accessors {
             if (cls == double.class) {
                 return new DoubleFieldAccessor(field);
             }
-            return new FieldAccessor(field);
+            return new FieldAccessor(type, field);
         }
-        return new SafeFieldAccessor(field);
+        return new SafeFieldAccessor(type, field);
     }
 
-    private static Map<String, MemberAccessor> getFields(Class<?> type) {
+    private static Map<String, MemberAccessor> getFields(Type type) {
         LinkedCaseInsensitiveMap<String, MemberAccessor> fields = fieldsCache.get(type);
         if (fields == null) {
             fields = new LinkedCaseInsensitiveMap<String, MemberAccessor>();
-            for (Class<?> clazz = type; clazz != null; clazz = clazz.getSuperclass()) {
+            for (Class<?> clazz = ClassUtil.toClass(type); clazz != null; clazz = clazz.getSuperclass()) {
                 Field[] fs = clazz.getDeclaredFields();
                 for (Field field : fs) {
                     int mod = field.getModifiers();
                     if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                         String fieldName = field.getName();
-                        fields.put(fieldName, getFieldAccessor(field));
+                        fields.put(fieldName, getFieldAccessor(type, field));
                     }
                 }
             }
@@ -170,11 +172,12 @@ public final class Accessors {
         return fields;
     }
 
-    private static Map<String, MemberAccessor> getMembers(Class<?> type) {
+    private static Map<String, MemberAccessor> getMembers(Type type) {
         LinkedCaseInsensitiveMap<String, MemberAccessor> members = membersCache.get(type);
         if (members == null) {
+            Class<?> clazz = ClassUtil.toClass(type);
             members = new LinkedCaseInsensitiveMap<String, MemberAccessor>();
-            Method[] methods = type.getMethods();
+            Method[] methods = clazz.getMethods();
             for (Method setter : methods) {
                 if (Modifier.isStatic(setter.getModifiers())) {
                     continue;
@@ -193,19 +196,19 @@ public final class Accessors {
                 String propertyName = name.substring(3);
                 Method getter = findGetter(methods, propertyName, paramTypes[0]);
                 if (getter != null) {
-                    PropertyAccessor propertyAccessor = new PropertyAccessor(getter, setter);
+                    PropertyAccessor propertyAccessor = new PropertyAccessor(type, getter, setter);
                     char[] cname = propertyName.toCharArray();
                     cname[0] = Character.toLowerCase(cname[0]);
                     propertyName = new String(cname);
                     members.put(propertyName, propertyAccessor);
                 }
             }
-            Field[] fs = type.getFields();
+            Field[] fs = clazz.getFields();
             for (Field field : fs) {
                 int mod = field.getModifiers();
                 if (!Modifier.isTransient(mod) && !Modifier.isStatic(mod)) {
                     String fieldName = field.getName();
-                    members.put(fieldName, getFieldAccessor(field));
+                    members.put(fieldName, getFieldAccessor(type, field));
                 }
             }
             membersCache.put(type, members);
@@ -213,8 +216,9 @@ public final class Accessors {
         return members;
     }
 
-    public final static Map<String, MemberAccessor> getMembers(Class<?> type, HproseMode mode) {
-        return ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(type)) ?
+    public final static Map<String, MemberAccessor> getMembers(Type type, HproseMode mode) {
+        Class<?> clazz = ClassUtil.toClass(type);
+        return ((mode != HproseMode.MemberMode) && Serializable.class.isAssignableFrom(clazz)) ?
                (mode == HproseMode.FieldMode) ?
                getFields(type) :
                getProperties(type) :

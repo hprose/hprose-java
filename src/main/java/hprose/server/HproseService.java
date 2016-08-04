@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Jul 28, 2016                             *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -749,27 +749,29 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         if (result instanceof Future) {
             result = ((Future)result).get();
         }
-        if (remoteMethod.mode == HproseResultMode.RawWithEndTag) {
-            data.write((byte[])result);
-            return data.buffer;
-        }
-        else if (remoteMethod.mode == HproseResultMode.Raw) {
-            data.write((byte[])result);
-        }
-        else {
-            data.write(TagResult);
-            boolean simple = remoteMethod.simple;
-            Writer writer = new Writer(data.getOutputStream(), mode, simple);
-            if (remoteMethod.mode == HproseResultMode.Serialized) {
+        switch (remoteMethod.mode) {
+            case RawWithEndTag:
                 data.write((byte[])result);
-            }
-            else {
-                writer.serialize(result);
-            }
-            if (context.isByref()) {
-                data.write(TagArgument);
-                writer.reset();
-                writer.writeArray(args);
+                return data.buffer;
+            case Raw:
+                data.write((byte[])result);
+                break;
+            default: {
+                data.write(TagResult);
+                boolean simple = remoteMethod.simple;
+                Writer writer = new Writer(data.getOutputStream(), mode, simple);
+                if (remoteMethod.mode == HproseResultMode.Serialized) {
+                    data.write((byte[])result);
+                }
+                else {
+                    writer.serialize(result);
+                }
+                if (context.isByref()) {
+                    data.write(TagArgument);
+                    writer.reset();
+                    writer.writeArray(args);
+                }
+                break;
             }
         }
         data.flip();

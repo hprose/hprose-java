@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jul 26, 2016                             *
+ * LastModified: Aug 5, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -874,8 +875,8 @@ public abstract class HproseClient extends HandlerManager {
         if (topics != null) {
             if (id == null) {
                 if (autoId == null) {
-                    for (Integer i: topics.keySet()) {
-                        delTopic(topics, i, callback);
+                    for (Enumeration<Integer> e = topics.keys(); e.hasMoreElements();) {
+                        delTopic(topics, e.nextElement(), callback);
                     }
                 }
                 else {

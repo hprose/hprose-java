@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-public class ImmutablePairSerializer<K, V> extends ReferenceSerializer<ImmutablePair<K, V>> {
+public class ImmutablePairSerializer extends ReferenceSerializer<ImmutablePair> {
 
     public final static ImmutablePairSerializer instance = new ImmutablePairSerializer();
 
     @Override
-    public void serialize(Writer writer, ImmutablePair<K, V> pair) throws IOException {
+    public void serialize(Writer writer, ImmutablePair pair) throws IOException {
         super.serialize(writer, pair);
         OutputStream stream = writer.stream;
         stream.write(TagMap);

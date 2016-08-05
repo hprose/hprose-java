@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.hprose</groupId>
     <artifactId>hprose-java</artifactId>
-    <version>2.0.12</version>
+    <version>2.0.13</version>
     <name>Hprose for Java</name>
     <description>Hprose is a High Performance Remote Object Service Engine.
 
@@ -32,7 +32,7 @@
         Through Hprose, You can conveniently and efficiently intercommunicate between those programming languages.
 
         This project is the implementation of Hprose for Java.</description>
-
+    <url>https://github.com/hprose/hprose-java</url>
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -49,13 +49,15 @@
         <connection>scm:git:https://github.com/hprose/hprose-java.git</connection>
         <developerConnection>scm:git:https://github.com/hprose/hprose-java.git</developerConnection>
         <url>https://github.com/hprose/hprose-java</url>
-        <tag>v2.0.12</tag>
+        <tag>v2.0.13</tag>
     </scm>
     <developers>
         <developer>
             <id>andot</id>
             <name>Ma Bingyao</name>
             <email>andot@hprose.com</email>
+            <organization>hprose</organization>
+            <organizationUrl>http://www.hprose.com</organizationUrl>
         </developer>
     </developers>
 
@@ -90,61 +92,208 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <tagNameFormat>v@{project.version}</tagNameFormat>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile> 
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.3</version>
+                        <configuration>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.5.1</version>
+                        <configuration>
+                            <source>1.7</source>
+                            <target>1.7</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.4</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>jdk15</id>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+            <build>  
+                <plugins>  
+                    <plugin>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <version>3.0.2</version>
+                        <executions>  
+                            <execution>  
+                                <phase>package</phase>  
+                                <goals>  
+                                    <goal>jar</goal>  
+                                </goals>  
+                                <configuration>  
+                                    <classifier>jdk15</classifier>  
+                                </configuration>  
+                            </execution>  
+                        </executions>  
+                    </plugin>  
+                </plugins>  
+            </build>  
+            <properties>  
+                <jar.source>1.5</jar.source>  
+                <jar.target>1.5</jar.target>  
+            </properties>  
+        </profile>
+        <profile>
+            <id>jdk16</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <build>  
+                <plugins>  
+                    <plugin>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <version>3.0.2</version>
+                        <executions>  
+                            <execution>  
+                                <phase>package</phase>  
+                                <goals>  
+                                    <goal>jar</goal>  
+                                </goals>  
+                                <configuration>  
+                                    <classifier>jdk16</classifier>  
+                                </configuration>  
+                            </execution>  
+                        </executions>  
+                    </plugin>  
+                </plugins>  
+            </build>  
+            <properties>  
+                <jar.source>1.6</jar.source>  
+                <jar.target>1.6</jar.target>  
+            </properties>  
+        </profile>
+        <profile>
+            <id>jdk17</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>  
+                <plugins>  
+                    <plugin>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <version>3.0.2</version>
+                        <executions>
+                            <execution>  
+                                <phase>package</phase>  
+                                <goals>  
+                                    <goal>jar</goal>  
+                                </goals>  
+                                <configuration>  
+                                    <classifier>jdk17</classifier>  
+                                </configuration>  
+                            </execution>  
+                        </executions>  
+                    </plugin>  
+                </plugins>  
+            </build>  
+            <properties>  
+                <jar.source>1.7</jar.source>  
+                <jar.target>1.7</jar.target>  
+            </properties>  
+        </profile>  
+        <profile>
+            <id>jdk18</id>
+            <build>  
+                <plugins>  
+                    <plugin>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <version>3.0.2</version>
+                        <executions>
+                            <execution>  
+                                <phase>package</phase>  
+                                <goals>  
+                                    <goal>jar</goal>  
+                                </goals>  
+                                <configuration>  
+                                    <classifier>jdk18</classifier>  
+                                </configuration>  
+                            </execution>  
+                        </executions>  
+                    </plugin>  
+                </plugins>  
+            </build>  
+            <properties>  
+                <jar.source>1.8</jar.source>  
+                <jar.target>1.8</jar.target>  
+            </properties>  
+        </profile>  
+    </profiles>  
 </project>

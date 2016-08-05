@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Aug 5, 2016                              *
+ * LastModified: Aug 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -52,7 +52,6 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1206,12 +1205,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
     }
 
     public final Integer[] idlist(String topic) {
-        ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
-        ArrayList<Integer> a = new ArrayList(topics.size());
-        for (Enumeration<Integer> e = topics.keys(); e.hasMoreElements();) {
-            a.add(e.nextElement());
-        }
-        return a.toArray(new Integer[0]);
+        return getTopics(topic).keySet().toArray(new Integer[0]);
     }
 
     public final boolean exist(String topic, Integer id) {

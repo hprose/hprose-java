@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Aug 5, 2016                              *
+ * LastModified: Jul 3, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -33,7 +33,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -151,12 +150,12 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
         return request.result;
     }
 
-    protected void close(ConcurrentHashMap<Connection, Object> responses) {
+    protected void close(Map<Connection, Object> responses) {
         interrupt();
         while (!responses.isEmpty()) {
-            Enumeration<Connection> it = responses.keys();
-            while (it.hasMoreElements()) {
-                Connection conn = it.nextElement();
+            Iterator<Connection> it = responses.keySet().iterator();
+            while (it.hasNext()) {
+                Connection conn = it.next();
                 conn.close();
             }
         }
@@ -176,13 +175,13 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 
 final class FullDuplexSocketTransporter extends SocketTransporter {
     private final static AtomicInteger nextId = new AtomicInteger(0);
-    private final ConcurrentHashMap<Connection, ConcurrentHashMap<Integer, Response>> responses = new ConcurrentHashMap<Connection, ConcurrentHashMap<Integer, Response>>();
+    private final Map<Connection, Map<Integer, Response>> responses = new ConcurrentHashMap<Connection, Map<Integer, Response>>();
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
             long currentTime = System.currentTimeMillis();
-            Iterator<Map.Entry<Connection, ConcurrentHashMap<Integer, Response>>> iterator = responses.entrySet().iterator();
+            Iterator<Map.Entry<Connection, Map<Integer, Response>>> iterator = responses.entrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<Connection, ConcurrentHashMap<Integer, Response>> entry = iterator.next();
+                Map.Entry<Connection, Map<Integer, Response>> entry = iterator.next();
                 Connection conn = entry.getKey();
                 Map<Integer, Response> res = entry.getValue();
                 Iterator<Map.Entry<Integer, Response>> it = res.entrySet().iterator();
@@ -242,7 +241,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     @SuppressWarnings("unchecked")
     public final void close() {
         timer.clear();
-        close((ConcurrentHashMap<Connection, Object>)(Object)responses);
+        close((Map<Connection, Object>)(Object)responses);
     }
 
     public void onConnect(Connection conn) {
@@ -312,7 +311,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 
 final class HalfDuplexSocketTransporter extends SocketTransporter {
     private final static Response nullResponse = new Response(null, 0);
-    private final ConcurrentHashMap<Connection, Response> responses = new ConcurrentHashMap<Connection, Response>();
+    private final Map<Connection, Response> responses = new ConcurrentHashMap<Connection, Response>();
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
             long currentTime = System.currentTimeMillis();
@@ -362,7 +361,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     @SuppressWarnings("unchecked")
     public final void close() {
         timer.clear();
-        close((ConcurrentHashMap<Connection, Object>)(Object)responses);
+        close((Map<Connection, Object>)(Object)responses);
     }
 
     public void onConnect(Connection conn) {

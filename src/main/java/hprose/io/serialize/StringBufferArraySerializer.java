@@ -12,7 +12,7 @@
  *                                                        *
  * StringBuffer array serializer class for Java.          *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class StringBufferArraySerializer extends ReferenceSerializer<StringBuffer[]> {
+public final class StringBufferArraySerializer extends ReferenceSerializer<StringBuffer[]> {
 
     public final static StringBufferArraySerializer instance = new StringBufferArraySerializer();
 

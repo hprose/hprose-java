@@ -12,7 +12,7 @@
  *                                                        *
  * other type array serializer class for Java.            *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 
-final class OtherTypeArraySerializer extends ReferenceSerializer {
+public final class OtherTypeArraySerializer extends ReferenceSerializer {
 
     public final static OtherTypeArraySerializer instance = new OtherTypeArraySerializer();
 

@@ -231,7 +231,7 @@ public final class ValueWriter {
         }
     }
 
-    final static void write(OutputStream stream, char[] s) throws IOException {
+    public final static void write(OutputStream stream, char[] s) throws IOException {
         int length = s.length;
         if (length > 0) {
             writeInt(stream, length);
@@ -279,7 +279,7 @@ public final class ValueWriter {
         stream.write(TagQuote);
     }
 
-    final static void write(OutputStream stream, String s) throws IOException {
+    public final static void write(OutputStream stream, String s) throws IOException {
         int length = s.length();
         if (length > 0) {
             writeInt(stream, length);
@@ -327,7 +327,7 @@ public final class ValueWriter {
         stream.write(TagQuote);
     }
 
-    final static void writeDate(OutputStream stream, int year, int month, int day) throws IOException {
+    public final static void writeDate(OutputStream stream, int year, int month, int day) throws IOException {
         stream.write(TagDate);
         stream.write((byte) ('0' + (year / 1000 % 10)));
         stream.write((byte) ('0' + (year / 100 % 10)));
@@ -339,14 +339,14 @@ public final class ValueWriter {
         stream.write((byte) ('0' + (day % 10)));
     }
 
-    final static void writeDateOfCalendar(OutputStream stream, Calendar calendar) throws IOException {
+    public final static void writeDateOfCalendar(OutputStream stream, Calendar calendar) throws IOException {
         writeDate(stream,
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH) + 1,
             calendar.get(Calendar.DAY_OF_MONTH));
     }
 
-    final static void writeTime(OutputStream stream, int hour, int minute, int second, int millisecond, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
+    public final static void writeTime(OutputStream stream, int hour, int minute, int second, int millisecond, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
         if (ignoreZero && hour == 0 && minute == 0 && second == 0 && millisecond == 0) {
             return;
         }
@@ -365,7 +365,7 @@ public final class ValueWriter {
         }
     }
 
-    final static void writeTimeOfCalendar(OutputStream stream, Calendar calendar, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
+    public final static void writeTimeOfCalendar(OutputStream stream, Calendar calendar, boolean ignoreZero, boolean ignoreMillisecond) throws IOException {
         writeTime(stream,
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
@@ -374,7 +374,7 @@ public final class ValueWriter {
             ignoreZero, ignoreMillisecond);
     }
 
-    final static void writeNano(OutputStream stream, int nanosecond) throws IOException {
+    public final static void writeNano(OutputStream stream, int nanosecond) throws IOException {
         if (nanosecond > 0) {
             stream.write(TagPoint);
             stream.write((byte) ('0' + (nanosecond / 100000000 % 10)));
@@ -393,7 +393,7 @@ public final class ValueWriter {
         }
     }
 
-    final static byte[] getAscii(String s) {
+    public final static byte[] getAscii(String s) {
         int size = s.length();
         byte[] b = new byte[size--];
         for (; size >= 0; --size) {

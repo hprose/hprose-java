@@ -12,7 +12,7 @@
  *                                                        *
  * String serializer class for Java.                      *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import static hprose.io.HproseTags.TagString;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class StringSerializer extends ReferenceSerializer<String> {
+public final class StringSerializer extends ReferenceSerializer<String> {
 
     public final static StringSerializer instance = new StringSerializer();
 

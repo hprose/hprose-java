@@ -12,7 +12,7 @@
  *                                                        *
  * Time serializer class for Java.                        *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.sql.Time;
 import java.util.Calendar;
 
-final class TimeSerializer extends ReferenceSerializer<Time> {
+public final class TimeSerializer extends ReferenceSerializer<Time> {
 
     public final static TimeSerializer instance = new TimeSerializer();
 

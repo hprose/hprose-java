@@ -12,7 +12,7 @@
  *                                                        *
  * Date serializer class for Java.                        *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.sql.Date;
 import java.util.Calendar;
 
-final class DateSerializer extends ReferenceSerializer<Date> {
+public final class DateSerializer extends ReferenceSerializer<Date> {
 
     public final static DateSerializer instance = new DateSerializer();
 

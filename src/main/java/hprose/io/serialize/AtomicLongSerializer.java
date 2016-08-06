@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicLong serializer class for Java.                  *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,7 +22,7 @@ package hprose.io.serialize;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-final class AtomicLongSerializer implements Serializer<AtomicLong> {
+public final class AtomicLongSerializer implements Serializer<AtomicLong> {
 
     public final static AtomicLongSerializer instance = new AtomicLongSerializer();
 

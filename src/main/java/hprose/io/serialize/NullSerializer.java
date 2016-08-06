@@ -12,7 +12,7 @@
  *                                                        *
  * null serializer class for Java.                        *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,7 +22,7 @@ package hprose.io.serialize;
 import static hprose.io.HproseTags.TagNull;
 import java.io.IOException;
 
-final class NullSerializer implements Serializer {
+public final class NullSerializer implements Serializer {
 
     public final static NullSerializer instance = new NullSerializer();
 

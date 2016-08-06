@@ -12,13 +12,12 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Jul 28, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 package hprose.util.concurrent;
 
-import hprose.util.JdkVersion;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -309,9 +308,6 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
                 },
                 new Action<Throwable>() {
                     public void call(Throwable e) throws Throwable {
-                        if (JdkVersion.majorJavaVersion  >= JdkVersion.JAVA_17) {
-                            reason.addSuppressed(e);
-                        }
                         if (count.decrementAndGet() == 0) {
                             promise.reject(reason);
                         }

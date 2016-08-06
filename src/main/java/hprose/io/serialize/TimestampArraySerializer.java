@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp array serializer class for Java.             *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 
-final class TimestampArraySerializer extends ReferenceSerializer<Timestamp[]> {
+public final class TimestampArraySerializer extends ReferenceSerializer<Timestamp[]> {
 
     public final static TimestampArraySerializer instance = new TimestampArraySerializer();
 

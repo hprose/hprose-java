@@ -12,7 +12,7 @@
  *                                                        *
  * Converter factory for Java.                            *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -71,64 +71,12 @@ public final class ConverterFactory {
         converters.put(Pattern.class, PatternConverter.instance);
         converters.put(TimeZone.class, TimeZoneConverter.instance);
         converters.put(DateTime.class, HproseDateTimeConverter.instance);
-/*
-        converters.put(boolean[].class, BooleanArrayConverter.instance);
-        converters.put(char[].class, CharArrayConverter.instance);
-        converters.put(byte[].class, ByteArrayConverter.instance);
-        converters.put(short[].class, ShortArrayConverter.instance);
-        converters.put(int[].class, IntArrayConverter.instance);
-        converters.put(long[].class, LongArrayConverter.instance);
-        converters.put(float[].class, FloatArrayConverter.instance);
-        converters.put(double[].class, DoubleArrayConverter.instance);
-        converters.put(String[].class, StringArrayConverter.instance);
-        converters.put(BigInteger[].class, BigIntegerArrayConverter.instance);
-        converters.put(Date[].class, DateArrayConverter.instance);
-        converters.put(Time[].class, TimeArrayConverter.instance);
-        converters.put(Timestamp[].class, TimestampArrayConverter.instance);
-        converters.put(java.util.Date[].class, DateTimeArrayConverter.instance);
-        converters.put(Calendar[].class, CalendarArrayConverter.instance);
-        converters.put(BigDecimal[].class, BigDecimalArrayConverter.instance);
-        converters.put(StringBuilder[].class, StringBuilderArrayConverter.instance);
-        converters.put(StringBuffer[].class, StringBufferArrayConverter.instance);
-        converters.put(UUID[].class, UUIDArrayConverter.instance);
-        converters.put(char[][].class, CharsArrayConverter.instance);
-        converters.put(byte[][].class, BytesArrayConverter.instance);
-        converters.put(ArrayList.class, ArrayListConverter.instance);
-        converters.put(AbstractList.class, ArrayListConverter.instance);
-        converters.put(AbstractCollection.class, ArrayListConverter.instance);
-        converters.put(List.class, ArrayListConverter.instance);
-        converters.put(Collection.class, ArrayListConverter.instance);
-        converters.put(LinkedList.class, LinkedListConverter.instance);
-        converters.put(AbstractSequentialList.class, LinkedListConverter.instance);
-        converters.put(HashSet.class, HashSetConverter.instance);
-        converters.put(AbstractSet.class, HashSetConverter.instance);
-        converters.put(Set.class, HashSetConverter.instance);
-        converters.put(TreeSet.class, TreeSetConverter.instance);
-        converters.put(SortedSet.class, TreeSetConverter.instance);
-        converters.put(HashMap.class, HashMapConverter.instance);
-        converters.put(AbstractMap.class, HashMapConverter.instance);
-        converters.put(Map.class, HashMapConverter.instance);
-        converters.put(TreeMap.class, TreeMapConverter.instance);
-        converters.put(SortedMap.class, TreeMapConverter.instance);
-*/
+
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             try {
-                converters.put(Class.forName("java.time.LocalDate"), LocalDateConverter.instance);
-                converters.put(Class.forName("java.time.LocalTime"), LocalTimeConverter.instance);
-                converters.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeConverter.instance);
-                converters.put(Class.forName("java.time.OffsetTime"), OffsetTimeConverter.instance);
-                converters.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeConverter.instance);
-                converters.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeConverter.instance);
-                converters.put(Class.forName("java.time.Duration"), DurationConverter.instance);
-                converters.put(Class.forName("java.time.Instant"), InstantConverter.instance);
-                converters.put(Class.forName("java.time.MonthDay"), MonthDayConverter.instance);
-                converters.put(Class.forName("java.time.Period"), PeriodConverter.instance);
-                converters.put(Class.forName("java.time.Year"), YearConverter.instance);
-                converters.put(Class.forName("java.time.YearMonth"), YearMonthConverter.instance);
-                converters.put(Class.forName("java.time.ZoneId"), ZoneIdConverter.instance);
-                converters.put(Class.forName("java.time.ZoneOffset"), ZoneOffsetConverter.instance);
+                Class.forName("hprose.io.convert.java8.ConverterLoader");
             }
-            catch (Throwable e) {}
+            catch (ClassNotFoundException e) {}
         }
     }
 

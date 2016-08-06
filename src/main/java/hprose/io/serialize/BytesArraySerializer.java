@@ -12,7 +12,7 @@
  *                                                        *
  * bytes array serializer class for Java.                 *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class BytesArraySerializer extends ReferenceSerializer<byte[][]> {
+public final class BytesArraySerializer extends ReferenceSerializer<byte[][]> {
 
     public final static BytesArraySerializer instance = new BytesArraySerializer();
 

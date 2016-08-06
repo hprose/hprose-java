@@ -12,7 +12,7 @@
  *                                                        *
  * hprose unserializer factory for Java.                  *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -151,22 +151,9 @@ public final class UnserializerFactory {
         unserializers.put(DateTime.class, HproseDateTimeUnserializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             try {
-                unserializers.put(Class.forName("java.time.LocalDate"), LocalDateUnserializer.instance);
-                unserializers.put(Class.forName("java.time.LocalTime"), LocalTimeUnserializer.instance);
-                unserializers.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeUnserializer.instance);
-                unserializers.put(Class.forName("java.time.OffsetTime"), OffsetTimeUnserializer.instance);
-                unserializers.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeUnserializer.instance);
-                unserializers.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeUnserializer.instance);
-                unserializers.put(Class.forName("java.time.Duration"), DurationUnserializer.instance);
-                unserializers.put(Class.forName("java.time.Instant"), InstantUnserializer.instance);
-                unserializers.put(Class.forName("java.time.MonthDay"), MonthDayUnserializer.instance);
-                unserializers.put(Class.forName("java.time.Period"), PeriodUnserializer.instance);
-                unserializers.put(Class.forName("java.time.Year"), YearUnserializer.instance);
-                unserializers.put(Class.forName("java.time.YearMonth"), YearMonthUnserializer.instance);
-                unserializers.put(Class.forName("java.time.ZoneId"), ZoneIdUnserializer.instance);
-                unserializers.put(Class.forName("java.time.ZoneOffset"), ZoneOffsetUnserializer.instance);
+                Class.forName("hprose.io.unserialize.java8.UnserializerLoader");
             }
-            catch (Throwable e) {}
+            catch (ClassNotFoundException e) {}
         }
     }
 

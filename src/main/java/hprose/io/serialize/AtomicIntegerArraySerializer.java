@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicIntegerArray serializer class for Java.          *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-final class AtomicIntegerArraySerializer extends ReferenceSerializer<AtomicIntegerArray> {
+public final class AtomicIntegerArraySerializer extends ReferenceSerializer<AtomicIntegerArray> {
 
     public final static AtomicIntegerArraySerializer instance = new AtomicIntegerArraySerializer();
 

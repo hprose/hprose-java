@@ -12,7 +12,7 @@
  *                                                        *
  * List serializer class for Java.                        *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
 
-final class ListSerializer<T> extends ReferenceSerializer<List<T>> {
+public final class ListSerializer<T> extends ReferenceSerializer<List<T>> {
 
     public final static ListSerializer instance = new ListSerializer();
 

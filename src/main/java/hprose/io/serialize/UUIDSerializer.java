@@ -12,7 +12,7 @@
  *                                                        *
  * UUID serializer class for Java.                        *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.UUID;
 
-final class UUIDSerializer extends ReferenceSerializer<UUID> {
+public final class UUIDSerializer extends ReferenceSerializer<UUID> {
 
     public final static UUIDSerializer instance = new UUIDSerializer();
 

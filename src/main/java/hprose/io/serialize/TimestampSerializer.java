@@ -12,7 +12,7 @@
  *                                                        *
  * Timestamp serializer class for Java.                   *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-final class TimestampSerializer extends ReferenceSerializer<Timestamp> {
+public final class TimestampSerializer extends ReferenceSerializer<Timestamp> {
 
     public final static TimestampSerializer instance = new TimestampSerializer();
 

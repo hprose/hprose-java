@@ -12,7 +12,7 @@
  *                                                        *
  * Collection serializer class for Java.                  *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 
-final class CollectionSerializer<T> extends ReferenceSerializer<Collection<T>> {
+public final class CollectionSerializer<T> extends ReferenceSerializer<Collection<T>> {
 
     public final static CollectionSerializer instance = new CollectionSerializer();
 

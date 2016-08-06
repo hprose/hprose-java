@@ -12,7 +12,7 @@
  *                                                        *
  * float array serializer class for Java.                 *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import static hprose.io.HproseTags.TagOpenbrace;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class FloatArraySerializer extends ReferenceSerializer<float[]> {
+public final class FloatArraySerializer extends ReferenceSerializer<float[]> {
 
     public final static FloatArraySerializer instance = new FloatArraySerializer();
 

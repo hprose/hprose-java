@@ -12,7 +12,7 @@
  *                                                        *
  * BigDecimal array serializer class for Java.            *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 
-final class BigDecimalArraySerializer extends ReferenceSerializer<BigDecimal[]> {
+public final class BigDecimalArraySerializer extends ReferenceSerializer<BigDecimal[]> {
 
     public final static BigDecimalArraySerializer instance = new BigDecimalArraySerializer();
 

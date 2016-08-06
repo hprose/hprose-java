@@ -12,7 +12,7 @@
  *                                                        *
  * Calendar serializer class for Java.                    *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-final class CalendarSerializer extends ReferenceSerializer<Calendar> {
+public final class CalendarSerializer extends ReferenceSerializer<Calendar> {
 
     public final static CalendarSerializer instance = new CalendarSerializer();
 

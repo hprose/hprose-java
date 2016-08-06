@@ -12,7 +12,7 @@
  *                                                        *
  * DateTime serializer class for Java.                    *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.Date;
 
-final class DateTimeSerializer extends ReferenceSerializer<Date> {
+public final class DateTimeSerializer extends ReferenceSerializer<Date> {
 
     public final static DateTimeSerializer instance = new DateTimeSerializer();
 

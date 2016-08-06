@@ -12,7 +12,7 @@
  *                                                        *
  * Map serializer class for Java.                         *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-final class MapSerializer<K, V> extends ReferenceSerializer<Map<K, V>> {
+public final class MapSerializer<K, V> extends ReferenceSerializer<Map<K, V>> {
 
     public final static MapSerializer instance = new MapSerializer();
 

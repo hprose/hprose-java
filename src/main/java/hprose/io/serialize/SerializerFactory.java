@@ -12,7 +12,7 @@
  *                                                        *
  * hprose serializer factory for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -146,22 +146,9 @@ public final class SerializerFactory {
         serializers.put(DateTime.class, HproseDateTimeSerializer.instance);
         if (JdkVersion.majorJavaVersion >= JdkVersion.JAVA_18) {
             try {
-                serializers.put(Class.forName("java.time.LocalDate"), LocalDateSerializer.instance);
-                serializers.put(Class.forName("java.time.LocalTime"), LocalTimeSerializer.instance);
-                serializers.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeSerializer.instance);
-                serializers.put(Class.forName("java.time.OffsetTime"), OffsetTimeSerializer.instance);
-                serializers.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeSerializer.instance);
-                serializers.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeSerializer.instance);
-                serializers.put(Class.forName("java.time.Duration"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.Instant"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.MonthDay"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.Period"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.Year"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.YearMonth"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.ZoneId"), ToStringSerializer.instance);
-                serializers.put(Class.forName("java.time.ZoneOffset"), ToStringSerializer.instance);
+                Class.forName("hprose.io.serialize.java8.SerializerLoader");
             }
-            catch (Throwable e) {}
+            catch (ClassNotFoundException e) {}
         }
     }
 

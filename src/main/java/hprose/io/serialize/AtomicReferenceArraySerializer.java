@@ -12,7 +12,7 @@
  *                                                        *
  * AtomicReferenceArray serializer class for Java.        *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-final class AtomicReferenceArraySerializer extends ReferenceSerializer<AtomicReferenceArray> {
+public final class AtomicReferenceArraySerializer extends ReferenceSerializer<AtomicReferenceArray> {
 
     public final static AtomicReferenceArraySerializer instance = new AtomicReferenceArraySerializer();
 

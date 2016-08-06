@@ -12,7 +12,7 @@
  *                                                        *
  * Date array serializer class for Java.                  *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Date;
 
-final class DateArraySerializer extends ReferenceSerializer<Date[]> {
+public final class DateArraySerializer extends ReferenceSerializer<Date[]> {
 
     public final static DateArraySerializer instance = new DateArraySerializer();
 

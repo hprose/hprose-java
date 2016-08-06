@@ -12,7 +12,7 @@
  *                                                        *
  * other type serializer class for Java.                  *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,7 +35,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-final class OtherTypeSerializer extends ReferenceSerializer {
+public final class OtherTypeSerializer extends ReferenceSerializer {
 
     public final static OtherTypeSerializer instance = new OtherTypeSerializer();
 

@@ -12,7 +12,7 @@
  *                                                        *
  * Hprose DateTime serializer class for Java.             *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,7 +25,7 @@ import hprose.util.DateTime;
 import java.io.IOException;
 import java.io.OutputStream;
 
-final class HproseDateTimeSerializer extends ReferenceSerializer<DateTime> {
+public final class HproseDateTimeSerializer extends ReferenceSerializer<DateTime> {
 
     public final static HproseDateTimeSerializer instance = new HproseDateTimeSerializer();
 

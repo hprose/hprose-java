@@ -12,7 +12,7 @@
  *                                                        *
  * TimeZone serializer class for Java.                    *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Aug 6, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.TimeZone;
 
-final class TimeZoneSerializer extends ReferenceSerializer<TimeZone> {
+public final class TimeZoneSerializer extends ReferenceSerializer<TimeZone> {
 
     public final static TimeZoneSerializer instance = new TimeZoneSerializer();
 

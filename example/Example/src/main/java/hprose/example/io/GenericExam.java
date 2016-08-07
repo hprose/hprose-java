@@ -28,8 +28,8 @@ public class GenericExam {
         user2.name = "Jerry";
         user2.age = 15;
         set.add(user2);
-        message.id = 1;
-        message.data = set;
+        message.setId(1);
+        message.setData(set);
         ByteBufferStream stream = new ByteBufferStream();
         HproseWriter writer = new HproseWriter(stream.getOutputStream());
         writer.serialize(message);
@@ -37,6 +37,6 @@ public class GenericExam {
         stream.flip();
         HproseReader reader = new HproseReader(stream.getInputStream());
         Message<Set<User>> message2 = (Message<Set<User>>)reader.unserialize(type);
-        System.out.println(message2.data.getClass());
+        System.out.println(message2.getData().getClass());
     }
 }

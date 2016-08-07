@@ -1,4 +1,4 @@
-package hprose.example.io;
+package hprose.example.tcp;
 
 public class Message<T> {
     private int id;

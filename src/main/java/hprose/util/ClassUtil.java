@@ -12,7 +12,7 @@
  *                                                        *
  * Class Util class for Java.                             *
  *                                                        *
- * LastModified: Aug 2, 2016                              *
+ * LastModified: Aug 7, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -188,7 +188,7 @@ public final class ClassUtil {
             TypeVariable[] typeParameters = ((TypeVariable) paramType).getGenericDeclaration().getTypeParameters();
             int n = typeParameters.length;
             for (int i = 0; i < n; i++) {
-                if (typeParameters[i] == paramType) {
+                if (typeParameters[i].equals(paramType)) {
                     return actualTypeArguments[i];
                 }
             }

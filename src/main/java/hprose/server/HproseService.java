@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Aug 10, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1162,18 +1162,22 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                         resetTimer(topics, topic, id);
                         return message.result;
                     }
-                    else {
-                        delTimer(topics, id);
-                        t.count.incrementAndGet();
-                    }
+                    delTimer(topics, id);
+                    t.count.incrementAndGet();
+                    newRequest(t, id);
                 }
                 else {
                     t = new Topic((heartbeat < 0) ? HproseService.this.heartbeat : heartbeat);
                     topics.put(id, t);
+                    newRequest(t, id);
                     if (pushEvent != null) {
                         pushEvent.subscribe(topic, id, HproseService.this);
                     }
                 }
+                return setRequestTimer(topic, id, t.request, (timeout < 0) ? HproseService.this.timeout : timeout);
+            }
+
+            private void newRequest(Topic t, final Integer id) {
                 if (t.request != null) {
                     t.request.reject(invalidRequestException);
                 }
@@ -1185,7 +1189,6 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                     }
                 });
                 t.request = request;
-                return setRequestTimer(topic, id, request, (timeout < 0) ? HproseService.this.timeout : timeout);
             }
         }, topic);
     }

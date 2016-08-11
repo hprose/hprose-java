@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Aug 10, 2016                             *
+ * LastModified: Aug 11, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -53,6 +53,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -81,17 +82,9 @@ public abstract class HproseService extends HandlerManager implements HproseClie
     private final static InvalidRequestException invalidRequestException = new InvalidRequestException();
 
     public HproseService() {
-        add("call", new Callable<Integer>() {
-            private final AtomicInteger next = new AtomicInteger(0);
-            public Integer call() throws Exception {
-                int nextId = next.getAndIncrement();
-                if (nextId >= 0) {
-                    return nextId;
-                }
-                else {
-                    next.set(1);
-                    return 0;
-                }
+        add("call", new Callable<String>() {
+            public String call() throws Exception {
+                return UUID.randomUUID().toString();
             }
         }, "#", true);
     }
@@ -1060,17 +1053,17 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         this.pushEvent = pushEvent;
     }
 
-    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic>>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Topic>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<String, Topic>>();
 
-    private ConcurrentHashMap<Integer, Topic> getTopics(String topic) {
-        ConcurrentHashMap<Integer, Topic> topics = allTopics.get(topic);
+    private ConcurrentHashMap<String, Topic> getTopics(String topic) {
+        ConcurrentHashMap<String, Topic> topics = allTopics.get(topic);
         if (topics == null) {
             throw new RuntimeException("topic \"" + topic + "\" is not published.");
         }
         return topics;
     }
 
-    private void delTimer(ConcurrentHashMap<Integer, Topic> topics, Integer id) {
+    private void delTimer(ConcurrentHashMap<String, Topic> topics, String id) {
         Topic t = topics.get(id);
         if (t != null && t.timer != null) {
             t.timer.cancel(false);
@@ -1078,7 +1071,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    private void offline(ConcurrentHashMap<Integer, Topic> topics, String topic, Integer id) {
+    private void offline(ConcurrentHashMap<String, Topic> topics, String topic, String id) {
         delTimer(topics, id);
         ConcurrentLinkedQueue<Message> messages = topics.remove(id).messages;
         for (Message message: messages) {
@@ -1089,7 +1082,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    private void setTimer(final ConcurrentHashMap<Integer, Topic> topics, final String topic, final Integer id) {
+    private void setTimer(final ConcurrentHashMap<String, Topic> topics, final String topic, final String id) {
         Topic t = topics.get(id);
         if (t != null && t.timer == null) {
             t.timer = timerService.schedule(new Runnable() {
@@ -1100,13 +1093,13 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    private void resetTimer(final ConcurrentHashMap<Integer, Topic> topics, final String topic, final Integer id) {
+    private void resetTimer(final ConcurrentHashMap<String, Topic> topics, final String topic, final String id) {
         delTimer(topics, id);
         setTimer(topics, topic, id);
     }
 
-    private Promise<?> setRequestTimer(final String topic, final Integer id, Promise<?> request, int timeout) {
-        final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
+    private Promise<?> setRequestTimer(final String topic, final String id, Promise<?> request, int timeout) {
+        final ConcurrentHashMap<String, Topic> topics = getTopics(topic);
         if (timeout > 0) {
             return request.timeout(timeout).catchError(new AsyncFunc<Object, Throwable>() {
                 public Promise<Object> call(Throwable e) throws Throwable {
@@ -1146,10 +1139,10 @@ public abstract class HproseService extends HandlerManager implements HproseClie
     }
 
     public final void publish(final String topic, final int timeout, final int heartbeat) {
-        final ConcurrentHashMap<Integer, Topic> topics = new ConcurrentHashMap<Integer, Topic>();
+        final ConcurrentHashMap<String, Topic> topics = new ConcurrentHashMap<String, Topic>();
         allTopics.put(topic, topics);
-        add("call", new Func<Object, Integer>() {
-            public Object call(final Integer id) throws Throwable {
+        add("call", new Func<Object, String>() {
+            public Object call(final String id) throws Throwable {
                 Topic t = topics.get(id);
                 if (t != null) {
                     if (t.count.get() < 0) {
@@ -1177,7 +1170,7 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                 return setRequestTimer(topic, id, t.request, (timeout < 0) ? HproseService.this.timeout : timeout);
             }
 
-            private void newRequest(Topic t, final Integer id) {
+            private void newRequest(Topic t, final String id) {
                 if (t.request != null) {
                     t.request.reject(invalidRequestException);
                 }
@@ -1207,11 +1200,11 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    public final Integer[] idlist(String topic) {
-        return getTopics(topic).keySet().toArray(new Integer[0]);
+    public final String[] idlist(String topic) {
+        return getTopics(topic).keySet().toArray(new String[0]);
     }
 
-    public final boolean exist(String topic, Integer id) {
+    public final boolean exist(String topic, String id) {
         return getTopics(topic).containsKey(id);
     }
 
@@ -1219,26 +1212,26 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         multicast(topic, idlist(topic), result);
     }
 
-    public final void broadcast(String topic, Object result, Action<Integer[]> callback) {
+    public final void broadcast(String topic, Object result, Action<String[]> callback) {
         multicast(topic, idlist(topic), result, callback);
     }
 
-    public final void multicast(String topic, Integer[] ids, Object result) {
+    public final void multicast(String topic, String[] ids, Object result) {
         for (int i = 0, n = ids.length; i < n; ++i) {
             push(topic, ids[i], result);
         }
     }
 
-    public final void multicast(String topic, Integer[] ids, Object result, Action<Integer[]> callback) {
+    public final void multicast(String topic, String[] ids, Object result, Action<String[]> callback) {
         if (callback == null) {
             multicast(topic, ids, result);
             return;
         }
         int n = ids.length;
-        List<Integer> sent = Collections.synchronizedList(new ArrayList<Integer>(n));
+        List<String> sent = Collections.synchronizedList(new ArrayList<String>(n));
         AtomicInteger count = new AtomicInteger(n);
         for (int i = 0; i < n; ++i) {
-            Integer id = ids[i];
+            String id = ids[i];
             if (id != null) {
                 push(topic, id, result).then(check(sent, id, count, callback));
             }
@@ -1248,46 +1241,46 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         }
     }
 
-    private Action<Boolean> check(final List<Integer> sent, final Integer id, final AtomicInteger count, final Action<Integer[]> callback) {
+    private Action<Boolean> check(final List<String> sent, final String id, final AtomicInteger count, final Action<String[]> callback) {
         return new Action<Boolean>() {
             public void call(Boolean success) throws Throwable {
                 if (success) {
                     sent.add(id);
                 }
                 if (count.decrementAndGet() == 0) {
-                    callback.call(sent.toArray(new Integer[sent.size()]));
+                    callback.call(sent.toArray(new String[sent.size()]));
                 }
             }
         };
     }
 
-    public final void unicast(String topic, Integer id, Object result) {
+    public final void unicast(String topic, String id, Object result) {
         push(topic, id, result);
     }
 
-    public final void unicast(String topic, Integer id, Object result, Action<Boolean> callback) {
+    public final void unicast(String topic, String id, Object result, Action<Boolean> callback) {
         Promise<Boolean> detector = push(topic, id, result);
         if (callback != null) {
             detector.then(callback);
         }
     }
 
-    public final Promise<Integer[]> push(String topic, Object result) {
+    public final Promise<String[]> push(String topic, Object result) {
         return push(topic, idlist(topic), result);
     }
 
-    public final Promise<Integer[]> push(String topic, Integer[] ids, Object result) {
-        final Promise<Integer[]> detector = new Promise<Integer[]>();
-        multicast(topic, ids, result, new Action<Integer[]>() {
-            public void call(Integer[] value) throws Throwable {
+    public final Promise<String[]> push(String topic, String[] ids, Object result) {
+        final Promise<String[]> detector = new Promise<String[]>();
+        multicast(topic, ids, result, new Action<String[]>() {
+            public void call(String[] value) throws Throwable {
                 detector.resolve(value);
             }
         });
         return detector;
     }
 
-    public final Promise<Boolean> push(String topic, Integer id, Object result) {
-        final ConcurrentHashMap<Integer, Topic> topics = getTopics(topic);
+    public final Promise<Boolean> push(String topic, String id, Object result) {
+        final ConcurrentHashMap<String, Topic> topics = getTopics(topic);
         Topic t = topics.get(id);
         if (t == null) {
             return Promise.value(false);

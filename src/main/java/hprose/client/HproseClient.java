@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Jul 26, 2016                             *
+ * LastModified: Aug 11, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -710,25 +710,24 @@ public abstract class HproseClient extends HandlerManager {
         final ConcurrentLinkedQueue<Action<T>> callbacks = new ConcurrentLinkedQueue<Action<T>>();
     }
 
-    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic<?>>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Topic<?>>>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Topic<?>>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<String, Topic<?>>>();
 
-    private Topic<?> getTopic(String name, Integer id, boolean create) {
-        ConcurrentHashMap<Integer, Topic<?>> topics = allTopics.get(name);
+    private Topic<?> getTopic(String name, String id, boolean create) {
+        ConcurrentHashMap<String, Topic<?>> topics = allTopics.get(name);
         if (topics != null) {
             return topics.get(id);
         }
         if (create) {
-            allTopics.put(name, new ConcurrentHashMap<Integer, Topic<?>>());
+            allTopics.put(name, new ConcurrentHashMap<String, Topic<?>>());
         }
         return null;
     }
 
     private static final InvokeSettings autoIdSettings = new InvokeSettings();
-    private volatile Promise<Integer> autoId = null;
-    private volatile Integer _autoId = null;
+    private volatile String autoId = null;
 
     static {
-        autoIdSettings.setReturnType(Integer.class);
+        autoIdSettings.setReturnType(String.class);
         autoIdSettings.setSimple(true);
         autoIdSettings.setIdempotent(true);
         autoIdSettings.setFailswitch(true);
@@ -736,23 +735,17 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     @SuppressWarnings("unchecked")
-    private synchronized Promise<Integer> autoId() {
+    private synchronized String autoId() {
         if (autoId == null) {
             try {
-                autoId = (Promise<Integer>)this.invoke("#", autoIdSettings);
+                Promise<String> id = (Promise<String>)this.invoke("#", autoIdSettings);
+                autoId = id.toFuture().get(timeout, TimeUnit.MILLISECONDS);
             }
-            catch (Throwable e) {}
-            autoId.then(new Action<Integer>() {
-                public void call(Integer value) throws Throwable {
-                    _autoId = value;
+            catch (Throwable e) {
+                if (onError != null) {
+                    onError.handler("autoId", e);
                 }
-            }, new Action<Throwable>() {
-                public void call(Throwable e) throws Throwable {
-                    if (onError != null) {
-                        onError.handler("autoId", e);
-                    }
-                }
-            });
+            }
         }
         return autoId;
     }
@@ -765,11 +758,11 @@ public abstract class HproseClient extends HandlerManager {
         subscribe(name, callback, Object.class, timeout);
     }
 
-    public final void subscribe(String name, Integer id, Action<Object> callback) {
+    public final void subscribe(String name, String id, Action<Object> callback) {
         subscribe(name, id, callback, Object.class, timeout);
     }
 
-    public final void subscribe(String name, Integer id, Action<Object> callback, int timeout) {
+    public final void subscribe(String name, String id, Action<Object> callback, int timeout) {
         subscribe(name, id, callback, Object.class, timeout);
     }
 
@@ -778,19 +771,15 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final <T> void subscribe(final String name, final Action<T> callback, final Type type, final int timeout) {
-        autoId().then(new Action<Integer>() {
-            public void call(Integer value) throws Throwable {
-                subscribe(name, value, callback, type, timeout);
-            }
-        });
+        subscribe(name, autoId(), callback, type, timeout);
     }
 
-    public final <T> void subscribe(String name, Integer id, Action<T> callback, Type type) {
+    public final <T> void subscribe(String name, String id, Action<T> callback, Type type) {
         subscribe(name, id, callback, type, timeout);
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> void subscribe(final String name, final Integer id, Action<T> callback, final Type type, final int timeout) {
+    public final <T> void subscribe(final String name, final String id, Action<T> callback, final Type type, final int timeout) {
         Topic<T> topic = (Topic<T>)getTopic(name, id, true);
         if (topic == null) {
             final Action<Throwable> cb = new Action<Throwable>() {
@@ -843,7 +832,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void delTopic(ConcurrentHashMap<Integer, Topic<?>> topics, Integer id, Action<T> callback) {
+    private <T> void delTopic(ConcurrentHashMap<String, Topic<?>> topics, String id, Action<T> callback) {
         if (topics != null && topics.size() > 0) {
             if (callback != null) {
                 Topic<T> topic = (Topic<T>)topics.get(id);
@@ -866,24 +855,20 @@ public abstract class HproseClient extends HandlerManager {
     public <T> void unsubscribe(String name, Action<T> callback) {
         unsubscribe(name, null, callback);
     }
-    public void unsubscribe(String name, Integer id) {
+    public void unsubscribe(String name, String id) {
         unsubscribe(name, id, null);
     }
-    public <T> void unsubscribe(String name, Integer id, final Action<T> callback) {
-        final ConcurrentHashMap<Integer, Topic<?>> topics = (ConcurrentHashMap<Integer, Topic<?>>)allTopics.get(name);
+    public <T> void unsubscribe(String name, String id, final Action<T> callback) {
+        final ConcurrentHashMap<String, Topic<?>> topics = (ConcurrentHashMap<String, Topic<?>>)allTopics.get(name);
         if (topics != null) {
             if (id == null) {
                 if (autoId == null) {
-                    for (Integer i: topics.keySet()) {
+                    for (String i: topics.keySet()) {
                         delTopic(topics, i, callback);
                     }
                 }
                 else {
-                    autoId.then(new Action<Integer>() {
-                        public void call(Integer value) throws Throwable {
-                            delTopic(topics, value, callback);
-                        }
-                    });
+                    delTopic(topics, autoId, callback);
                 }
             }
             else {
@@ -892,8 +877,8 @@ public abstract class HproseClient extends HandlerManager {
         }
     }
 
-    public Integer getId() {
-        return _autoId;
+    public String getId() {
+        return autoId;
     }
 
 }

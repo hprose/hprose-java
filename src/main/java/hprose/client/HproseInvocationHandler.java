@@ -12,7 +12,7 @@
  *                                                        *
  * hprose InvocationHandler class for Java.               *
  *                                                        *
- * LastModified: Jun 30, 2016                             *
+ * LastModified: Aug 11, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -95,24 +95,25 @@ public class HproseInvocationHandler implements InvocationHandler {
                 returnType = ((ParameterizedType)paramTypes[n - 1]).getActualTypeArguments()[0];
             }
             Action<?> callback = (Action<?>)args[n - 1];
-            if (n == 1) {
-                if (timeout != null) {
-                    client.subscribe(name, callback, returnType, timeout.value());
-                }
-                else {
-                    client.subscribe(name, callback, returnType);
-                }
-            }
-            else if (n == 2) {
-                if (timeout != null) {
-                    client.subscribe(name, (Integer)args[0], callback, returnType, timeout.value());
-                }
-                else {
-                    client.subscribe(name, (Integer)args[0], callback, returnType);
-                }
-            }
-            else {
-                throw new NoSuchMethodException(name);
+            switch (n) {
+                case 1:
+                    if (timeout != null) {
+                        client.subscribe(name, callback, returnType, timeout.value());
+                    }
+                    else {
+                        client.subscribe(name, callback, returnType);
+                    }
+                    break;
+                case 2:
+                    if (timeout != null) {
+                        client.subscribe(name, args[0].toString(), callback, returnType, timeout.value());
+                    }
+                    else {
+                        client.subscribe(name, args[0].toString(), callback, returnType);
+                    }
+                    break;
+                default:
+                    throw new NoSuchMethodException(name);
             }
         }
         else if ((n > 0) && ClassUtil.toClass(paramTypes[n - 1]).equals(HproseCallback1.class)) {

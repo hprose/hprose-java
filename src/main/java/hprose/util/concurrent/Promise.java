@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Aug 6, 2016                              *
+ * LastModified: Aug 12, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private final static ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
@@ -40,8 +41,8 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     private final ConcurrentLinkedQueue<Subscriber<?, V>> subscribers = new ConcurrentLinkedQueue<Subscriber<?, V>>();
-    private volatile State state = State.PENDING;
-    private volatile Object value;
+    private volatile AtomicReference<State> state = new AtomicReference<State>(State.PENDING);
+    private volatile V value;
     private volatile Throwable reason;
 
     public Promise() {}
@@ -83,6 +84,12 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final static <T> Promise<T> value(Promise<T> value) {
+        Promise<T> promise = new Promise<T>();
+        promise.resolve(value);
+        return promise;
+    }
+
+    public final static <T> Promise<T> value(Thenable<T> value) {
         Promise<T> promise = new Promise<T>();
         promise.resolve(value);
         return promise;
@@ -738,6 +745,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private <R, V> void resolve(final Callback<R, V> onfulfill, final Promise<R> next, final V x) {
+        if (onfulfill != null) {
+            call(onfulfill, next, x);
+        }
+        else {
+            next.resolve((R)x);
+        }
+    }
+
     private <R> void reject(final Callback<R, Throwable> onreject, final Promise<R> next, final Throwable e) {
         if (onreject != null) {
             call(onreject, next, e);
@@ -748,71 +765,51 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <R> void resolve(final Callback<R, V> onfulfill, final Callback<R, Throwable> onreject, final Promise<R> next, final Object x) {
-        if (x instanceof Promise) {
-            if (x == this) {
-                reject(onreject, next, new TypeException("Self resolution"));
-                return;
-            }
-            Action<Object> resolveFunction = new Action<Object>() {
-                public void call(Object y) throws Throwable {
-                    resolve(onfulfill, onreject, next, y);
-                }
-            };
-            Action<Throwable> rejectFunction = new Action<Throwable>() {
-                public void call(Throwable e) throws Throwable {
-                    reject(onreject, next, e);
-                }
-            };
-            ((Promise<Object>)x).then(resolveFunction, rejectFunction);
-        }
-        else if (x instanceof Thenable) {
-            final AtomicBoolean notrun = new AtomicBoolean(true);
-            Action<Object> resolveFunction = new Action<Object>() {
-                public void call(Object y) throws Throwable {
-                    if (notrun.compareAndSet(true, false)) {
-                        resolve(onfulfill, onreject, next, y);
-                    }
-                }
-            };
-            Action<Throwable> rejectFunction = new Action<Throwable>() {
-                public void call(Throwable e) throws Throwable {
-                    if (notrun.compareAndSet(true, false)) {
-                        reject(onreject, next, e);
-                    }
-                }
-            };
-            try {
-                ((Thenable<Object>)x).then(resolveFunction, rejectFunction);
-            }
-            catch (Throwable e) {
-                if (notrun.compareAndSet(true, false)) {
-                    reject(onreject, next, e);
-                }
-            }
-        }
-        else {
-            if (onfulfill != null) {
-                call(onfulfill, next, (V)x);
-            }
-            else {
-                next.resolve((R)x);
-            }
-        }
-    }
-
-    public final void resolve(V value) {
-        _resolve(value);
-    }
-
-    @SuppressWarnings("unchecked")
     private <R> void _resolve(V value) {
-        if (state == State.PENDING) {
-            state = State.FULFILLED;
+        if (state.compareAndSet(State.PENDING, State.FULFILLED)) {
             this.value = value;
             while (!subscribers.isEmpty()) {
                 Subscriber<R, V> subscriber = (Subscriber<R, V>)subscribers.poll();
-                resolve(subscriber.onfulfill, subscriber.onreject, subscriber.next, value);
+                resolve(subscriber.onfulfill, subscriber.next, value);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void resolve(Object value) {
+        if (isPromise(value)) {
+            resolve((Promise<V>)value);
+        }
+        else if (isThenable(value)) {
+            resolve((Thenable<V>)value);
+        }
+        else {
+            _resolve((V)value);
+        }
+    }
+
+    public final void resolve(Thenable<V> value) {
+        final AtomicBoolean notrun = new AtomicBoolean(true);
+        Action<V> resolveFunction = new Action<V>() {
+            public void call(V y) throws Throwable {
+                if (notrun.compareAndSet(true, false)) {
+                    resolve(y);
+                }
+            }
+        };
+        Action<Throwable> rejectFunction = new Action<Throwable>() {
+            public void call(Throwable e) throws Throwable {
+                if (notrun.compareAndSet(true, false)) {
+                    reject(e);
+                }
+            }
+        };
+        try {
+            value.then(resolveFunction, rejectFunction);
+        }
+        catch (Throwable e) {
+            if (notrun.compareAndSet(true, false)) {
+                reject(e);
             }
         }
     }
@@ -821,30 +818,27 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         if (value == null) {
             _resolve(null);
         }
+        else if (value == this) {
+            reject(new TypeException("Self resolution"));
+        }
         else {
             value.fill(this);
         }
     }
 
-    public final void reject(Throwable e) {
-        _reject(e);
-    }
-
     @SuppressWarnings("unchecked")
     private <R> void _reject(Throwable e) {
-        if (state == State.PENDING) {
-            state = State.REJECTED;
+        if (state.compareAndSet(State.PENDING, State.REJECTED)) {
             this.reason = e;
             while (!subscribers.isEmpty()) {
                 Subscriber<R, V> subscriber = (Subscriber<R, V>)subscribers.poll();
-                if (subscriber.onreject != null) {
-                    call(subscriber.onreject, subscriber.next, e);
-                }
-                else {
-                    subscriber.next.reject(e);
-                }
+                reject(subscriber.onreject, subscriber.next, e);
             }
         }
+    }
+
+    public final void reject(Throwable e) {
+        _reject(e);
     }
 
     public final Promise<?> then(Action<V> onfulfill) {
@@ -883,19 +877,16 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     private <R> Promise<R> then(Callback<R, V> onfulfill, Callback<R, Throwable> onreject) {
         if ((onfulfill != null) || (onreject != null)) {
             Promise<R> next = new Promise<R>();
-            if (state == State.FULFILLED) {
-                resolve(onfulfill, onreject, next, value);
-            }
-            else if (state == State.REJECTED) {
-                if (onreject != null) {
-                    call(onreject, next, reason);
-                }
-                else {
-                    next.reject(reason);
-                }
-            }
-            else {
-                subscribers.offer(new Subscriber<R, V>(onfulfill, onreject, next));
+            switch (state.get()) {
+                case FULFILLED:
+                    resolve(onfulfill, next, value);
+                    break;
+                case REJECTED:
+                    reject(onreject, next, reason);
+                    break;
+                default:
+                    subscribers.offer(new Subscriber<R, V>(onfulfill, onreject, next));
+                    break;
             }
             return next;
         }
@@ -919,10 +910,10 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     public final State getState() {
-        return state;
+        return state.get();
     }
 
-    public final Object getValue() {
+    public final V getValue() {
         return value;
     }
 

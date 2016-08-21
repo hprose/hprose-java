@@ -12,7 +12,7 @@
  *                                                        *
  * DateTimeConverter class for Java.                      *
  *                                                        *
- * LastModified: Aug 2, 2016                              *
+ * LastModified: Aug 21, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -29,7 +29,7 @@ public class DateTimeConverter implements Converter<Date> {
     @SuppressWarnings({"deprecation"})
     public Date convertTo(Object obj, Type type) {
         if (obj instanceof DateTime) {
-            return ((DateTime) obj).toDate();
+            return ((DateTime) obj).toDateTime();
         }
         else if (obj instanceof String) {
             return new Date((String) obj);

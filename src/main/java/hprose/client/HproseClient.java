@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Aug 11, 2016                             *
+ * LastModified: Aug 25, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -770,7 +770,7 @@ public abstract class HproseClient extends HandlerManager {
         subscribe(name, callback, type, timeout);
     }
 
-    public final <T> void subscribe(final String name, final Action<T> callback, final Type type, final int timeout) {
+    public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout) {
         subscribe(name, autoId(), callback, type, timeout);
     }
 
@@ -778,8 +778,40 @@ public abstract class HproseClient extends HandlerManager {
         subscribe(name, id, callback, type, timeout);
     }
 
-    @SuppressWarnings("unchecked")
     public final <T> void subscribe(final String name, final String id, Action<T> callback, final Type type, final int timeout) {
+        subscribe(name, id, callback, type, timeout, false);
+    }
+
+    public final void subscribe(String name, Action<Object> callback, boolean failswitch) {
+        subscribe(name, callback, Object.class, timeout, failswitch);
+    }
+
+    public final void subscribe(String name, Action<Object> callback, int timeout, boolean failswitch) {
+        subscribe(name, callback, Object.class, timeout, failswitch);
+    }
+
+    public final void subscribe(String name, String id, Action<Object> callback, boolean failswitch) {
+        subscribe(name, id, callback, Object.class, timeout, failswitch);
+    }
+
+    public final void subscribe(String name, String id, Action<Object> callback, int timeout, boolean failswitch) {
+        subscribe(name, id, callback, Object.class, timeout, failswitch);
+    }
+
+    public final <T> void subscribe(String name, Action<T> callback, Type type, boolean failswitch) {
+        subscribe(name, callback, type, timeout, failswitch);
+    }
+
+    public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout, boolean failswitch) {
+        subscribe(name, autoId(), callback, type, timeout, failswitch);
+    }
+
+    public final <T> void subscribe(String name, String id, Action<T> callback, Type type, boolean failswitch) {
+        subscribe(name, id, callback, type, timeout, failswitch);
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <T> void subscribe(final String name, final String id, Action<T> callback, final Type type, final int timeout, final boolean failswitch) {
         Topic<T> topic = (Topic<T>)getTopic(name, id, true);
         if (topic == null) {
             final Action<Throwable> cb = new Action<Throwable>() {
@@ -788,7 +820,7 @@ public abstract class HproseClient extends HandlerManager {
                     if (topic != null) {
                         InvokeSettings settings = new InvokeSettings();
                         settings.setIdempotent(true);
-                        settings.setFailswitch(false);
+                        settings.setFailswitch(failswitch);
                         settings.setReturnType(type);
                         settings.setTimeout(timeout);
                         settings.setAsync(true);

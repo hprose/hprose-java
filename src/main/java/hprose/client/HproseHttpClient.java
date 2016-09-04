@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Sep 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -23,8 +23,8 @@ import hprose.common.InvokeSettings;
 import hprose.io.ByteBufferStream;
 import hprose.io.HproseMode;
 import hprose.util.Base64;
-import hprose.util.concurrent.Call;
 import hprose.util.concurrent.Promise;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,11 +38,21 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 public class HproseHttpClient extends HproseClient {
+    private final static ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    static {
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                pool.shutdown();
+            }
+        });
+    }
     private final ConcurrentHashMap<String, String> headers = new ConcurrentHashMap<String, String>();
     private static boolean disableGlobalCookie = false;
     private static CookieManager globalCookieManager = new CookieManager();
@@ -285,16 +295,17 @@ public class HproseHttpClient extends HproseClient {
     @Override
     protected Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, ClientContext context) {
         final InvokeSettings settings = context.getSettings();
-        Call<ByteBuffer> call = new Call<ByteBuffer>() {
-            public ByteBuffer call() throws Throwable {
-                return syncSendAndReceive(request, settings.getTimeout());
+        final Promise<ByteBuffer> promise = new Promise<ByteBuffer>();
+        pool.submit(new Runnable() {
+            public void run() {
+                try {
+                    promise.resolve(syncSendAndReceive(request, settings.getTimeout()));
+                }
+                catch (Throwable ex) {
+                    promise.reject(ex);
+                }
             }
-        };
-        if (settings.isAsync()) {
-            return new Promise<ByteBuffer>(call);
-        }
-        else {
-            return Promise.sync(call);
-        }
+        });
+        return promise;
     }
 }

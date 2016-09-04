@@ -12,7 +12,7 @@
  *                                                        *
  * hprose remote methods class for Java.                  *
  *                                                        *
- * LastModified: Jun 29, 2016                             *
+ * LastModified: Sep 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -952,5 +952,11 @@ public class HproseMethods {
 
     public void addMissingMethod(String methodName, Class<?> type, HproseResultMode mode, boolean simple, boolean oneway) throws NoSuchMethodException {
         addMethod(methodName, type, new Class<?>[] { String.class, Object[].class }, "*", mode, simple, oneway);
+    }
+
+    public void remove(String alias) {
+        String name = alias.toLowerCase();
+        methodNames.remove(name);
+        remoteMethods.remove(name);
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * client context class for Java.                         *
  *                                                        *
- * LastModified: Jun 2, 2016                              *
+ * LastModified: Sep 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -22,6 +22,7 @@ import hprose.common.HproseContext;
 import hprose.common.InvokeSettings;
 
 public class ClientContext extends HproseContext {
+    volatile int retried = 0;
     private final HproseClient client;
     private final InvokeSettings settings;
 

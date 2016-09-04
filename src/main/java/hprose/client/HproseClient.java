@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Aug 25, 2016                             *
+ * LastModified: Sep 4, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -52,7 +52,9 @@ import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
@@ -62,15 +64,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class HproseClient extends HandlerManager {
     private final static Object[] nullArgs = new Object[0];
     private final ArrayList<HproseFilter> filters = new ArrayList<HproseFilter>();
-    private final ArrayList<String> uris = new ArrayList<String>();
+    private final ArrayList<String> uriList = new ArrayList<String>();
     private final AtomicInteger index = new AtomicInteger(-1);
-    private HproseMode mode;
-    private int timeout = 30000;
-    private int retry = 10;
-    private boolean idempotent = false;
-    private boolean failswitch = false;
-    private boolean byref = false;
-    private boolean simple = false;
+    private volatile HproseMode mode;
+    private volatile int timeout = 30000;
+    private volatile int retry = 10;
+    private volatile boolean idempotent = false;
+    private volatile boolean failswitch = false;
+    private volatile int failround = 0;
+    private volatile boolean byref = false;
+    private volatile boolean simple = false;
     protected String uri;
     public HproseErrorEvent onError = null;
 
@@ -90,14 +93,14 @@ public abstract class HproseClient extends HandlerManager {
         this(uri == null ? (String[])null : new String[] {uri}, mode);
     }
 
-    protected HproseClient(String[] uris) {
-        this(uris, HproseMode.MemberMode);
+    protected HproseClient(String[] uriList) {
+        this(uriList, HproseMode.MemberMode);
     }
 
-    protected HproseClient(String[] uris, HproseMode mode) {
+    protected HproseClient(String[] uriList, HproseMode mode) {
         this.mode = mode;
-        if (uris != null) {
-            useService(uris);
+        if (uriList != null) {
+            setUriList(uriList);
         }
     }
 
@@ -127,10 +130,10 @@ public abstract class HproseClient extends HandlerManager {
         return create(new String[] { uri }, mode);
     }
 
-    public static HproseClient create(String[] uris, HproseMode mode) throws IOException, URISyntaxException {
-        String scheme = (new URI(uris[0])).getScheme().toLowerCase();
-        for (int i = 1, n = uris.length; i < n; ++i) {
-            if (!(new URI(uris[i])).getScheme().toLowerCase().equalsIgnoreCase(scheme)) {
+    public static HproseClient create(String[] uriList, HproseMode mode) throws IOException, URISyntaxException {
+        String scheme = (new URI(uriList[0])).getScheme().toLowerCase();
+        for (int i = 1, n = uriList.length; i < n; ++i) {
+            if (!(new URI(uriList[i])).getScheme().toLowerCase().equalsIgnoreCase(scheme)) {
                 throw new HproseException("Not support multiple protocol.");
             }
         }
@@ -139,7 +142,7 @@ public abstract class HproseClient extends HandlerManager {
             try {
                 HproseClient client = clientClass.newInstance();
                 client.mode = mode;
-                client.useService(uris);
+                client.useService(uriList);
                 return client;
             }
             catch (Exception ex) {
@@ -147,6 +150,35 @@ public abstract class HproseClient extends HandlerManager {
             }
         }
         throw new HproseException("This client doesn't support " + scheme + " scheme.");
+    }
+
+    public final List<String> getUriList() {
+        return uriList;
+    }
+
+    private void initUriList() {
+        Collections.shuffle(this.uriList);
+        this.index.set(0);
+        this.failround = 0;
+        this.uri = this.uriList.get(0);
+    }
+
+    public final void setUriList(List<String> uriList) {
+        this.uriList.clear();
+        int n = uriList.size();
+        for (int i = 0; i < n; i++) {
+            this.uriList.add(uriList.get(i));
+        }
+        this.initUriList();
+    }
+
+    public final void setUriList(String[] uriList) {
+        this.uriList.clear();
+        int n = uriList.length;
+        for (int i = 0; i < n; i++) {
+            this.uriList.add(uriList[i]);
+        }
+        this.initUriList();
     }
 
     public final int getTimeout() {
@@ -180,6 +212,10 @@ public abstract class HproseClient extends HandlerManager {
 
     public final void setFailswitch(boolean failswitch) {
         this.failswitch = failswitch;
+    }
+
+    public final int getFailround() {
+        return failround;
     }
 
     public final boolean isByref() {
@@ -225,19 +261,11 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final void useService(String uri) {
-        useService(new String[] { uri });
+        setUriList(new String[] { uri });
     }
 
-    public final void useService(String[] uris) {
-        this.uris.clear();
-        int n = uris.length;
-        for (int i = 0; i < n; i++) {
-            this.uris.add(uris[i]);
-        }
-        if (n > 0) {
-            index.set((int)Math.floor(Math.random() * n));
-            this.uri = uris[index.get()];
-        }
+    public final void useService(String[] uriList) {
+        setUriList(uriList);
     }
 
     public final <T> T useService(Class<T> type) {
@@ -248,8 +276,8 @@ public abstract class HproseClient extends HandlerManager {
         return useService(uri, type, null);
     }
 
-    public final <T> T useService(String[] uris, Class<T> type) {
-        return useService(uris, type, null);
+    public final <T> T useService(String[] uriList, Class<T> type) {
+        return useService(uriList, type, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -268,8 +296,8 @@ public abstract class HproseClient extends HandlerManager {
         return useService(type, ns);
     }
 
-    public final <T> T useService(String[] uris, Class<T> type, String ns) {
-        useService(uris);
+    public final <T> T useService(String[] uriList, Class<T> type, String ns) {
+        setUriList(uriList);
         return useService(type, ns);
     }
 
@@ -333,31 +361,43 @@ public abstract class HproseClient extends HandlerManager {
         if (settings.isFailswitch()) {
             failswitch();
         }
-        if (settings.isIdempotent()) {
-            int n = settings.getRetry();
-            if (n > 0) {
-                settings.setRetry(n - 1);
-                int interval = (n >= 10) ? 500 : (10 - n) * 500;
+        if (settings.isIdempotent() && context.retried < settings.getRetry()) {
+            int interval = ++context.retried * 500;
+            if (settings.isFailswitch()) {
+                interval -= (uriList.size() - 1) * 500;
+            }
+            if (interval > 5000) {
+                interval = 5000;
+            }
+            if (interval > 0) {
                 return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
                     public Promise<ByteBuffer> call() throws Throwable {
                         return sendRequest(request, context);
                     }
                 });
             }
+            else {
+                return sendRequest(request, context);
+            }
         }
         return null;
     }
 
     private void failswitch() {
-        int n = uris.size();
+        int n = uriList.size();
         if (n > 1) {
-            int i = index.get() + (int)Math.floor(Math.random() * (n - 1)) + 1;
-            if (i >= n) {
-                i %= n;
+            if (index.compareAndSet(n - 1, 0)) {
+                uri = uriList.get(0);
+                failround++;
             }
-            index.set(i);
-            uri = uris.get(i);
+            else {
+                uri = uriList.get(index.incrementAndGet());
+            }
         }
+        else {
+            failround++;
+        }
+
     }
 
     private ClientContext getContext(InvokeSettings settings) {

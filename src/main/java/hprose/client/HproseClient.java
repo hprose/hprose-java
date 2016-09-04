@@ -76,6 +76,7 @@ public abstract class HproseClient extends HandlerManager {
     private volatile boolean simple = false;
     protected String uri;
     public HproseErrorEvent onError = null;
+    public Action<HproseClient> onFailswitch = null;
 
     protected HproseClient() {
         this((String[])null, HproseMode.MemberMode);
@@ -356,7 +357,7 @@ public abstract class HproseClient extends HandlerManager {
         );
     }
 
-    private Promise<ByteBuffer> retry(final ByteBuffer request, final ClientContext context) {
+    private Promise<ByteBuffer> retry(final ByteBuffer request, final ClientContext context) throws Throwable {
         InvokeSettings settings = context.getSettings();
         if (settings.isFailswitch()) {
             failswitch();
@@ -383,7 +384,7 @@ public abstract class HproseClient extends HandlerManager {
         return null;
     }
 
-    private void failswitch() {
+    private void failswitch() throws Throwable {
         int n = uriList.size();
         if (n > 1) {
             if (index.compareAndSet(n - 1, 0)) {
@@ -397,7 +398,9 @@ public abstract class HproseClient extends HandlerManager {
         else {
             failround++;
         }
-
+        if (onFailswitch != null) {
+            onFailswitch.call(this);
+        }
     }
 
     private ClientContext getContext(InvokeSettings settings) {

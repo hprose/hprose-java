@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Aug 12, 2016                             *
+ * LastModified: Sep 5, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -875,22 +875,19 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
 
     @SuppressWarnings("unchecked")
     private <R> Promise<R> then(Callback<R, V> onfulfill, Callback<R, Throwable> onreject) {
-        if ((onfulfill != null) || (onreject != null)) {
-            Promise<R> next = new Promise<R>();
-            switch (state.get()) {
-                case FULFILLED:
-                    resolve(onfulfill, next, value);
-                    break;
-                case REJECTED:
-                    reject(onreject, next, reason);
-                    break;
-                default:
-                    subscribers.offer(new Subscriber<R, V>(onfulfill, onreject, next));
-                    break;
-            }
-            return next;
+        Promise<R> next = new Promise<R>();
+        switch (state.get()) {
+            case FULFILLED:
+                resolve(onfulfill, next, value);
+                break;
+            case REJECTED:
+                reject(onreject, next, reason);
+                break;
+            default:
+                subscribers.offer(new Subscriber<R, V>(onfulfill, onreject, next));
+                break;
         }
-        return (Promise<R>)this;
+        return next;
     }
 
     public final void done(Action<V> onfulfill) {

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Sep 4, 2016                              *
+ * LastModified: Sep 5, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -45,7 +45,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 public class HproseHttpClient extends HproseClient {
-    private final static ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private static ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() >> 1 + 1);
     static {
         Threads.registerShutdownHandler(new Runnable() {
             public void run() {
@@ -65,6 +65,10 @@ public class HproseHttpClient extends HproseClient {
     private String proxyPass = null;
     private HostnameVerifier hv = null;
     private SSLSocketFactory sslsf = null;
+
+    public static void setThreadPool(ExecutorService threadPool) {
+        pool = threadPool;
+    }
 
     public static void setDisableGlobalCookie(boolean value) {
         disableGlobalCookie = value;

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Sep 4, 2016                              *
+ * LastModified: Sep 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -67,12 +67,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class HproseService extends HandlerManager implements HproseClients {
 
-    private final static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor();
+    private static volatile ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor();
 
     static {
         Threads.registerShutdownHandler(new Runnable() {
             public void run() {
-                timerService.shutdownNow();
+                ScheduledExecutorService timer = timerService;
+                timerService = Executors.newSingleThreadScheduledExecutor();
+                timer.shutdownNow();
             }
         });
     }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Jul 3, 2016                              *
+ * LastModified: Sep 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -66,8 +66,8 @@ final class Response {
 
 abstract class SocketTransporter extends Thread implements ConnectionHandler {
     protected final static class ConnectorHolder {
-        final static Connector connector;
-        static {
+        private static volatile Connector connector;
+        private static void init() {
             Connector temp = null;
             try {
                 temp = new Connector(HproseTcpClient.getReactorThreads());
@@ -75,15 +75,25 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
             catch (IOException e) {}
             finally {
                 connector = temp;
-                connector.start();
             }
+        }
+        static {
+            init();
             Threads.registerShutdownHandler(new Runnable() {
                 public void run() {
-                    if (connector != null) {
-                        connector.close();
+                    Connector temp = connector;
+                    init();
+                    if (temp != null) {
+                        temp.close();
                     }
                 }
             });
+        }
+        public static final void create(String uri, ConnectionHandler handler, boolean keepAlive, boolean noDelay) throws IOException {
+            if (!connector.isAlive()) {
+                connector.start();
+            }
+            connector.create(uri, handler, keepAlive, noDelay);
         }
     }
     protected final HproseTcpClient client;
@@ -118,7 +128,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
                 if (idleConnections.isEmpty()) {
                     if (geRealPoolSize() < client.getMaxPoolSize()) {
                         try {
-                            ConnectorHolder.connector.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
+                            ConnectorHolder.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
                         }
                         catch (IOException ex) {
                             while ((request = requests.poll()) != null) {

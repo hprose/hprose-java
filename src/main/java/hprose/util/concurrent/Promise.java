@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Sep 5, 2016                              *
+ * LastModified: Sep 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -31,11 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
-    private final static ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
+    private static volatile ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
     static {
         Threads.registerShutdownHandler(new Runnable() {
             public void run() {
-                timer.shutdown();
+                ScheduledExecutorService t = timer;
+                timer = Executors.newSingleThreadScheduledExecutor();
+                t.shutdownNow();
             }
         });
     }

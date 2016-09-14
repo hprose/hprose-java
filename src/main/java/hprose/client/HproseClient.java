@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Sep 4, 2016                              *
+ * LastModified: Sep 14, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -43,6 +43,7 @@ import hprose.util.concurrent.AsyncCall;
 import hprose.util.concurrent.AsyncFunc;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
+import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -103,6 +104,11 @@ public abstract class HproseClient extends HandlerManager {
         if (uriList != null) {
             setUriList(uriList);
         }
+        Threads.registerShutdownHandler(new Runnable() {
+            public void run() {
+                close();
+            }
+        });
     }
 
     public void close() {}

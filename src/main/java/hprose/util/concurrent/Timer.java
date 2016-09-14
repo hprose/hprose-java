@@ -12,7 +12,7 @@
  *                                                        *
  * Timer class for Java.                                  *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Sep 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -25,13 +25,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Timer {
-    private final static ScheduledExecutorService timer1 = Executors.newSingleThreadScheduledExecutor();
-    private final static ScheduledExecutorService timer2 = Executors.newSingleThreadScheduledExecutor();
+    private static volatile ScheduledExecutorService timer1 = Executors.newSingleThreadScheduledExecutor();
+    private static volatile ScheduledExecutorService timer2 = Executors.newSingleThreadScheduledExecutor();
     static {
         Threads.registerShutdownHandler(new Runnable() {
             public void run() {
-                timer1.shutdown();
-                List<Runnable> tasks = timer2.shutdownNow();
+                ScheduledExecutorService timer = timer1;
+                timer1 = Executors.newSingleThreadScheduledExecutor();
+                timer.shutdownNow();
+                timer = timer2;
+                timer2 = Executors.newSingleThreadScheduledExecutor();
+                List<Runnable> tasks = timer.shutdownNow();
                 for (Runnable task: tasks) {
                     task.run();
                 }

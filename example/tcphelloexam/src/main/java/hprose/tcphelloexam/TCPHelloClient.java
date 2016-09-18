@@ -1,9 +1,6 @@
 package hprose.tcphelloexam;
 
 import hprose.client.HproseTcpClient;
-import hprose.common.HproseCallback1;
-import hprose.util.concurrent.Action;
-import hprose.util.concurrent.Promise;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,12 +16,12 @@ public class TCPHelloClient {
         client.setFullDuplex(true);
         client.setNoDelay(true);
         client.setMaxPoolSize(4);
-        client.subscribe("news", new Action<String>() {
-            @Override
-            public void call(String value) throws Throwable {
-                //System.out.println(value);
-            }
-        }, String.class);
+//        client.subscribe("news", new Action<String>() {
+//            @Override
+//            public void call(String value) throws Throwable {
+//                //System.out.println(value);
+//            }
+//        }, String.class);
 
 //        client.addFilter(new HproseFilter() {
 //            public String getString(ByteBuffer buffer) {
@@ -57,18 +54,18 @@ public class TCPHelloClient {
 //        });
 
 
-        System.out.println(client.invoke("hello", new Object[] {"World"}));
-        client.invoke("hello", new Object[] {"Async World"}, Promise.class).then(new Action<String>() {
-            @Override
-            public void call(String value) throws Throwable {
-                System.out.println(value);
-            }
-        }, new Action<Throwable>() {
-            @Override
-            public void call(Throwable value) throws Throwable {
-                Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, value);
-            }
-        });
+//        System.out.println(client.invoke("hello", new Object[] {"World"}));
+//        client.invoke("hello", new Object[] {"Async World"}, Promise.class).then(new Action<String>() {
+//            @Override
+//            public void call(String value) throws Throwable {
+//                System.out.println(value);
+//            }
+//        }, new Action<Throwable>() {
+//            @Override
+//            public void call(Throwable value) throws Throwable {
+//                Logger.getLogger(TCPHelloClient.class.getName()).log(Level.SEVERE, null, value);
+//            }
+//        });
 
         for (int i = 0; i < threadNumber; i++) {
             threads[i] = new Thread() {
@@ -91,19 +88,19 @@ public class TCPHelloClient {
         long end = System.currentTimeMillis();
         System.out.println("总耗时: " + (end - start));
         System.out.println(((threadNumber * roundNumber) * 1000/(end - start)) + " QPS");
-        start = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            client.invoke("hello", new Object[] {"World"}, new HproseCallback1<String>() {
-                @Override
-                public void handler(String result) {
-                    System.out.println(result);
-                }
-            });
-        }
-        client.unsubscribe("news");
-        //client.close();
-        end = System.currentTimeMillis();
-        System.out.println(end - start);
+//        start = System.currentTimeMillis();
+//        for (int i = 0; i < 10; i++) {
+//            client.invoke("hello", new Object[] {"World"}, new HproseCallback1<String>() {
+//                @Override
+//                public void handler(String result) {
+//                    System.out.println(result);
+//                }
+//            });
+//        }
+//        client.unsubscribe("news");
+//        client.close();
+//        end = System.currentTimeMillis();
+//        System.out.println(end - start);
         System.out.println("END");
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Sep 14, 2016                             *
+ * LastModified: Sep 18, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -55,12 +55,10 @@ final class Request {
 
 final class Response {
     public final Promise<ByteBuffer> result;
-    public final long createTime;
-    public final int timeout;
-    public Response(Promise<ByteBuffer> result, int timeout) {
+    public final Timer timer;
+    public Response(Promise<ByteBuffer> result, Timer timer) {
         this.result = result;
-        this.createTime = System.currentTimeMillis();
-        this.timeout = timeout;
+        this.timer = timer;
     }
 }
 
@@ -71,6 +69,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
             Connector temp = null;
             try {
                 temp = new Connector(HproseTcpClient.getReactorThreads());
+                temp.start();
             }
             catch (IOException e) {}
             finally {
@@ -90,9 +89,6 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
             });
         }
         public static final void create(String uri, ConnectionHandler handler, boolean keepAlive, boolean noDelay) throws IOException {
-            if (!connector.isAlive()) {
-                connector.start();
-            }
             connector.create(uri, handler, keepAlive, noDelay);
         }
     }
@@ -126,7 +122,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
                     requests.offer(request);
                 }
                 if (idleConnections.isEmpty()) {
-                    if (geRealPoolSize() < client.getMaxPoolSize()) {
+                    if (getRealPoolSize() < client.getMaxPoolSize()) {
                         try {
                             ConnectorHolder.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
                         }
@@ -139,10 +135,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
                 }
                 Connection conn = idleConnections.poll(client.getConnectTimeout(), TimeUnit.MILLISECONDS);
                 if (conn != null) {
-                    request = requests.poll();
-                    if (request == null) {
-                        request = requests.take();
-                    }
+                    request = requests.take();
                     send(conn, request);
                 }
             }
@@ -150,7 +143,7 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
         catch (InterruptedException e) {}
     }
 
-    protected abstract int geRealPoolSize();
+    protected abstract int getRealPoolSize();
 
     protected abstract void send(Connection conn, Request request);
 
@@ -186,54 +179,41 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
 final class FullDuplexSocketTransporter extends SocketTransporter {
     private final static AtomicInteger nextId = new AtomicInteger(0);
     private final Map<Connection, Map<Integer, Response>> responses = new ConcurrentHashMap<Connection, Map<Integer, Response>>();
-    private final Timer timer = new Timer(new Runnable() {
-        public void run() {
-            long currentTime = System.currentTimeMillis();
-            Iterator<Map.Entry<Connection, Map<Integer, Response>>> iterator = responses.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Connection, Map<Integer, Response>> entry = iterator.next();
-                Connection conn = entry.getKey();
-                Map<Integer, Response> res = entry.getValue();
-                Iterator<Map.Entry<Integer, Response>> it = res.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<Integer, Response> e = it.next();
-                    Response response = e.getValue();
-                    if ((currentTime - response.createTime) >=  response.timeout) {
-                        it.remove();
-                        response.result.reject(new TimeoutException("timeout"));
-                    }
-                }
-                if (res.isEmpty() && conn.isConnected()) {
-                    recycle(conn);
-                }
-            }
-        }
-    });
 
     public FullDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
-        init();
-    }
-
-    private void init() {
-        int timeout = Math.min(client.getTimeout(), client.getConnectTimeout());
-        timeout =  Math.min(timeout, client.getReadTimeout());
-        timeout =  Math.min(timeout, client.getWriteTimeout());
-        timeout = Math.max(timeout, 1000);
-        timer.setInterval((timeout + 1) >> 1);
-        start();
     }
 
     private void recycle(Connection conn) {
         conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
     }
 
-    protected final void send(Connection conn, Request request) {
-        Map<Integer, Response> res = responses.get(conn);
+    private Promise<ByteBuffer> clean(Map<Integer, Response> res, int id) {
+        Response response = res.remove(id);
+        if (response != null) {
+            response.timer.clear();
+            return response.result;
+        }
+        return null;
+    }
+    protected final void send(final Connection conn, Request request) {
+        final Map<Integer, Response> res = responses.get(conn);
         if (res != null) {
             if (res.size() < 10) {
-                int id = nextId.incrementAndGet() & 0x7fffffff;
-                res.put(id, new Response(request.result, request.timeout));
+                final int id = nextId.incrementAndGet() & 0x7fffffff;
+                Timer timer = new Timer(new Runnable() {
+                    public void run() {
+                        Promise<ByteBuffer> result = clean(res, id);
+                        if (res.isEmpty()) {
+                            recycle(conn);
+                        }
+                        if (result != null) {
+                            result.reject(new TimeoutException("timeout"));
+                        }
+                    }
+                });
+                timer.setTimeout(request.timeout);
+                res.put(id, new Response(request.result, timer));
                 conn.send(request.buffer, id);
             }
             else {
@@ -243,14 +223,13 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         }
     }
 
-    protected final int geRealPoolSize() {
+    protected final int getRealPoolSize() {
         return responses.size();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public final void close() {
-        timer.clear();
         close((Map<Connection, Object>)(Object)responses);
     }
 
@@ -279,6 +258,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                     Map.Entry<Integer, Response> entry = it.next();
                     it.remove();
                     Response response = entry.getValue();
+                    response.timer.clear();
                     response.result.reject(new TimeoutException(type.toString()));
                 }
             }
@@ -288,12 +268,12 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
         Map<Integer, Response> res = responses.get(conn);
         if (res != null) {
-            Response response = res.remove(id);
-            if (response != null) {
+            Promise<ByteBuffer> result = clean(res, id);
+            if (result != null) {
                 if (data.position() != 0) {
                     data.flip();
                 }
-                response.result.resolve(data);
+                result.resolve(data);
             }
             if (res.isEmpty()) {
                 recycle(conn);
@@ -320,37 +300,10 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 }
 
 final class HalfDuplexSocketTransporter extends SocketTransporter {
-    private final static Response nullResponse = new Response(null, 0);
     private final Map<Connection, Response> responses = new ConcurrentHashMap<Connection, Response>();
-    private final Timer timer = new Timer(new Runnable() {
-        public void run() {
-            long currentTime = System.currentTimeMillis();
-            Iterator<Map.Entry<Connection, Response>> it = responses.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<Connection, Response> entry = it.next();
-                Connection conn = entry.getKey();
-                Response response = entry.getValue();
-                if ((currentTime - response.createTime) >= response.timeout) {
-                    it.remove();
-                    response.result.reject(new TimeoutException("timeout"));
-                    conn.close();
-                }
-            }
-        }
-    });
 
     public HalfDuplexSocketTransporter(HproseTcpClient client) {
         super(client);
-        init();
-    }
-
-    private void init() {
-        int timeout = Math.min(client.getTimeout(), client.getConnectTimeout());
-        timeout =  Math.min(timeout, client.getReadTimeout());
-        timeout =  Math.min(timeout, client.getWriteTimeout());
-        timeout = Math.max(timeout, 1000);
-        timer.setInterval((timeout + 1) >> 1);
-        start();
     }
 
     private void recycle(Connection conn) {
@@ -358,24 +311,41 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
     }
 
-    protected final void send(Connection conn, Request request) {
-        responses.put(conn, new Response(request.result, request.timeout));
+    private Promise<ByteBuffer> clean(Connection conn) {
+        Response response = responses.remove(conn);
+        if (response != null) {
+            response.timer.clear();
+            return response.result;
+        }
+        return null;
+    }
+
+    protected final void send(final Connection conn, Request request) {
+        Timer timer = new Timer(new Runnable() {
+            public void run() {
+                Promise<ByteBuffer> result = clean(conn);
+                conn.close();
+                if (result != null) {
+                    result.reject(new TimeoutException("timeout"));
+                }
+            }
+        });
+        timer.setTimeout(request.timeout);
+        responses.put(conn, new Response(request.result, timer));
         conn.send(request.buffer, null);
     }
 
-    protected final int geRealPoolSize() {
+    protected final int getRealPoolSize() {
         return responses.size();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public final void close() {
-        timer.clear();
         close((Map<Connection, Object>)(Object)responses);
     }
 
     public void onConnect(Connection conn) {
-        responses.put(conn, nullResponse);
     }
 
     public void onConnected(Connection conn) {
@@ -391,8 +361,9 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
             }
         }
         else if (TimeoutType.IDLE_TIMEOUT != type) {
-            Response response = responses.put(conn, nullResponse);
-            if (response != null && response != nullResponse) {
+            Response response = responses.remove(conn);
+            if (response != null) {
+                response.timer.clear();
                 response.result.reject(new TimeoutException(type.toString()));
             }
         }
@@ -400,13 +371,13 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     }
 
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
-        Response response = responses.put(conn, nullResponse);
+        Promise<ByteBuffer> result = clean(conn);
         recycle(conn);
-        if (response != null && response != nullResponse) {
+        if (result != null) {
             if (data.position() != 0) {
                 data.flip();
             }
-            response.result.resolve(data);
+            result.resolve(data);
         }
     }
 
@@ -414,7 +385,8 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 
     public final void onError(Connection conn, Exception e) {
         Response response = responses.remove(conn);
-        if (response != null && response != nullResponse) {
+        if (response != null) {
+            response.timer.clear();
             response.result.reject(e);
         }
     }
@@ -449,26 +421,37 @@ public class HproseTcpClient extends HproseClient {
 
     public HproseTcpClient() {
         super();
+        init();
     }
 
     public HproseTcpClient(String uri) {
         super(uri);
+        init();
     }
 
     public HproseTcpClient(HproseMode mode) {
         super(mode);
+        init();
     }
 
     public HproseTcpClient(String uri, HproseMode mode) {
         super(uri, mode);
+        init();
     }
 
     public HproseTcpClient(String[] uris) {
         super(uris);
+        init();
     }
 
     public HproseTcpClient(String[] uris, HproseMode mode) {
         super(uris, mode);
+        init();
+    }
+
+    private void init() {
+        fdTrans.start();
+        hdTrans.start();
     }
 
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {

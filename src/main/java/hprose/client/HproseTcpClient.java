@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Sep 18, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,14 +34,13 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 final class Request {
     public final ByteBuffer buffer;
@@ -62,14 +61,13 @@ final class Response {
     }
 }
 
-abstract class SocketTransporter extends Thread implements ConnectionHandler {
+abstract class SocketTransporter implements ConnectionHandler {
     protected final static class ConnectorHolder {
         private static volatile Connector connector;
         private static void init() {
             Connector temp = null;
             try {
                 temp = new Connector(HproseTcpClient.getReactorThreads());
-                temp.start();
             }
             catch (IOException e) {}
             finally {
@@ -89,13 +87,19 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
             });
         }
         public static final void create(String uri, ConnectionHandler handler, boolean keepAlive, boolean noDelay) throws IOException {
+            if (!connector.isAlive()) {
+                try {
+                    connector.start();
+                }
+                catch (IllegalThreadStateException ignore) {}
+            }
             connector.create(uri, handler, keepAlive, noDelay);
         }
     }
+
     protected final HproseTcpClient client;
-    protected final BlockingQueue<Connection> idleConnections = new LinkedBlockingQueue<Connection>();
-    protected final BlockingQueue<Request> requests = new LinkedBlockingQueue<Request>();
-    protected final AtomicInteger size = new AtomicInteger(0);
+    protected final LinkedList<Connection> idleConnections = new LinkedList<Connection>();
+    protected final ConcurrentLinkedQueue<Request> requests = new ConcurrentLinkedQueue<Request>();
 
     public SocketTransporter(HproseTcpClient client) {
         super();
@@ -112,53 +116,37 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
         return client.getConnectTimeout();
     }
 
-    @Override
-    public void run() {
-        try {
-            while (!isInterrupted()) {
-                Request request;
-                if (requests.isEmpty()) {
-                    request = requests.take();
-                    requests.offer(request);
-                }
-                if (idleConnections.isEmpty()) {
-                    if (getRealPoolSize() < client.getMaxPoolSize()) {
-                        try {
-                            ConnectorHolder.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
-                        }
-                        catch (IOException ex) {
-                            while ((request = requests.poll()) != null) {
-                                request.result.reject(ex);
-                            }
-                        }
-                    }
-                }
-                Connection conn = idleConnections.poll(client.getConnectTimeout(), TimeUnit.MILLISECONDS);
-                if (conn != null) {
-                    request = requests.take();
-                    send(conn, request);
-                }
+    protected final void create(Request request) {
+        if (getRealPoolSize() < client.getMaxPoolSize()) {
+            try {
+                ConnectorHolder.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
+            }
+            catch (IOException ex) {
+                request.result.reject(ex);
+                return;
             }
         }
-        catch (InterruptedException e) {}
+        requests.offer(request);
     }
+
+    protected abstract Connection fetch(Request request);
 
     protected abstract int getRealPoolSize();
 
     protected abstract void send(Connection conn, Request request);
 
-    public final synchronized Promise<ByteBuffer> send(ByteBuffer buffer, int timeout) {
+    public final Promise<ByteBuffer> send(ByteBuffer buffer, int timeout) {
         Request request = new Request(buffer, timeout);
-        requests.offer(request);
+        Connection conn = fetch(request);
+        if (conn != null) {
+            send(conn, request);
+        }
         return request.result;
     }
 
-    protected void close(Map<Connection, Object> responses) {
-        interrupt();
-        while (!responses.isEmpty()) {
-            Iterator<Connection> it = responses.keySet().iterator();
-            while (it.hasNext()) {
-                Connection conn = it.next();
+    protected void close(Set<Connection> conns) {
+        while (!conns.isEmpty()) {
+            for (Connection conn: conns) {
                 conn.close();
             }
         }
@@ -168,7 +156,9 @@ abstract class SocketTransporter extends Thread implements ConnectionHandler {
     }
 
     public final void onClose(Connection conn) {
-        idleConnections.remove(conn);
+        synchronized (idleConnections) {
+            idleConnections.remove(conn);
+        }
         onError(conn, new ClosedChannelException());
     }
 
@@ -184,42 +174,78 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         super(client);
     }
 
+    protected final Connection fetch(Request request) {
+        Connection conn;
+        synchronized (idleConnections) {
+            do {
+                conn = idleConnections.poll();
+                if (conn != null && conn.isConnected()) {
+                    if (responses.get(conn).isEmpty()) {
+                        conn.clearTimeout();
+                    }
+                    else {
+                        conn = null;
+                    }
+                }
+            } while (conn != null && !conn.isConnected());
+            if (conn == null) create(request);
+        }
+        return conn;
+    }
+
     private void recycle(Connection conn) {
         conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
     }
 
-    private Promise<ByteBuffer> clean(Map<Integer, Response> res, int id) {
-        Response response = res.remove(id);
-        if (response != null) {
-            response.timer.clear();
-            return response.result;
+    private Promise<ByteBuffer> clean(Connection conn, int id) {
+        Map<Integer, Response> res = responses.get(conn);
+        Promise<ByteBuffer> result = null;
+        if (res != null) {
+            Response response = res.remove(id);
+            if (response != null) {
+                response.timer.clear();
+                result = response.result;
+            }
+            sendNext(conn, res);
         }
-        return null;
+        return result;
     }
+
+    private void sendNext(Connection conn, Map<Integer, Response> res) {
+        if (res.size() < 10) {
+            Request request = requests.poll();
+            if (request != null) {
+                send(conn, request);
+            }
+            else {
+                synchronized (idleConnections) {
+                    if (!idleConnections.contains(conn)) {
+                        idleConnections.offer(conn);
+                    }
+                }
+            }
+        }
+    }
+
     protected final void send(final Connection conn, Request request) {
         final Map<Integer, Response> res = responses.get(conn);
         if (res != null) {
-            if (res.size() < 10) {
-                final int id = nextId.incrementAndGet() & 0x7fffffff;
-                Timer timer = new Timer(new Runnable() {
-                    public void run() {
-                        Promise<ByteBuffer> result = clean(res, id);
-                        if (res.isEmpty()) {
-                            recycle(conn);
-                        }
-                        if (result != null) {
-                            result.reject(new TimeoutException("timeout"));
-                        }
+            final int id = nextId.incrementAndGet() & 0x7fffffff;
+            Timer timer = new Timer(new Runnable() {
+                public void run() {
+                    Promise<ByteBuffer> result = clean(conn, id);
+                    if (res.isEmpty()) {
+                        recycle(conn);
                     }
-                });
-                timer.setTimeout(request.timeout);
-                res.put(id, new Response(request.result, timer));
-                conn.send(request.buffer, id);
-            }
-            else {
-                idleConnections.offer(conn);
-                requests.offer(request);
-            }
+                    if (result != null) {
+                        result.reject(new TimeoutException("timeout"));
+                    }
+                }
+            });
+            timer.setTimeout(request.timeout);
+            res.put(id, new Response(request.result, timer));
+            conn.send(request.buffer, id);
+            sendNext(conn, res);
         }
     }
 
@@ -228,18 +254,25 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public final void close() {
-        close((Map<Connection, Object>)(Object)responses);
+        close(responses.keySet());
     }
 
-    public void onConnect(Connection conn) {
+    public final void onConnect(Connection conn) {
         responses.put(conn, new ConcurrentHashMap<Integer, Response>());
     }
 
-    public void onConnected(Connection conn) {
-        idleConnections.offer(conn);
-        recycle(conn);
+    public final void onConnected(Connection conn) {
+        Request request = requests.poll();
+        if (request != null) {
+            send(conn, request);
+        }
+        else {
+            synchronized (idleConnections) {
+                idleConnections.offer(conn);
+            }
+            recycle(conn);
+        }
     }
 
     public final void onTimeout(Connection conn, TimeoutType type) {
@@ -266,23 +299,22 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     }
 
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
-        Map<Integer, Response> res = responses.get(conn);
-        if (res != null) {
-            Promise<ByteBuffer> result = clean(res, id);
-            if (result != null) {
-                if (data.position() != 0) {
-                    data.flip();
-                }
-                result.resolve(data);
+        Promise<ByteBuffer> result = clean(conn, id);
+        if (result != null) {
+            if (data.position() != 0) {
+                data.flip();
             }
-            if (res.isEmpty()) {
-                recycle(conn);
-            }
+            result.resolve(data);
+        }
+        else {
+            recycle(conn);
         }
     }
 
     public final void onSended(Connection conn, Integer id) {
-        idleConnections.offer(conn);
+        synchronized (idleConnections) {
+            idleConnections.offer(conn);
+        }
     }
 
     public final void onError(Connection conn, Exception e) {
@@ -293,6 +325,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
                 Map.Entry<Integer, Response> entry = it.next();
                 it.remove();
                 Response response = entry.getValue();
+                response.timer.clear();
                 response.result.reject(e);
             }
         }
@@ -306,9 +339,29 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         super(client);
     }
 
+    protected final Connection fetch(Request request) {
+        Connection conn;
+        synchronized (idleConnections) {
+            do {
+                conn = idleConnections.poll();
+            } while (conn != null && !conn.isConnected());
+            if (conn != null) {
+                conn.clearTimeout();
+            }
+            else {
+                create(request);
+            }
+        }
+        return conn;
+    }
+
     private void recycle(Connection conn) {
-        idleConnections.offer(conn);
-        conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
+        synchronized (idleConnections) {
+            if (!idleConnections.contains(conn)) {
+                idleConnections.offer(conn);
+                conn.setTimeout(client.getIdleTimeout(), TimeoutType.IDLE_TIMEOUT);
+            }
+        }
     }
 
     private Promise<ByteBuffer> clean(Connection conn) {
@@ -318,6 +371,16 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
             return response.result;
         }
         return null;
+    }
+
+    private void sendNext(Connection conn) {
+        Request request = requests.poll();
+        if (request != null) {
+            send(conn, request);
+        }
+        else {
+            recycle(conn);
+        }
     }
 
     protected final void send(final Connection conn, Request request) {
@@ -340,16 +403,15 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public final void close() {
-        close((Map<Connection, Object>)(Object)responses);
+        close(responses.keySet());
     }
 
-    public void onConnect(Connection conn) {
+    public final void onConnect(Connection conn) {
     }
 
-    public void onConnected(Connection conn) {
-        recycle(conn);
+    public final void onConnected(Connection conn) {
+        sendNext(conn);
     }
 
     public final void onTimeout(Connection conn, TimeoutType type) {
@@ -372,13 +434,13 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
 
     public final void onReceived(Connection conn, ByteBuffer data, Integer id) {
         Promise<ByteBuffer> result = clean(conn);
-        recycle(conn);
         if (result != null) {
             if (data.position() != 0) {
                 data.flip();
             }
             result.resolve(data);
         }
+        sendNext(conn);
     }
 
     public final void onSended(Connection conn, Integer id) {}
@@ -410,7 +472,7 @@ public class HproseTcpClient extends HproseClient {
 
     private volatile boolean fullDuplex = false;
     private volatile boolean noDelay = false;
-    private volatile int maxPoolSize = 2;
+    private volatile int maxPoolSize = 4;
     private volatile int idleTimeout = 30000;
     private volatile int readTimeout = 30000;
     private volatile int writeTimeout = 30000;
@@ -421,37 +483,26 @@ public class HproseTcpClient extends HproseClient {
 
     public HproseTcpClient() {
         super();
-        init();
     }
 
     public HproseTcpClient(String uri) {
         super(uri);
-        init();
     }
 
     public HproseTcpClient(HproseMode mode) {
         super(mode);
-        init();
     }
 
     public HproseTcpClient(String uri, HproseMode mode) {
         super(uri, mode);
-        init();
     }
 
     public HproseTcpClient(String[] uris) {
         super(uris);
-        init();
     }
 
     public HproseTcpClient(String[] uris, HproseMode mode) {
         super(uris, mode);
-        init();
-    }
-
-    private void init() {
-        fdTrans.start();
-        hdTrans.start();
     }
 
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {

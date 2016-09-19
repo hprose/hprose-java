@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Sep 14, 2016                              *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -727,7 +727,8 @@ public abstract class HproseClient extends HandlerManager {
                 }
             }
         }
-        return ((Promise<T>)invokeHandler.handle(name, args, getContext(settings))).toFuture().get();
+        ClientContext context = getContext(settings);
+        return ((Promise<T>)invokeHandler.handle(name, args, context)).toFuture().get(context.getSettings().getTimeout(), TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("unchecked")

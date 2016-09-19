@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connector class for Java.                       *
  *                                                        *
- * LastModified: Jul 31, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -75,7 +75,12 @@ public final class Connector extends Thread {
             try {
                 conn.connect(selector);
             }
-            catch (ClosedChannelException e) {}
+            catch (ClosedChannelException e) {
+                conn.close();
+            }
+            catch (IOException e) {
+                conn.close();
+            }
         }
     }
 
@@ -110,13 +115,13 @@ public final class Connector extends Thread {
         try {
             URI u = new URI(uri);
             SocketChannel channel = SocketChannel.open();
-            Connection conn = new Connection(channel, handler);
+            InetSocketAddress address = new InetSocketAddress(u.getHost(), u.getPort());
+            Connection conn = new Connection(channel, handler, address);
             handler.onConnect(conn);
             channel.configureBlocking(false);
             channel.socket().setReuseAddress(true);
             channel.socket().setKeepAlive(keepAlive);
             channel.socket().setTcpNoDelay(noDelay);
-            channel.connect(new InetSocketAddress(u.getHost(), u.getPort()));
             register(conn);
         }
         catch (URISyntaxException e) {

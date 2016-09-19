@@ -20,7 +20,7 @@ public class TimeoutClient {
             System.out.println("1 + 2 = " + r);
         }, (e) -> {
             InvokeSettings settings = new InvokeSettings();
-            settings.setTimeout(2000);
+            settings.setTimeout(20000);
             exam.sum(2, 3, settings).then(r -> {
                System.out.println("2 + 3 = " + r);
             });

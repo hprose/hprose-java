@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Acceptor class for Java.                        *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -84,7 +84,7 @@ import java.util.Iterator;
                 channel.configureBlocking(false);
                 channel.socket().setReuseAddress(true);
                 channel.socket().setKeepAlive(true);
-                reactor.register(new Connection(channel, handler));
+                reactor.register(new Connection(channel, handler, null));
             }
         }
 

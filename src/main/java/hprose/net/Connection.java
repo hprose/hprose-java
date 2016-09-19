@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Jun 27, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -21,6 +21,7 @@ package hprose.net;
 import hprose.io.ByteBufferStream;
 import hprose.util.concurrent.Timer;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -32,6 +33,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class Connection {
     private final SocketChannel channel;
     private final ConnectionHandler handler;
+    private final InetSocketAddress address;
     private volatile SelectionKey key;
     private volatile TimeoutType timeoutType;
     private final Timer timer = new Timer(new Runnable() {
@@ -51,14 +53,16 @@ public final class Connection {
     private OutPacket packet = null;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
     private Reactor reactor = null;
-    public Connection(SocketChannel channel, ConnectionHandler handler) {
+    public Connection(SocketChannel channel, ConnectionHandler handler, InetSocketAddress address) {
         this.channel = channel;
         this.handler = handler;
+        this.address = address;
     }
 
-    public final void connect(Selector selector) throws ClosedChannelException {
+    public final void connect(Selector selector) throws ClosedChannelException, IOException {
         key = channel.register(selector, SelectionKey.OP_CONNECT, this);
         setTimeout(handler.getConnectTimeout(), TimeoutType.CONNECT_TIMEOUT);
+        channel.connect(address);
     }
 
     public final void connected(Reactor reactor, Selector selector) throws ClosedChannelException {

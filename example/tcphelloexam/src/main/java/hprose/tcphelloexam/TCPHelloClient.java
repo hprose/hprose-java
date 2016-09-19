@@ -15,6 +15,7 @@ public class TCPHelloClient {
         final HproseTcpClient client = new HproseTcpClient(new String[] {"tcp://localhost:4321", "tcp://localhost:4321"} );
         client.setFullDuplex(true);
         client.setNoDelay(true);
+        client.setTimeout(10000);
         client.setMaxPoolSize(4);
 //        client.subscribe("news", new Action<String>() {
 //            @Override
@@ -83,7 +84,9 @@ public class TCPHelloClient {
             threads[i].start();
         }
         for (int i = 0; i < threadNumber; i++) {
-            threads[i].join();
+            if (threads[i].isAlive()) {
+                threads[i].join();
+            }
         }
         long end = System.currentTimeMillis();
         System.out.println("总耗时: " + (end - start));
@@ -98,7 +101,7 @@ public class TCPHelloClient {
 //            });
 //        }
 //        client.unsubscribe("news");
-//        client.close();
+        client.close();
 //        end = System.currentTimeMillis();
 //        System.out.println(end - start);
         System.out.println("END");

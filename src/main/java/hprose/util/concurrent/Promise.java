@@ -20,7 +20,7 @@ package hprose.util.concurrent;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,7 +42,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
         });
     }
 
-    private final ConcurrentLinkedQueue<Subscriber<?, V>> subscribers = new ConcurrentLinkedQueue<Subscriber<?, V>>();
+    private final LinkedList<Subscriber<?, V>> subscribers = new LinkedList<Subscriber<?, V>>();
     private volatile AtomicReference<State> state = new AtomicReference<State>(State.PENDING);
     private volatile V value;
     private volatile Throwable reason;

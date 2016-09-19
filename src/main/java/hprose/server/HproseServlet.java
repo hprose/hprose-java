@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Jun 29, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -169,27 +169,29 @@ public class HproseServlet extends HttpServlet {
                     Class<?> type = Class.forName(name[0]);
                     Object obj = type.newInstance();
                     Class<?> ancestorType;
-                    if (name.length == 1) {
-                        methods.addInstanceMethods(obj, type);
-                    }
-                    else if (name.length == 2) {
-                        for (ancestorType = Class.forName(name[1]);
-                             ancestorType.isAssignableFrom(type);
-                             type = type.getSuperclass()) {
+                    switch (name.length) {
+                        case 1:
                             methods.addInstanceMethods(obj, type);
-                        }
-                    }
-                    else if (name.length == 3) {
-                        if (name[1].equals("")) {
-                            methods.addInstanceMethods(obj, type, name[2]);
-                        }
-                        else {
+                            break;
+                        case 2:
                             for (ancestorType = Class.forName(name[1]);
-                                 ancestorType.isAssignableFrom(type);
-                                 type = type.getSuperclass()) {
+                                    ancestorType.isAssignableFrom(type);
+                                    type = type.getSuperclass()) {
+                                methods.addInstanceMethods(obj, type);
+                            }
+                            break;
+                        case 3:
+                            if (name[1].equals("")) {
                                 methods.addInstanceMethods(obj, type, name[2]);
                             }
-                        }
+                            else {
+                                for (ancestorType = Class.forName(name[1]);
+                                        ancestorType.isAssignableFrom(type);
+                                        type = type.getSuperclass()) {
+                                    methods.addInstanceMethods(obj, type, name[2]);
+                                }
+                            }
+                            break;
                     }
                 }
             }
@@ -235,17 +237,19 @@ public class HproseServlet extends HttpServlet {
                 String[] topics = StrUtil.split(param, ',', 0);
                 for (int i = 0, n = topics.length; i < n; ++i) {
                     String[] item = StrUtil.split(topics[i], '|', 3);
-                    if (item.length == 1) {
-                        service.publish(item[0]);
-                    }
-                    else if (item.length == 2) {
-                        service.publish(item[0],
-                                Integer.parseInt(item[1], 10));
-                    }
-                    else if (item.length == 3) {
-                        service.publish(item[0],
-                                Integer.parseInt(item[1], 10),
-                                Integer.parseInt(item[1], 10));
+                    switch (item.length) {
+                        case 1:
+                            service.publish(item[0]);
+                            break;
+                        case 2:
+                            service.publish(item[0],
+                                    Integer.parseInt(item[1], 10));
+                            break;
+                        case 3:
+                            service.publish(item[0],
+                                    Integer.parseInt(item[1], 10),
+                                    Integer.parseInt(item[1], 10));
+                            break;
                     }
                 }
             }

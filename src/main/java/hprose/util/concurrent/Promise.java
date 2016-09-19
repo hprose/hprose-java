@@ -12,7 +12,7 @@
  *                                                        *
  * Promise class for Java.                                *
  *                                                        *
- * LastModified: Sep 14, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -767,7 +767,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <R> void _resolve(V value) {
+    private synchronized <R> void _resolve(V value) {
         if (state.compareAndSet(State.PENDING, State.FULFILLED)) {
             this.value = value;
             while (!subscribers.isEmpty()) {
@@ -829,7 +829,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <R> void _reject(Throwable e) {
+    private synchronized <R> void _reject(Throwable e) {
         if (state.compareAndSet(State.PENDING, State.REJECTED)) {
             this.reason = e;
             while (!subscribers.isEmpty()) {
@@ -876,7 +876,7 @@ public final class Promise<V> implements Resolver<V>, Rejector, Thenable<V> {
     }
 
     @SuppressWarnings("unchecked")
-    private <R> Promise<R> then(Callback<R, V> onfulfill, Callback<R, Throwable> onreject) {
+    private synchronized <R> Promise<R> then(Callback<R, V> onfulfill, Callback<R, Throwable> onreject) {
         Promise<R> next = new Promise<R>();
         switch (state.get()) {
             case FULFILLED:

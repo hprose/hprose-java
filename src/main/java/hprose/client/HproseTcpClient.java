@@ -100,6 +100,7 @@ abstract class SocketTransporter implements ConnectionHandler {
     protected final HproseTcpClient client;
     protected final LinkedList<Connection> idleConnections = new LinkedList<Connection>();
     protected final ConcurrentLinkedQueue<Request> requests = new ConcurrentLinkedQueue<Request>();
+    protected final AtomicInteger size = new AtomicInteger(0);
 
     public SocketTransporter(HproseTcpClient client) {
         super();
@@ -117,12 +118,15 @@ abstract class SocketTransporter implements ConnectionHandler {
     }
 
     protected final void create(Request request) {
-        if (getRealPoolSize() < client.getMaxPoolSize()) {
+        if (size.get() < client.getMaxPoolSize()) {
             try {
                 ConnectorHolder.create(client.uri, this, client.isKeepAlive(), client.isNoDelay());
             }
             catch (IOException ex) {
                 request.result.reject(ex);
+//                while ((request = requests.poll()) != null) {
+//                    request.result.reject(ex);
+//                }
                 return;
             }
         }
@@ -130,8 +134,6 @@ abstract class SocketTransporter implements ConnectionHandler {
     }
 
     protected abstract Connection fetch(Request request);
-
-    protected abstract int getRealPoolSize();
 
     protected abstract void send(Connection conn, Request request);
 
@@ -156,6 +158,7 @@ abstract class SocketTransporter implements ConnectionHandler {
     }
 
     public final void onClose(Connection conn) {
+        size.decrementAndGet();
         synchronized (idleConnections) {
             idleConnections.remove(conn);
         }
@@ -249,16 +252,13 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         }
     }
 
-    protected final int getRealPoolSize() {
-        return responses.size();
-    }
-
     @Override
     public final void close() {
         close(responses.keySet());
     }
 
     public final void onConnect(Connection conn) {
+        size.incrementAndGet();
         responses.put(conn, new ConcurrentHashMap<Integer, Response>());
     }
 
@@ -269,7 +269,9 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         }
         else {
             synchronized (idleConnections) {
-                idleConnections.offer(conn);
+                if (!idleConnections.contains(conn)) {
+                    idleConnections.offer(conn);
+                }
             }
             recycle(conn);
         }
@@ -313,7 +315,9 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
 
     public final void onSended(Connection conn, Integer id) {
         synchronized (idleConnections) {
-            idleConnections.offer(conn);
+            if (!idleConnections.contains(conn)) {
+                idleConnections.offer(conn);
+            }
         }
     }
 
@@ -398,16 +402,13 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         conn.send(request.buffer, null);
     }
 
-    protected final int getRealPoolSize() {
-        return responses.size();
-    }
-
     @Override
     public final void close() {
         close(responses.keySet());
     }
 
     public final void onConnect(Connection conn) {
+        size.incrementAndGet();
     }
 
     public final void onConnected(Connection conn) {

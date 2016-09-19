@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Sep 14, 2016                             *
+ * LastModified: Sep 19, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -1246,9 +1246,6 @@ public abstract class HproseService extends HandlerManager implements HproseClie
                         }.run();
                     }
                     else {
-                        if (e instanceof InvalidRequestException) {
-                            return new Promise<Object>();
-                        }
                         t.count.decrementAndGet();
                     }
                     return null;

@@ -1227,10 +1227,10 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         if (timeout > 0) {
             return request.timeout(timeout).catchError(new AsyncFunc<Object, Throwable>() {
                 public Promise<Object> call(Throwable e) throws Throwable {
-                    final Topic t = topics.get(id);
                     if (e instanceof TimeoutException) {
                         new Runnable() {
                             public void run() {
+                                Topic t = topics.get(id);
                                 t.timer = timerService.schedule(this, t.heartbeat, TimeUnit.MILLISECONDS);
                                 if (t.count.get() < 0) {
                                     offline(topics, topic, id);

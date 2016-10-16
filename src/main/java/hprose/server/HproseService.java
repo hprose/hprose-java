@@ -12,7 +12,7 @@
  *                                                        *
  * hprose service class for Java.                         *
  *                                                        *
- * LastModified: Sep 20, 2016                             *
+ * LastModified: Oct 16, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -45,6 +45,7 @@ import hprose.util.concurrent.Call;
 import hprose.util.concurrent.Func;
 import hprose.util.concurrent.Promise;
 import hprose.util.concurrent.Reducer;
+import hprose.util.concurrent.Thenable;
 import hprose.util.concurrent.Threads;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -1398,7 +1399,15 @@ public abstract class HproseService extends HandlerManager implements HproseClie
         return detector;
     }
 
-    public final Promise<Boolean> push(String topic, String id, Object result) {
+    public final Promise<Boolean> push(final String topic, final String id, Object result) {
+        if (Promise.isThenable(result)) {
+            AsyncFunc<Boolean, Object> callback = new AsyncFunc<Boolean, Object>() {
+                public Promise<Boolean> call(Object value) throws Throwable {
+                    return push(topic, id, value);
+                }
+            };
+            return ((Thenable)result).then(callback, callback);
+        }
         final ConcurrentHashMap<String, Topic> topics = getTopics(topic);
         Topic t = topics.get(id);
         if (t == null) {

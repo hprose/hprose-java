@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Oct 16, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -762,13 +762,10 @@ public abstract class HproseClient extends HandlerManager {
 
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, Topic<?>>> allTopics = new ConcurrentHashMap<String, ConcurrentHashMap<String, Topic<?>>>();
 
-    private Topic<?> getTopic(String name, String id, boolean create) {
+    private Topic<?> getTopic(String name, String id) {
         ConcurrentHashMap<String, Topic<?>> topics = allTopics.get(name);
         if (topics != null) {
             return topics.get(id);
-        }
-        if (create) {
-            allTopics.put(name, new ConcurrentHashMap<String, Topic<?>>());
         }
         return null;
     }
@@ -781,15 +778,13 @@ public abstract class HproseClient extends HandlerManager {
         autoIdSettings.setSimple(true);
         autoIdSettings.setIdempotent(true);
         autoIdSettings.setFailswitch(true);
-        autoIdSettings.setAsync(true);
     }
 
     @SuppressWarnings("unchecked")
-    private synchronized String autoId() {
+    public synchronized String autoId() {
         if (autoId == null) {
             try {
-                Promise<String> id = (Promise<String>)this.invoke("#", autoIdSettings);
-                autoId = id.toFuture().get(timeout, TimeUnit.MILLISECONDS);
+                autoId = (String)this.invoke("#", autoIdSettings);
             }
             catch (Throwable e) {
                 if (onError != null) {
@@ -862,11 +857,12 @@ public abstract class HproseClient extends HandlerManager {
 
     @SuppressWarnings("unchecked")
     public final <T> void subscribe(final String name, final String id, Action<T> callback, final Type type, final int timeout, final boolean failswitch) {
-        Topic<T> topic = (Topic<T>)getTopic(name, id, true);
+        allTopics.putIfAbsent(name, new ConcurrentHashMap<String, Topic<?>>());
+        Topic<T> topic = (Topic<T>)getTopic(name, id);
         if (topic == null) {
             final Action<Throwable> cb = new Action<Throwable>() {
                 public void call(Throwable e) throws Throwable {
-                    Topic<T> topic = (Topic<T>)getTopic(name, id, false);
+                    Topic<T> topic = (Topic<T>)getTopic(name, id);
                     if (topic != null) {
                         InvokeSettings settings = new InvokeSettings();
                         settings.setIdempotent(true);
@@ -882,7 +878,7 @@ public abstract class HproseClient extends HandlerManager {
             topic = new Topic<T>();
             topic.handler = new Action<T>() {
                 public void call(T result) throws Throwable {
-                    Topic topic = getTopic(name, id, false);
+                    Topic topic = getTopic(name, id);
                     if (topic != null) {
                         if (result != null) {
                             ConcurrentLinkedQueue<Action<T>> callbacks = topic.callbacks;
@@ -956,6 +952,9 @@ public abstract class HproseClient extends HandlerManager {
             else {
                 delTopic(topics, id, callback);
             }
+            if (topics.isEmpty()) {
+                allTopics.remove(name, topics);
+            }
         }
     }
 
@@ -963,4 +962,11 @@ public abstract class HproseClient extends HandlerManager {
         return autoId;
     }
 
+    public boolean isSubscribed(String name) {
+        return allTopics.containsKey(name);
+    }
+
+    public String[] subscribedList() {
+        return allTopics.keySet().toArray(new String[0]);
+    }
 }

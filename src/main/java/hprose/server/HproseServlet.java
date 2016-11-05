@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Nov 5, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 public class HproseServlet extends HttpServlet {
 
     private final static long serialVersionUID = 1716958719284073368L;
-    private final HproseHttpService service = new HproseHttpService();
+    protected final HproseHttpService service = new HproseHttpService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -120,7 +120,7 @@ public class HproseServlet extends HttpServlet {
                 String[] classNames = StrUtil.split(param, ',', 0);
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
-                    if (HproseFilter.class.isAssignableFrom(type)) {
+                    if (FilterHandler.class.isAssignableFrom(type)) {
                         service.beforeFilter.use((FilterHandler) type.newInstance());
                     }
                 }
@@ -135,7 +135,7 @@ public class HproseServlet extends HttpServlet {
                 String[] classNames = StrUtil.split(param, ',', 0);
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
-                    if (HproseFilter.class.isAssignableFrom(type)) {
+                    if (FilterHandler.class.isAssignableFrom(type)) {
                         service.afterFilter.use((FilterHandler) type.newInstance());
                     }
                 }
@@ -150,7 +150,7 @@ public class HproseServlet extends HttpServlet {
                 String[] classNames = StrUtil.split(param, ',', 0);
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
-                    if (HproseFilter.class.isAssignableFrom(type)) {
+                    if (InvokeHandler.class.isAssignableFrom(type)) {
                         service.use((InvokeHandler) type.newInstance());
                     }
                 }

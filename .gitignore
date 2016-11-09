@@ -6,3 +6,6 @@
 target
 /promise/nbproject/private/
 /promise/build/
+/example/Benchmark/nbproject/private/
+/example/Benchmark/build/
+/example/Benchmark/dist/

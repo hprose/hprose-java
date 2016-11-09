@@ -12,6 +12,7 @@ public class Benchmark {
         String url = "rmi://localhost/serviceRMI";
         Context namingContext = new InitialContext();
         final IService serviceRMI = (IService) namingContext.lookup(url);
+
         int threadNumber = 40;
         final int roundNumber = 25000;
         Thread[] threads = new Thread[threadNumber];
@@ -37,8 +38,8 @@ public class Benchmark {
             }
         }
         long end = System.currentTimeMillis();
-        System.out.println("总耗时: " + (end - start));
-        System.out.println(((threadNumber * roundNumber) * 1000/(end - start)) + " QPS");
+        System.out.println("总耗时: " + (end - start) + "ms");
+        System.out.println((long)(((double)(threadNumber * roundNumber) * 1000 / (end - start))) + " QPS");
         System.out.println("END");
     }
 }

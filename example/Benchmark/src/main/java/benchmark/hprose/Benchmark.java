@@ -37,8 +37,8 @@ public class Benchmark {
             }
         }
         long end = System.currentTimeMillis();
-        System.out.println("总耗时: " + (end - start));
-        System.out.println(((threadNumber * roundNumber) * 1000/(end - start)) + " QPS");
+        System.out.println("总耗时: " + (end - start) + "ms");
+        System.out.println((long)(((double)(threadNumber * roundNumber) * 1000 / (end - start))) + " QPS");
         System.out.println("END");
 
         client.close();

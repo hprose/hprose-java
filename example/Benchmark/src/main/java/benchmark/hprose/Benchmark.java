@@ -7,6 +7,7 @@ public class Benchmark {
         System.out.println("START HPROSE");
         HproseTcpClient.setReactorThreads(2);
         final HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
+        final IService service = client.useService(IService.class);
         client.setFullDuplex(true);
         client.setNoDelay(true);
         //client.setMaxPoolSize(8);
@@ -21,7 +22,7 @@ public class Benchmark {
                 public void run() {
                     try {
                         for (int i = 0; i < roundNumber; i++) {
-                            client.invoke("hello", new Object[] {"World" + i});
+                            service.hello("World" + i);
                         }
                     } catch (Throwable ex) {
                         ex.printStackTrace();

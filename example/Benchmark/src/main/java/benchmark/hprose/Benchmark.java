@@ -5,12 +5,12 @@ import hprose.client.HproseTcpClient;
 public class Benchmark {
     public static void main(String[] args) throws Throwable {
         System.out.println("START HPROSE");
-        HproseTcpClient.setReactorThreads(2);
+        HproseTcpClient.setReactorThreads(Runtime.getRuntime().availableProcessors());
         final HproseTcpClient client = new HproseTcpClient("tcp://localhost:4321");
         final IService service = client.useService(IService.class);
         client.setFullDuplex(true);
         client.setNoDelay(true);
-        //client.setMaxPoolSize(8);
+        client.setMaxPoolSize(Runtime.getRuntime().availableProcessors());
 
         int threadNumber = 40;
         final int roundNumber = 25000;

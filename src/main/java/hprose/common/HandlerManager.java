@@ -12,7 +12,7 @@
  *                                                        *
  * hprose HandlerManager class for Java.                  *
  *                                                        *
- * LastModified: Jul 4, 2016                              *
+ * LastModified: Nov 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -40,6 +40,7 @@ public abstract class HandlerManager {
             }
             return beforeFilterHandler(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
                 public ByteBuffer call(ByteBuffer response) throws Throwable {
+                    if (response == null) return null;
                     if (response.position() != 0) {
                         response.flip();
                     }
@@ -55,6 +56,7 @@ public abstract class HandlerManager {
             }
             return afterFilterHandler(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
                 public ByteBuffer call(ByteBuffer response) throws Throwable {
+                    if (response == null) return null;
                     if (response.position() != 0) {
                         response.flip();
                     }
@@ -93,6 +95,7 @@ public abstract class HandlerManager {
                     }
                     return handler.handle(request, context, next).then(new Func<ByteBuffer, ByteBuffer>() {
                         public ByteBuffer call(ByteBuffer response) throws Throwable {
+                            if (response == null) return null;
                             if (response.position() != 0) {
                                 response.flip();
                             }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Oct 16, 2016                             *
+ * LastModified: Nov 14, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -348,12 +348,8 @@ public abstract class HproseClient extends HandlerManager {
         });
     }
 
-    private Promise<ByteBuffer> afterFilterHandler(ByteBuffer request, ClientContext context) {
-        return sendAndReceive(request, context);
-    }
-
-    private Promise<ByteBuffer> sendRequest(final ByteBuffer request, final ClientContext context) {
-        return beforeFilterHandler.handle(request, context).catchError(
+    private Promise<ByteBuffer> afterFilterHandler(final ByteBuffer request, final ClientContext context) {
+        return sendAndReceive(request, context).catchError(
             new AsyncFunc<ByteBuffer, Throwable>() {
                 public Promise<ByteBuffer> call(Throwable e) throws Throwable {
                     Promise<ByteBuffer> response = retry(request, context);
@@ -382,12 +378,12 @@ public abstract class HproseClient extends HandlerManager {
             if (interval > 0) {
                 return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
                     public Promise<ByteBuffer> call() throws Throwable {
-                        return sendRequest(request, context);
+                        return afterFilterHandler(request, context);
                     }
                 });
             }
             else {
-                return sendRequest(request, context);
+                return afterFilterHandler(request, context);
             }
         }
         return null;
@@ -538,7 +534,8 @@ public abstract class HproseClient extends HandlerManager {
             return Promise.error(e);
         }
         final InvokeSettings settings = context.getSettings();
-        return sendRequest(stream.buffer, context).then(new Func<Object, ByteBuffer>() {
+        return beforeFilterHandler.handle(stream.buffer, context).then(
+        new Func<Object, ByteBuffer>() {
             public Object call(ByteBuffer value) throws Throwable {
                 stream.buffer = value;
                 try {

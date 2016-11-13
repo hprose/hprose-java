@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Oct 16, 2016                             *
+ * LastModified: Nov 13, 2016                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -338,7 +338,6 @@ public abstract class HproseClient extends HandlerManager {
         request = outputFilter(request, context);
         return afterFilterHandler.handle(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
             public ByteBuffer call(ByteBuffer response) throws Throwable {
-                if (context.getSettings().isOneway()) return null;
                 response = inputFilter(response, context);
                 return response;
             }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Dec 1, 2016                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -35,6 +35,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -206,7 +207,10 @@ public class HproseHttpClient extends HproseClient {
         this.sslsf = sslsf;
     }
 
-    private ByteBuffer syncSendAndReceive(ByteBuffer request, int timeout) throws Throwable {
+    @SuppressWarnings({"unchecked"})
+    private ByteBuffer syncSendAndReceive(ByteBuffer request, ClientContext context) throws Throwable {
+        final InvokeSettings settings = context.getSettings();
+        int timeout = settings.getTimeout();
         URL url = new URL(uri);
         Properties prop = System.getProperties();
         prop.put("http.keepAlive", Boolean.toString(keepAlive));
@@ -242,6 +246,15 @@ public class HproseHttpClient extends HproseClient {
         for (Entry<String, String> entry : headers.entrySet()) {
             conn.setRequestProperty(entry.getKey(), entry.getValue());
         }
+        Map<String, List<String>> header = (Map<String, List<String>>)(context.get("httpHeader"));
+        if (header != null) {
+            for (Entry<String, List<String>> entry : header.entrySet()) {
+                String key = entry.getKey();
+                for (String value : entry.getValue()) {
+                    conn.addRequestProperty(key, value);
+                }
+            }
+        }
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
         conn.setUseCaches(false);
@@ -257,6 +270,7 @@ public class HproseHttpClient extends HproseClient {
         finally {
             if (ostream != null) ostream.close();
         }
+        context.set("httpHeader", conn.getHeaderFields());
         List<String> cookieList = new ArrayList<String>();
         int i = 1;
         String key;
@@ -299,13 +313,12 @@ public class HproseHttpClient extends HproseClient {
     }
 
     @Override
-    protected Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, ClientContext context) {
-        final InvokeSettings settings = context.getSettings();
+    protected Promise<ByteBuffer> sendAndReceive(final ByteBuffer request, final ClientContext context) {
         final Promise<ByteBuffer> promise = new Promise<ByteBuffer>();
         pool.submit(new Runnable() {
             public void run() {
                 try {
-                    promise.resolve(syncSendAndReceive(request, settings.getTimeout()));
+                    promise.resolve(syncSendAndReceive(request, context));
                 }
                 catch (Throwable ex) {
                     promise.reject(ex);

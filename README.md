@@ -1,3 +1,5 @@
+<p align="center"><img src="http://hprose.com/banner.@2x.png" alt="Hprose" title="Hprose" width="650" height="200" /></p>
+
 # Hprose for Java
 
 [![Join the chat at https://gitter.im/hprose/hprose-java](https://img.shields.io/badge/GITTER-join%20chat-green.svg)](https://gitter.im/hprose/hprose-java?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

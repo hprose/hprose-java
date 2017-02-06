@@ -26,3 +26,5 @@ for %%version in (5,6,7,8) do (
     call :buildByJdkVersion %%version
 )
 call :clean
+
+@echo on

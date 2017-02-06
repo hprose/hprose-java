@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 init(){
     rm -rf build

@@ -19,7 +19,6 @@ hs_err_pid*
 nbproject/private/
 build/
 nbbuild/
-dist/
 nbdist/
 .nb-gradle/
 

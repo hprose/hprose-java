@@ -15,8 +15,8 @@ del /F/S/Q build 1>NUL 2>NUL
 rd /S/Q build 1>NUL 2>NUL
 del /F/S/Q dist 1>NUL 2>NUL
 rd /S/Q dist 1>NUL 2>NUL
-mkdir build
-mkdir dist
+md build
+md dist
 EXIT /B 0
 
 :buildByJdkVersion
@@ -27,7 +27,7 @@ if "%1" == "8" (
 javac -source %1 -target %1 -Xlint:none -XDignore.symbol.file -cp lib\javax.servlet-api-3.1.0.jar;lib\javax.websocket-api-1.1.jar -d build %javafiles%
 jar cf dist/hprose_for_java_%1.jar -C build .
 del /Q build\hprose\server\*
-rmdir build\hprose\server
+rd build\hprose\server
 del /Q build\hprose\common\HproseMethod.class
 del /Q build\hprose\common\HproseMethods.class
 jar cf dist/hprose_client_for_java_%1.jar -C build .

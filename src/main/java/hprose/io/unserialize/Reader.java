@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Apr 8, 2017                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -20,6 +20,7 @@ package hprose.io.unserialize;
 
 import hprose.common.HproseException;
 import hprose.io.ByteBufferStream;
+import hprose.io.HproseClassManager;
 import hprose.io.HproseMode;
 import static hprose.io.HproseTags.TagBytes;
 import static hprose.io.HproseTags.TagClass;
@@ -512,7 +513,7 @@ public class Reader {
             memberNames[i] = unserialize.read(this, stream.read(), String.class);
         }
         stream.read();
-        Class<?> cls = ClassUtil.getClass(className);
+        Class<?> cls = HproseClassManager.getClass(className);
         Object key = (cls.equals(void.class)) ? new Object() : cls;
         classref.add(key);
         membersref.put(key, memberNames);

@@ -53,6 +53,7 @@ public final class Connection {
     private OutPacket packet = null;
     private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
     private Reactor reactor = null;
+    private boolean closed = false;
     public Connection(SocketChannel channel, ConnectionHandler handler, InetSocketAddress address) {
         this.channel = channel;
         this.handler = handler;
@@ -80,14 +81,38 @@ public final class Connection {
         return channel;
     }
 
-    public final void close() {
+    private void closeWithError(boolean error) {
+        synchronized (this) {
+            if (closed) {
+                return;
+            }
+            closed = true;
+        }
         try {
             clearTimeout();
+            if (error) {
+                try {
+                    handler.onTimeout(Connection.this, timeoutType);
+                }
+                catch (Exception e) {
+                }
+            }
             handler.onClose(this);
             channel.close();
+        }
+        catch (IOException e) {
+        }
+        finally {
             key.cancel();
         }
-        catch (IOException e) {}
+    }
+
+    public final void close() {
+        closeWithError(false);
+    }
+
+    final void errorClose() {
+        closeWithError(true);
     }
 
     public final boolean receive() {

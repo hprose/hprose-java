@@ -76,10 +76,10 @@ public final class Connector extends Thread {
                 conn.connect(selector);
             }
             catch (ClosedChannelException e) {
-                conn.close();
+                conn.errorClose();
             }
             catch (IOException e) {
-                conn.close();
+                conn.errorClose();
             }
         }
     }
@@ -97,13 +97,25 @@ public final class Connector extends Thread {
         }
     }
 
-    private void connect(SelectionKey key) throws IOException {
+    private void connect(SelectionKey key) {
         final SocketChannel channel = (SocketChannel) key.channel();
+        Connection conn = (Connection)key.attachment();
+        boolean success = false;
         if (channel.isConnectionPending()) {
-            channel.finishConnect();
+            try {
+                success = channel.finishConnect();
+            }
+            catch (IOException e) {
+                conn.errorClose();
+            }
         }
-        reactor.register((Connection)key.attachment());
-        key.cancel();
+        else {
+            success = true;
+        }
+        if (success) {
+            reactor.register(conn);
+            key.cancel();
+        }
     }
 
     private void register(Connection conn) {

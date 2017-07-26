@@ -12,7 +12,7 @@
  *                                                        *
  * Enum unserializer class for Java.                      *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Jul 26, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -28,6 +28,7 @@ public final class EnumUnserializer implements Unserializer {
     public final static EnumUnserializer instance = new EnumUnserializer();
 
     public Object read(Reader reader, int tag, Type type) throws IOException {
+        if (tag == TagNull) return null;
         int index = IntUnserializer.instance.read(reader, tag, int.class);
         return ClassUtil.toClass(type).getEnumConstants()[index];
     }

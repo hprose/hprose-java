@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Nov 14, 2016                             *
+ * LastModified: Aug 20, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -796,7 +796,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final void subscribe(String name, Action<Object> callback) {
-        subscribe(name, callback, Object.class, timeout);
+        subscribe(name, callback, Object.class, 300000);
     }
 
     public final void subscribe(String name, Action<Object> callback, int timeout) {
@@ -804,7 +804,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final void subscribe(String name, String id, Action<Object> callback) {
-        subscribe(name, id, callback, Object.class, timeout);
+        subscribe(name, id, callback, Object.class, 300000);
     }
 
     public final void subscribe(String name, String id, Action<Object> callback, int timeout) {
@@ -812,7 +812,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final <T> void subscribe(String name, Action<T> callback, Type type) {
-        subscribe(name, callback, type, timeout);
+        subscribe(name, callback, type, 300000);
     }
 
     public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout) {
@@ -820,7 +820,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final <T> void subscribe(String name, String id, Action<T> callback, Type type) {
-        subscribe(name, id, callback, type, timeout);
+        subscribe(name, id, callback, type, 300000);
     }
 
     public final <T> void subscribe(final String name, final String id, Action<T> callback, final Type type, final int timeout) {
@@ -828,7 +828,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final void subscribe(String name, Action<Object> callback, boolean failswitch) {
-        subscribe(name, callback, Object.class, timeout, failswitch);
+        subscribe(name, callback, Object.class, 300000, failswitch);
     }
 
     public final void subscribe(String name, Action<Object> callback, int timeout, boolean failswitch) {
@@ -836,7 +836,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final void subscribe(String name, String id, Action<Object> callback, boolean failswitch) {
-        subscribe(name, id, callback, Object.class, timeout, failswitch);
+        subscribe(name, id, callback, Object.class, 300000, failswitch);
     }
 
     public final void subscribe(String name, String id, Action<Object> callback, int timeout, boolean failswitch) {
@@ -844,7 +844,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final <T> void subscribe(String name, Action<T> callback, Type type, boolean failswitch) {
-        subscribe(name, callback, type, timeout, failswitch);
+        subscribe(name, callback, type, 300000, failswitch);
     }
 
     public final <T> void subscribe(String name, Action<T> callback, Type type, int timeout, boolean failswitch) {
@@ -852,7 +852,7 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public final <T> void subscribe(String name, String id, Action<T> callback, Type type, boolean failswitch) {
-        subscribe(name, id, callback, type, timeout, failswitch);
+        subscribe(name, id, callback, type, 300000, failswitch);
     }
 
     @SuppressWarnings("unchecked")

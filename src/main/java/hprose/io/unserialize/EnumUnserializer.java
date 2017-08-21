@@ -12,13 +12,14 @@
  *                                                        *
  * Enum unserializer class for Java.                      *
  *                                                        *
- * LastModified: Jul 26, 2017                             *
+ * LastModified: Aug 11, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
 
 package hprose.io.unserialize;
 
+import static hprose.io.HproseTags.TagNull;
 import hprose.util.ClassUtil;
 import java.io.IOException;
 import java.lang.reflect.Type;

@@ -12,7 +12,7 @@
  *                                                        *
  * LongFieldAccessor class for Java.                      *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class LongFieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getLong(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         ValueWriter.write(writer.stream, value);
     }
@@ -53,7 +53,7 @@ public final class LongFieldAccessor implements MemberAccessor {
             Accessors.unsafe.putLong(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

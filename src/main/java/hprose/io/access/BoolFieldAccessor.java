@@ -12,7 +12,7 @@
  *                                                        *
  * BoolFieldAccessor class for Java.                      *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class BoolFieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getBoolean(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         ValueWriter.write(writer.stream, value);
     }
@@ -53,7 +53,7 @@ public final class BoolFieldAccessor implements MemberAccessor {
             Accessors.unsafe.putBoolean(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

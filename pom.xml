@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.hprose</groupId>
     <artifactId>hprose-java</artifactId>
-    <version>2.0.33</version>
+    <version>2.0.34</version>
     <name>Hprose for Java</name>
     <description>Hprose is a High Performance Remote Object Service Engine.
 
@@ -69,6 +69,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>1.5</maven.compiler.source>
+        <maven.compiler.target>1.5</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -275,6 +277,35 @@
             <properties>  
                 <jar.source>1.8</jar.source>  
                 <jar.target>1.8</jar.target>  
+            </properties>  
+        </profile>  
+        <profile>
+            <id>jdk19</id>
+            <activation>
+                <jdk>1.9</jdk>
+            </activation>
+            <build>  
+                <plugins>  
+                    <plugin>  
+                        <artifactId>maven-jar-plugin</artifactId>  
+                        <version>3.0.2</version>
+                        <executions>
+                            <execution>  
+                                <phase>package</phase>  
+                                <goals>  
+                                    <goal>jar</goal>  
+                                </goals>  
+                                <configuration>  
+                                    <classifier>jdk19</classifier>  
+                                </configuration>  
+                            </execution>  
+                        </executions>  
+                    </plugin>  
+                </plugins>  
+            </build>  
+            <properties>  
+                <jar.source>1.9</jar.source>  
+                <jar.target>1.9</jar.target>  
             </properties>  
         </profile>  
     </profiles>  

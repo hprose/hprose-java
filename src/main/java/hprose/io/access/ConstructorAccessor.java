@@ -12,7 +12,7 @@
  *                                                        *
  * ConstructorAccessor class for Java.                    *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -127,7 +127,7 @@ public class ConstructorAccessor {
             return (T) ctor.newInstance(getArgs(ctor));
         }
         catch (Exception ex) {
-            throw new HproseException(ex.getMessage());
+            throw new HproseException(ex);
         }
     }
 }

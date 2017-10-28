@@ -12,7 +12,7 @@
  *                                                        *
  * FieldAccessor class for Java.                          *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -54,7 +54,7 @@ public final class FieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getObject(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         if (value == null) {
             writer.stream.write(TagNull);
@@ -71,7 +71,7 @@ public final class FieldAccessor implements MemberAccessor {
             Accessors.unsafe.putObject(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

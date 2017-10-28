@@ -12,7 +12,7 @@
  *                                                        *
  * FloatFieldAccessor class for Java.                     *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class FloatFieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getFloat(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         ValueWriter.write(writer.stream, value);
     }
@@ -53,7 +53,7 @@ public final class FloatFieldAccessor implements MemberAccessor {
             Accessors.unsafe.putFloat(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

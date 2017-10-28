@@ -12,7 +12,7 @@
  *                                                        *
  * PropertyAccessor class for Java.                       *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -58,7 +58,7 @@ public final class PropertyAccessor implements MemberAccessor {
             value = getter.invoke(obj, nullArgs);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         if (value == null) {
             writer.stream.write(TagNull);
@@ -75,7 +75,7 @@ public final class PropertyAccessor implements MemberAccessor {
             setter.invoke(obj, new Object[] { value });
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 

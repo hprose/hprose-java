@@ -12,7 +12,7 @@
  *                                                        *
  * ShortFieldAccessor class for Java.                     *
  *                                                        *
- * LastModified: Aug 3, 2016                              *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class ShortFieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getShort(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         ValueWriter.write(writer.stream, value);
     }
@@ -53,7 +53,7 @@ public final class ShortFieldAccessor implements MemberAccessor {
             Accessors.unsafe.putShort(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * DoubleFieldAccessor class for Java.                    *
  *                                                        *
- * LastModified: Apr 17, 2016                             *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -41,7 +41,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
             value = Accessors.unsafe.getDouble(obj, offset);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
         ValueWriter.write(writer.stream, value);
     }
@@ -53,7 +53,7 @@ public final class DoubleFieldAccessor implements MemberAccessor {
             Accessors.unsafe.putDouble(obj, offset, value);
         }
         catch (Exception e) {
-            throw new HproseException(e.getMessage());
+            throw new HproseException(e);
         }
     }
 }

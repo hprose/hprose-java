@@ -12,7 +12,7 @@
  *                                                        *
  * hprose exception for Java.                             *
  *                                                        *
- * LastModified: Apr 26, 2016                             *
+ * LastModified: Oct 28, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -34,11 +34,15 @@ public class HproseException extends IOException {
 
     public HproseException(Throwable e) {
         super(e.getMessage());
-        setStackTrace(e.getStackTrace());
+        initStackTrace(e);
     }
 
     public HproseException(String msg, Throwable e) {
         super(msg);
+        initStackTrace(e);
+    }
+
+    private void initStackTrace(Throwable e) {
         setStackTrace(e.getStackTrace());
     }
 }

@@ -12,7 +12,7 @@
  *                                                        *
  * hprose reader class for Java.                          *
  *                                                        *
- * LastModified: Apr 8, 2017                              *
+ * LastModified: Nov 12, 2017                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -514,7 +514,7 @@ public class Reader {
         }
         stream.read();
         Class<?> cls = HproseClassManager.getClass(className);
-        Object key = (cls.equals(void.class)) ? new Object() : cls;
+        Object key = (cls == null || void.class.equals(cls)) ? new Object() : cls;
         classref.add(key);
         membersref.put(key, memberNames);
     }

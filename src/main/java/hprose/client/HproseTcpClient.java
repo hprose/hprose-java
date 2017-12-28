@@ -263,17 +263,17 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
     }
 
     public final void onConnected(Connection conn) {
-        Request request = requests.poll();
-        if (request != null) {
-            send(conn, request);
-        }
-        else {
-            synchronized (idleConnections) {
+        synchronized (idleConnections) {
+            Request request = requests.poll();
+            if (request != null) {
+                send(conn, request);
+            }
+            else {
                 if (!idleConnections.contains(conn)) {
                     idleConnections.offer(conn);
                 }
+                recycle(conn);
             }
-            recycle(conn);
         }
     }
 

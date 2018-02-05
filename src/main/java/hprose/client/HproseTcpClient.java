@@ -12,7 +12,7 @@
  *                                                        *
  * hprose tcp client class for Java.                      *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Feb 5, 2018                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -507,10 +507,10 @@ public class HproseTcpClient extends HproseClient {
     }
 
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
-        String scheme = (new URI(uri)).getScheme().toLowerCase();
-        if (!scheme.equals("tcp") &&
-            !scheme.equals("tcp4") &&
-            !scheme.equals("tcp6")) {
+        String scheme = (new URI(uri)).getScheme();
+        if (!"tcp".equalsIgnoreCase(scheme) &&
+            !"tcp4".equalsIgnoreCase(scheme) &&
+            !"tcp6".equalsIgnoreCase(scheme)) {
             throw new HproseException("This client doesn't support " + scheme + " scheme.");
         }
         return new HproseTcpClient(uri, mode);
@@ -518,10 +518,10 @@ public class HproseTcpClient extends HproseClient {
 
     public static HproseClient create(String[] uris, HproseMode mode) throws IOException, URISyntaxException {
         for (int i = 0, n = uris.length; i < n; ++i) {
-            String scheme = (new URI(uris[i])).getScheme().toLowerCase();
-            if (!scheme.equals("tcp") &&
-                !scheme.equals("tcp4") &&
-                !scheme.equals("tcp6")) {
+            String scheme = (new URI(uris[i])).getScheme();
+            if (!"tcp".equalsIgnoreCase(scheme) &&
+                !"tcp4".equalsIgnoreCase(scheme) &&
+                !"tcp6".equalsIgnoreCase(scheme)) {
                 throw new HproseException("This client doesn't support " + scheme + " scheme.");
             }
         }

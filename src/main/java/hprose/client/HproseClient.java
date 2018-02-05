@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Aug 20, 2017                             *
+ * LastModified: Feb 5, 2018                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -138,9 +138,12 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     public static HproseClient create(String[] uriList, HproseMode mode) throws IOException, URISyntaxException {
-        String scheme = (new URI(uriList[0])).getScheme().toLowerCase();
+        String scheme = (new URI(uriList[0])).getScheme();
+        if (scheme == null) {
+            throw new HproseException("This client doesn't support " + scheme + " scheme.");
+        }
         for (int i = 1, n = uriList.length; i < n; ++i) {
-            if (!(new URI(uriList[i])).getScheme().toLowerCase().equalsIgnoreCase(scheme)) {
+            if (!scheme.equalsIgnoreCase((new URI(uriList[i])).getScheme())) {
                 throw new HproseException("Not support multiple protocol.");
             }
         }

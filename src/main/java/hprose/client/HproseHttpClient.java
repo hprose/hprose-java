@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http client class for Java.                     *
  *                                                        *
- * LastModified: Dec 1, 2016                              *
+ * LastModified: Feb 5, 2018                              *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -106,8 +106,8 @@ public class HproseHttpClient extends HproseClient {
     }
 
     public static HproseClient create(String uri, HproseMode mode) throws IOException, URISyntaxException {
-        String scheme = (new URI(uri)).getScheme().toLowerCase();
-        if (!scheme.equals("http") && !scheme.equals("https")) {
+        String scheme = (new URI(uri)).getScheme();
+        if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
             throw new HproseException("This client doesn't support " + scheme + " scheme.");
         }
         return new HproseHttpClient(uri, mode);
@@ -115,8 +115,8 @@ public class HproseHttpClient extends HproseClient {
 
     public static HproseClient create(String[] uris, HproseMode mode) throws IOException, URISyntaxException {
         for (int i = 0, n = uris.length; i < n; ++i) {
-            String scheme = (new URI(uris[i])).getScheme().toLowerCase();
-            if (!scheme.equals("http") && !scheme.equals("https")) {
+            String scheme = (new URI(uris[i])).getScheme();
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
                 throw new HproseException("This client doesn't support " + scheme + " scheme.");
             }
         }

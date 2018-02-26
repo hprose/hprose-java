@@ -12,7 +12,7 @@
  *                                                        *
  * Accessors class for Java.                              *
  *                                                        *
- * LastModified: Aug 4, 2016                              *
+ * LastModified: Feb 26, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -186,7 +186,8 @@ public final class Accessors {
                 if (!name.startsWith("set")) {
                     continue;
                 }
-                if (!setter.getReturnType().equals(void.class)) {
+                Class<?> returnType = setter.getReturnType();
+                if (!returnType.equals(void.class) && !returnType.isAssignableFrom(clazz)) {
                     continue;
                 }
                 Class<?>[] paramTypes = setter.getParameterTypes();

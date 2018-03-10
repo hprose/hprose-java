@@ -92,7 +92,7 @@ public class CookieManager {
         }
         for (int i = 0, n = cookieList.size(); i < n; ++i) {
             String cookieString = cookieList.get(i);
-            if (cookieString.length() == "") {
+            if (cookieString.length() == 0) {
                 continue;
             }
             String[] cookies = StrUtil.split(cookieString.trim(), ';', 0);

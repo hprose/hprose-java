@@ -12,7 +12,7 @@
  *                                                        *
  * Base64 for Java.                                       *
  *                                                        *
- * LastModified: Apr 27, 2015                             *
+ * LastModified: Mar 10, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -50,24 +50,24 @@ public final class Base64 {
             c = (0x000000ff & data[i++]) << 16 |
                 (0x000000ff & data[i++]) << 8  |
                 (0x000000ff & data[i++]);
-            sb.append(base64EncodeChars[c >> 18]);
-            sb.append(base64EncodeChars[c >> 12 & 0x3f]);
-            sb.append(base64EncodeChars[c >> 6  & 0x3f]);
-            sb.append(base64EncodeChars[c & 0x3f]);
+            sb.append(base64EncodeChars[c >> 18])
+              .append(base64EncodeChars[c >> 12 & 0x3f])
+              .append(base64EncodeChars[c >> 6  & 0x3f])
+              .append(base64EncodeChars[c & 0x3f]);
         }
         if (r == 1) {
             c = 0x000000ff & data[i++];
-            sb.append(base64EncodeChars[c >> 2]);
-            sb.append(base64EncodeChars[(c & 0x03) << 4]);
-            sb.append("==");
+            sb.append(base64EncodeChars[c >> 2])
+              .append(base64EncodeChars[(c & 0x03) << 4])
+              .append("==");
         }
         else if (r == 2) {
             c = (0x000000ff & data[i++]) << 8 |
                 (0x000000ff & data[i++]);
-            sb.append(base64EncodeChars[c >> 10]);
-            sb.append(base64EncodeChars[c >> 4 & 0x3f]);
-            sb.append(base64EncodeChars[(c & 0x0f) << 2]);
-            sb.append("=");
+            sb.append(base64EncodeChars[c >> 10])
+              .append(base64EncodeChars[c >> 4 & 0x3f])
+              .append(base64EncodeChars[(c & 0x0f) << 2])
+              .append("=");
         }
         return sb.toString();
     }

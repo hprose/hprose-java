@@ -154,9 +154,7 @@ public class CookieManager {
                             if (cookies.length() != 0) {
                                 cookies.append("; ");
                             }
-                            cookies.append(cookie.get("name"));
-                            cookies.append('=');
-                            cookies.append(cookie.get("value"));
+                            cookies.append(cookie.get("name")).append('=').append(cookie.get("value"));
                         }
                     }
                 }

@@ -58,22 +58,22 @@ public class MainActivity extends Activity {
                             TextView text = (TextView)findViewById(R.id.textView);
                             StringBuilder sb = new StringBuilder();
                             for (int i = 0; i < users.length; i++) {
-                                sb.append("name: ");
-                                sb.append(users[i].name);
-                                sb.append("\r\n");
-                                sb.append("sex: ");
-                                sb.append(users[i].sex);
-                                sb.append("\r\n");
-                                sb.append("birthday: ");
-                                sb.append(users[i].birthday);
-                                sb.append("\r\n");
-                                sb.append("age: ");
-                                sb.append(users[i].age);
-                                sb.append("\r\n");
-                                sb.append("married: ");
-                                sb.append(users[i].married);
-                                sb.append("\r\n");
-                                sb.append("\r\n");
+                                sb.append("name: ")
+                                  .append(users[i].name)
+                                  .append("\r\n")
+                                  .append("sex: ")
+                                  .append(users[i].sex)
+                                  .append("\r\n")
+                                  .append("birthday: ")
+                                  .append(users[i].birthday)
+                                  .append("\r\n")
+                                  .append("age: ")
+                                  .append(users[i].age)
+                                  .append("\r\n")
+                                  .append("married: ")
+                                  .append(users[i].married)
+                                  .append("\r\n")
+                                  .append("\r\n");
                             }
                             text.setText(sb.toString());
                         }

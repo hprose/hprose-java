@@ -12,7 +12,7 @@
  *                                                        *
  * cookie manager class for Java.                         *
  *                                                        *
- * LastModified: Apr 6, 2014                              *
+ * LastModified: Mar 10, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -49,7 +49,7 @@ public class CookieManager {
     }
     private static Calendar parseCalendar(String str) {
         Calendar calendar = Calendar.getInstance(utc);
-        if (str == null || str.equals("")) {
+        if (str == null || str.length() == 0) {
             return calendar;
         }
         String[] datetime = StrUtil.split(str, ' ', 0);
@@ -92,7 +92,7 @@ public class CookieManager {
         }
         for (int i = 0, n = cookieList.size(); i < n; ++i) {
             String cookieString = cookieList.get(i);
-            if (cookieString.equals("")) {
+            if (cookieString.length() == "") {
                 continue;
             }
             String[] cookies = StrUtil.split(cookieString.trim(), ';', 0);
@@ -150,7 +150,7 @@ public class CookieManager {
                         names.add(entry2.getKey());
                     }
                     else if (path.startsWith(cookie.get("PATH"))) {
-                        if (((secure && cookie.containsKey("SECURE")) || !cookie.containsKey("SECURE")) && !cookie.get("value").equals("")) {
+                        if (((secure && cookie.containsKey("SECURE")) || !cookie.containsKey("SECURE")) && cookie.get("value").length() > 0) {
                             if (cookies.length() != 0) {
                                 cookies.append("; ");
                             }

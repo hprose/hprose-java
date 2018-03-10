@@ -12,7 +12,7 @@
  *                                                        *
  * hprose servlet class for Java.                         *
  *                                                        *
- * LastModified: Nov 5, 2016                              *
+ * LastModified: Mar 10, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -181,7 +181,7 @@ public class HproseServlet extends HttpServlet {
                             }
                             break;
                         case 3:
-                            if (name[1].equals("")) {
+                            if (name[1].length() == 0) {
                                 methods.addInstanceMethods(obj, type, name[2]);
                             }
                             else {

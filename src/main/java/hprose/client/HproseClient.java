@@ -150,7 +150,7 @@ public abstract class HproseClient extends HandlerManager {
         Class<? extends HproseClient> clientClass = clientFactories.get(scheme);
         if (clientClass != null) {
             try {
-                HproseClient client = clientClass.newInstance();
+                HproseClient client = clientClass.getDeclaredConstructor().newInstance();
                 client.mode = mode;
                 client.useService(uriList);
                 return client;

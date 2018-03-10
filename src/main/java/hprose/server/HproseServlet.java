@@ -92,7 +92,7 @@ public class HproseServlet extends HttpServlet {
             try {
                 Class<?> type = Class.forName(param);
                 if (HproseServiceEvent.class.isAssignableFrom(type)) {
-                    service.setEvent((HproseServiceEvent) type.newInstance());
+                    service.setEvent((HproseServiceEvent) type.getDeclaredConstructor().newInstance());
                 }
             }
             catch (Exception ex) {
@@ -106,7 +106,7 @@ public class HproseServlet extends HttpServlet {
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
                     if (HproseFilter.class.isAssignableFrom(type)) {
-                        service.addFilter((HproseFilter) type.newInstance());
+                        service.addFilter((HproseFilter) type.getDeclaredConstructor().newInstance());
                     }
                 }
             }
@@ -121,7 +121,7 @@ public class HproseServlet extends HttpServlet {
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
                     if (FilterHandler.class.isAssignableFrom(type)) {
-                        service.beforeFilter.use((FilterHandler) type.newInstance());
+                        service.beforeFilter.use((FilterHandler) type.getDeclaredConstructor().newInstance());
                     }
                 }
             }
@@ -136,7 +136,7 @@ public class HproseServlet extends HttpServlet {
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
                     if (FilterHandler.class.isAssignableFrom(type)) {
-                        service.afterFilter.use((FilterHandler) type.newInstance());
+                        service.afterFilter.use((FilterHandler) type.getDeclaredConstructor().newInstance());
                     }
                 }
             }
@@ -151,7 +151,7 @@ public class HproseServlet extends HttpServlet {
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     Class<?> type = Class.forName(classNames[i]);
                     if (InvokeHandler.class.isAssignableFrom(type)) {
-                        service.use((InvokeHandler) type.newInstance());
+                        service.use((InvokeHandler) type.getDeclaredConstructor().newInstance());
                     }
                 }
             }
@@ -167,7 +167,7 @@ public class HproseServlet extends HttpServlet {
                 for (int i = 0, n = classNames.length; i < n; ++i) {
                     String[] name = StrUtil.split(classNames[i], '|', 3);
                     Class<?> type = Class.forName(name[0]);
-                    Object obj = type.newInstance();
+                    Object obj = type.getDeclaredConstructor().newInstance();
                     Class<?> ancestorType;
                     switch (name.length) {
                         case 1:

@@ -546,17 +546,17 @@ public abstract class HproseClient extends HandlerManager {
         return beforeFilterHandler.handle(stream.buffer, context).then(
         new Func<Object, ByteBuffer>() {
             public Object call(ByteBuffer value) throws Throwable {
-            ByteBufferStream stream = new ByteBufferStream(value);
-            try {
-                return decode(stream, args, context);
-            }
-            finally {
-                if (settings.getMode() == HproseResultMode.Normal ||
-                    settings.getMode() == HproseResultMode.Serialized ||
-                    settings.getReturnType() == byte[].class) {
-                    stream.close();
+                ByteBufferStream stream = new ByteBufferStream(value);
+                try {
+                    return decode(stream, args, context);
                 }
-            }
+                finally {
+                    if (settings.getMode() == HproseResultMode.Normal ||
+                        settings.getMode() == HproseResultMode.Serialized ||
+                        settings.getReturnType() == byte[].class) {
+                        stream.close();
+                    }
+                }
             }
         });
     }

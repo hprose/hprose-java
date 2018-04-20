@@ -20,6 +20,7 @@ build/
 nbbuild/
 nbdist/
 .nb-gradle/
+nb-configuration.xml
 
 ### IntelliJ
 .idea

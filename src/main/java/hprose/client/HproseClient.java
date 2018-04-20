@@ -12,7 +12,7 @@
  *                                                        *
  * hprose client class for Java.                          *
  *                                                        *
- * LastModified: Feb 5, 2018                              *
+ * LastModified: Apr 20, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -338,15 +338,23 @@ public abstract class HproseClient extends HandlerManager {
     }
 
     private Promise<ByteBuffer> beforeFilterHandler(ByteBuffer request, final ClientContext context) {
-        request = outputFilter(request, context);
+        final ByteBuffer req = outputFilter(request, context);
         if (context.getSettings().isOneway()) {
-            afterFilterHandler.handle(request, context);
+            afterFilterHandler.handle(req, context).whenComplete(new Runnable() {
+                public void run() {
+                    ByteBufferStream.free(req);
+                }
+            });
             return Promise.value(null);
         }
-        return afterFilterHandler.handle(request, context).then(new Func<ByteBuffer, ByteBuffer>() {
+        return afterFilterHandler.handle(req, context).then(new Func<ByteBuffer, ByteBuffer>() {
             public ByteBuffer call(ByteBuffer response) throws Throwable {
                 response = inputFilter(response, context);
                 return response;
+            }
+        }).whenComplete(new Runnable() {
+            public void run() {
+                ByteBufferStream.free(req);
             }
         });
     }
@@ -378,16 +386,14 @@ public abstract class HproseClient extends HandlerManager {
             if (interval > 5000) {
                 interval = 5000;
             }
-            if (interval > 0) {
-                return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
-                    public Promise<ByteBuffer> call() throws Throwable {
-                        return afterFilterHandler(request, context);
-                    }
-                });
+            if (interval < 0) {
+                interval = 0;
             }
-            else {
-                return afterFilterHandler(request, context);
-            }
+            return Promise.delayed(interval, new AsyncCall<ByteBuffer>() {
+                public Promise<ByteBuffer> call() throws Throwable {
+                    return afterFilterHandler(request, context);
+                }
+            });
         }
         return null;
     }
@@ -540,17 +546,17 @@ public abstract class HproseClient extends HandlerManager {
         return beforeFilterHandler.handle(stream.buffer, context).then(
         new Func<Object, ByteBuffer>() {
             public Object call(ByteBuffer value) throws Throwable {
-                stream.buffer = value;
-                try {
-                    return decode(stream, args, context);
+            ByteBufferStream stream = new ByteBufferStream(value);
+            try {
+                return decode(stream, args, context);
+            }
+            finally {
+                if (settings.getMode() == HproseResultMode.Normal ||
+                    settings.getMode() == HproseResultMode.Serialized ||
+                    settings.getReturnType() == byte[].class) {
+                    stream.close();
                 }
-                finally {
-                    if (settings.getMode() == HproseResultMode.Normal ||
-                        settings.getMode() == HproseResultMode.Serialized ||
-                        settings.getReturnType() == byte[].class) {
-                        stream.close();
-                    }
-                }
+            }
             }
         });
     }

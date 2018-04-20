@@ -12,7 +12,7 @@
  *                                                        *
  * hprose http service class for Java.                    *
  *                                                        *
- * LastModified: Jul 7, 2016                              *
+ * LastModified: Apr 20, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -240,13 +240,13 @@ public class HproseHttpService extends HproseService {
                 currentContext.set(httpContext);
                 handle(istream.buffer, methods, httpContext).then(new Action<ByteBuffer>() {
                     public void call(ByteBuffer value) throws Throwable {
+                        ByteBufferStream ostream = new ByteBufferStream(value);
                         try {
-                            ByteBufferStream ostream = new ByteBufferStream(value);
                             async.getResponse().setContentLength(ostream.available());
                             ostream.writeTo(async.getResponse().getOutputStream());
                         }
                         finally {
-                            ByteBufferStream.free(value);
+                            ostream.close();
                         }
                     }
                 }).catchError(new Action<Throwable>() {
@@ -278,13 +278,13 @@ public class HproseHttpService extends HproseService {
         currentContext.set(httpContext);
         handle(istream.buffer, methods, httpContext).then(new Action<ByteBuffer>() {
             public void call(ByteBuffer value) throws Throwable {
+                ByteBufferStream ostream = new ByteBufferStream(value);
                 try {
-                    ByteBufferStream ostream = new ByteBufferStream(value);
                     httpContext.getResponse().setContentLength(ostream.available());
                     ostream.writeTo(httpContext.getResponse().getOutputStream());
                 }
                 finally {
-                    ByteBufferStream.free(value);
+                    ostream.close();
                 }
             }
         }).catchError(new Action<Throwable>() {

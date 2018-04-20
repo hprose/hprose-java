@@ -313,7 +313,7 @@ final class FullDuplexSocketTransporter extends SocketTransporter {
         }
     }
 
-    public final void onSended(Connection conn, Integer id) {
+    public final void onSended(Connection conn, ByteBuffer data, Integer id) {
         synchronized (idleConnections) {
             if (!idleConnections.contains(conn)) {
                 idleConnections.offer(conn);
@@ -444,7 +444,7 @@ final class HalfDuplexSocketTransporter extends SocketTransporter {
         sendNext(conn);
     }
 
-    public final void onSended(Connection conn, Integer id) {}
+    public final void onSended(Connection conn, ByteBuffer data, Integer id) {}
 
     public final void onError(Connection conn, Exception e) {
         Response response = responses.remove(conn);

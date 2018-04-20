@@ -12,7 +12,7 @@
  *                                                        *
  * hprose websocket service class for Java.               *
  *                                                        *
- * LastModified: Jul 7, 2016                              *
+ * LastModified: Apr 20, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -92,12 +92,12 @@ public class HproseWebSocketService extends HproseService {
         handle(buf.slice(), context).then(new Action<ByteBuffer>() {
             public void call(ByteBuffer value) throws Throwable {
                 try {
-                    ByteBuffer buffer = ByteBuffer.allocate(4 + value.remaining());
+                    ByteBuffer buffer = ByteBuffer.allocate(4);
                     buffer.putInt(id);
-                    buffer.put(value);
                     buffer.flip();
-                    final RemoteEndpoint.Async remote = session.getAsyncRemote();
-                    remote.sendBinary(buffer);
+                    final RemoteEndpoint.Basic remote = session.getBasicRemote();
+                    remote.sendBinary(buffer, false);
+                    remote.sendBinary(value, true);
                 }
                 finally {
                     ByteBufferStream.free(value);

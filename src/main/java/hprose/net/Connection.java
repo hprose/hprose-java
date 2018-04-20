@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Apr 20, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -206,9 +206,8 @@ public final class Connection {
                     }
                     packet.writeLength += n;
                 }
-                ByteBufferStream.free(packet.buffers[1]);
                 clearTimeout();
-                handler.onSended(this, packet.id);
+                handler.onSended(this, packet.buffers[1], packet.id);
                 synchronized (outqueue) {
                     packet = outqueue.poll();
                     if (packet == null) {

@@ -26,9 +26,7 @@ public final class OutPacket {
     public final int totalLength;
     public int writeLength = 0;
     public OutPacket(ByteBuffer buffer, Integer id) {
-        if (buffer.remaining() == 0) {
-            buffer.rewind();
-        }
+        buffer.rewind();
         if (id == null) {
             buffers[0] = ByteBuffer.allocate(4);
             buffers[0].putInt(buffer.remaining());

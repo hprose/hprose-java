@@ -34,21 +34,21 @@ public final class Connection {
     private final SocketChannel channel;
     private final ConnectionHandler handler;
     private final InetSocketAddress address;
-    private volatile SelectionKey key;
-    private volatile TimeoutType timeoutType;
+    private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
             timeoutClose();
         }
     });
-    private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
-    private int headerLength = 4;
-    private int dataLength = -1;
-    private Integer id = null;
-    private OutPacket packet = null;
-    private final Queue<OutPacket> outqueue = new ConcurrentLinkedQueue<OutPacket>();
-    private Reactor reactor = null;
-    private boolean closed = false;
+    private volatile SelectionKey key;
+    private volatile TimeoutType timeoutType;
+    private volatile ByteBuffer inbuf = ByteBufferStream.allocate(1024);
+    private volatile int headerLength = 4;
+    private volatile int dataLength = -1;
+    private volatile Integer id = null;
+    private volatile OutPacket packet = null;
+    private volatile Reactor reactor = null;
+    private volatile boolean closed = false;
     public Connection(SocketChannel channel, ConnectionHandler handler, InetSocketAddress address) {
         this.channel = channel;
         this.handler = handler;
@@ -202,7 +202,8 @@ public final class Connection {
                         return;
                     }
                     if (n == 0) {
-                        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                        // key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+                        timeoutClose();
                         return;
                     }
                     packet.writeLength += n;

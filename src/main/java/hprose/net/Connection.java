@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connection interface for Java.                  *
  *                                                        *
- * LastModified: Apr 20, 2018                             *
+ * LastModified: Apr 23, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -38,12 +38,7 @@ public final class Connection {
     private volatile TimeoutType timeoutType;
     private final Timer timer = new Timer(new Runnable() {
         public void run() {
-            try {
-                handler.onTimeout(Connection.this, timeoutType);
-            }
-            finally {
-                close();
-            }
+            timeoutClose();
         }
     });
     private ByteBuffer inbuf = ByteBufferStream.allocate(1024);
@@ -81,7 +76,7 @@ public final class Connection {
         return channel;
     }
 
-    private void closeWithError(boolean error) {
+    public void close(boolean timeout, Exception e) {
         synchronized (this) {
             if (closed) {
                 return;
@@ -90,29 +85,36 @@ public final class Connection {
         }
         try {
             clearTimeout();
-            if (error) {
-                try {
-                    handler.onTimeout(Connection.this, timeoutType);
-                }
-                catch (Exception e) {
-                }
-            }
-            handler.onClose(this);
             channel.close();
         }
-        catch (IOException e) {
+        catch (IOException ex) {
         }
         finally {
             key.cancel();
+            if (e != null) {
+                handler.onError(this, e);
+            }
+            if (timeout) {
+                try {
+                    handler.onTimeout(Connection.this, timeoutType);
+                }
+                catch (Exception ex) {
+                }
+            }
+            handler.onClose(this);
         }
     }
 
     public final void close() {
-        closeWithError(false);
+        close(false, null);
     }
 
-    final void errorClose() {
-        closeWithError(true);
+    public final void timeoutClose() {
+        close(true, null);
+    }
+
+    public final void close(Exception e) {
+        close(false, e);
     }
 
     public final boolean receive() {
@@ -171,8 +173,7 @@ public final class Connection {
             }
         }
         catch (Exception e) {
-            handler.onError(this, e);
-            close();
+            close(e);
             return false;
         }
         return true;

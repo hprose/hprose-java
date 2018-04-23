@@ -12,7 +12,7 @@
  *                                                        *
  * hprose Connector class for Java.                       *
  *                                                        *
- * LastModified: Sep 19, 2016                             *
+ * LastModified: Apr 23, 2018                             *
  * Author: Ma Bingyao <andot@hprose.com>                  *
  *                                                        *
 \**********************************************************/
@@ -76,10 +76,10 @@ public final class Connector extends Thread {
                 conn.connect(selector);
             }
             catch (ClosedChannelException e) {
-                conn.errorClose();
+                conn.timeoutClose();
             }
             catch (IOException e) {
-                conn.errorClose();
+                conn.timeoutClose();
             }
         }
     }
@@ -106,7 +106,7 @@ public final class Connector extends Thread {
                 success = channel.finishConnect();
             }
             catch (IOException e) {
-                conn.errorClose();
+                conn.timeoutClose();
             }
         }
         else {

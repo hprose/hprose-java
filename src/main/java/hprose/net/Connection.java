@@ -55,7 +55,7 @@ public final class Connection {
         this.address = address;
     }
 
-    public final void connect(Selector selector) throws ClosedChannelException, IOException {
+    public final void connect(Selector selector) throws IOException {
         key = channel.register(selector, SelectionKey.OP_CONNECT, this);
         setTimeout(handler.getConnectTimeout(), TimeoutType.CONNECT_TIMEOUT);
         channel.connect(address);

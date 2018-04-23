@@ -75,10 +75,7 @@ public final class Connector extends Thread {
             try {
                 conn.connect(selector);
             }
-            catch (ClosedChannelException e) {
-                conn.timeoutClose();
-            }
-            catch (IOException e) {
+            catch (Exception e) {
                 conn.timeoutClose();
             }
         }

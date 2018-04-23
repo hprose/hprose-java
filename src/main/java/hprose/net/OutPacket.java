@@ -26,16 +26,19 @@ public final class OutPacket {
     public final int totalLength;
     public int writeLength = 0;
     public OutPacket(ByteBuffer buffer, Integer id) {
+        if (buffer.remaining() == 0) {
+            buffer.rewind();
+        }
         if (id == null) {
             buffers[0] = ByteBuffer.allocate(4);
-            buffers[0].putInt(buffer.limit());
-            totalLength = buffer.limit() + 4;
+            buffers[0].putInt(buffer.remaining());
+            totalLength = buffer.remaining() + 4;
         }
         else {
             buffers[0] = ByteBuffer.allocate(8);
-            buffers[0].putInt(buffer.limit() | 0x80000000);
+            buffers[0].putInt(buffer.remaining() | 0x80000000);
             buffers[0].putInt(id);
-            totalLength = buffer.limit() + 8;
+            totalLength = buffer.remaining() + 8;
         }
         buffers[0].flip();
         buffers[1] = buffer;

@@ -202,8 +202,7 @@ public final class Connection {
                         return;
                     }
                     if (n == 0) {
-                        // key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                        timeoutClose();
+                        key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         return;
                     }
                     packet.writeLength += n;
@@ -220,7 +219,7 @@ public final class Connection {
             }
         }
         catch (Exception e) {
-            close();
+            close(e);
         }
     }
 
